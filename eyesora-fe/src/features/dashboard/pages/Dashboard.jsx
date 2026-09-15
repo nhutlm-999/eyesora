@@ -10,11 +10,31 @@ import ExamRecordDetailModal from "../../eye-exam-record/components/ExamRecordDe
 
 const Dashboard = () => {
     const [summary, setSummary] = useState({
-        totalExaminedStudents: 0,
-        currentMyopiaRate: 0,
-        myopiaRateTrend: null,
-        totalAlertCases: 0,
-        totalParticipatingFacilities: 0
+        students: {
+            examined: 0,
+            target: 1500,
+            completionRate: 0
+        },
+        myopia: {
+            currentRate: 0,
+            trendComparison: {
+                previousPeriodRate: 0,
+                diff: 0,
+                direction: 'STABLE'
+            }
+        },
+        criticalAlerts: {
+            totalCases: 0,
+            severeMyopiaCount: 0,
+            highAstigmatismCount: 0,
+            pendingActionCount: 0
+        },
+        facilities: {
+            participating: 0,
+            inProgress: 0,
+            totalManaged: 0,
+            coverageRate: 0
+        }
     });
     const [gradeStats, setGradeStats] = useState([]);
     const [facilityStats, setFacilityStats] = useState([]);
@@ -37,11 +57,31 @@ const Dashboard = () => {
             ]);
 
             setSummary(countersRes.data || {
-                totalExaminedStudents: 0,
-                currentMyopiaRate: 0,
-                myopiaRateTrend: null,
-                totalAlertCases: 0,
-                totalParticipatingFacilities: 0
+                students: {
+                    examined: 0,
+                    target: 1500,
+                    completionRate: 0
+                },
+                myopia: {
+                    currentRate: 0,
+                    trendComparison: {
+                        previousPeriodRate: 0,
+                        diff: 0,
+                        direction: 'STABLE'
+                    }
+                },
+                criticalAlerts: {
+                    totalCases: 0,
+                    severeMyopiaCount: 0,
+                    highAstigmatismCount: 0,
+                    pendingActionCount: 0
+                },
+                facilities: {
+                    participating: 0,
+                    inProgress: 0,
+                    totalManaged: 0,
+                    coverageRate: 0
+                }
             });
             setGradeStats(gradeRes.data || []);
             setFacilityStats(facilityRes.data || []);

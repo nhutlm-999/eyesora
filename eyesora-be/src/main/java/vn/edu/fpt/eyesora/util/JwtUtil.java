@@ -25,7 +25,7 @@ public class JwtUtil {
     }
 
     public String generateToken(UserDetails userDetails) {
-        String source = "user";  // default
+        String source = "user";
 
         User user = (User) userDetails;
 

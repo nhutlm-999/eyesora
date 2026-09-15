@@ -7,14 +7,14 @@ public record PatientResponse(
         String patientId,
         String patientName,
 
-        String classId,
-        String className,
+//        String classId,
+//        String className,
 
         String facilityId,
         String facilityName,
 
-        String campaignId,
-        String campaignTitle,
+//        String campaignId,
+//        String campaignTitle,
 
         LocalDate dob,
         String gender,

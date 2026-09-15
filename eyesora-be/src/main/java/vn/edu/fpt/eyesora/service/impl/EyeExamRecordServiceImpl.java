@@ -211,8 +211,8 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
             }
 
             // Đồng bộ các thực thể liên kết (Campaign, Facility, Class, Ward)
-            newPatient.setExamCampaign(campaign);
-            newPatient.setClasses(patientClass);
+//            newPatient.setExamCampaign(campaign);
+//            newPatient.setClasses(patientClass);
             newPatient.setWard(patientWard);
 
             if (patientClass != null && patientClass.getFacility() != null) {
@@ -390,7 +390,7 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
                 } catch (Exception e) {
                     newClass.setGrade(99); // Đặt một giá trị mặc định tạm thời để không bị lỗi NOT NULL
                 }
-                newClass.updateSchoolYear();
+//                newClass.updateSchoolYear();
 
                 clazz = classesRepository.save(newClass);
             }
@@ -417,7 +417,7 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
 
         Patient patient = patientCache.get(patientCacheKey);
         if (patient == null) {
-            Optional<Patient> existingPatient = patientRepository.findByPatientNameAndGenderAndClasses(patientName, gender, clazz);
+            Optional<Patient> existingPatient = patientRepository.findByPatientNameAndGenderAndClassId(patientName, gender, clazz.getId());
 
             if (existingPatient.isPresent()) {
                 patient = existingPatient.get();
@@ -425,10 +425,10 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
                 Patient newPatient = new Patient();
                 newPatient.setPatientName(patientName);
                 newPatient.setGender(gender);
-                newPatient.setClasses(clazz);
+//                newPatient.setClasses(clazz);
                 newPatient.setFacility(facility);
                 newPatient.setIsDeleted(false);
-                newPatient.setExamCampaign(campaign);
+//                newPatient.setExamCampaign(campaign);
                 patient = patientRepository.save(newPatient);
             }
             patientCache.put(patientCacheKey, patient);

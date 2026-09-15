@@ -10,7 +10,7 @@ const MENU_ITEMS = [
     { icon: <CalendarDays className="w-5 h-5" />, label: 'Campaigns', path: '/campaigns', roles: ['ROLE_ADMIN'] },
     { icon: <ShieldAlert className="w-5 h-5" />, label: 'Admin Users', path: '/admin/users', roles: ['ROLE_ADMIN'] },
     { icon: <University className="w-5 h-5" />, label: 'Facilities', path: '/facilities', roles: ['ROLE_ADMIN'] },
-    { icon: <GraduationCap className="w-5 h-5" />, label: 'Classes', path: '/classes', roles: ['ROLE_ADMIN', 'ROLE_FACILITY_ADMIN'] },
+    // { icon: <GraduationCap className="w-5 h-5" />, label: 'Classes', path: '/classes', roles: ['ROLE_ADMIN', 'ROLE_FACILITY_ADMIN'] },
 
 ];
 

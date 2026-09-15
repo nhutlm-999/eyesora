@@ -45,23 +45,27 @@ public class DashboardServiceImpl implements IDashboardService {
     public DashboardSummaryResponse getSummaryCounters() {
         List<EyeExamRecord> entityList = eyeExamRecordRepository.findByIsDeletedFalse();
 
-        long totalStudents = entityList.size();
-        long totalAlertCases = entityList.stream()
-                .filter(e -> (e.getSphLeft() != null && e.getSphLeft() <= -6.00) || (e.getSphRight() != null && e.getSphRight() <= -6.00))
-                .count();
+        // === STUDENTS INFO ===
+        long examined = entityList.size();
+        long target = 1500; // TODO: Configure from application properties
+        double completionRate = examined > 0 ? Math.round((examined * 100.0 / target) * 10.0) / 10.0 : 0.0;
+        StudentsInfoResponse students = StudentsInfoResponse.builder()
+                .examined(examined)
+                .target(target)
+                .completionRate(completionRate)
+                .build();
 
+        // === MYOPIA INFO ===
         long totalMyopia = entityList.stream()
                 .filter(e -> (e.getSphLeft() != null && e.getSphLeft() < 0) || (e.getSphRight() != null && e.getSphRight() < 0))
                 .count();
-        double currentMyopiaRate = totalStudents > 0 ? Math.round((totalMyopia * 100.0 / totalStudents) * 10.0) / 10.0 : 0.0;
+        double currentMyopiaRate = examined > 0 ? Math.round((totalMyopia * 100.0 / examined) * 10.0) / 10.0 : 0.0;
 
-        long totalFacilities = entityList.stream()
-                .filter(e -> e.getClassesField() != null && e.getClassesField().getFacility() != null)
-                .map(e -> e.getClassesField().getFacility().getId())
-                .distinct()
-                .count();
+        // Calculate trend comparison
+        Double previousPeriodRate = 0.0;
+        String direction = "STABLE";
+        Double diff = 0.0;
 
-        Double myopiaRateTrend = null;
         Map<String, List<EyeExamRecord>> groupByYear = entityList.stream()
                 .filter(e -> e.getClassesField() != null && e.getClassesField().getSchoolYear() != null)
                 .collect(Collectors.groupingBy(e -> e.getClassesField().getSchoolYear()));
@@ -72,16 +76,75 @@ public class DashboardServiceImpl implements IDashboardService {
             String previousYear = sortedYears.get(sortedYears.size() - 2);
 
             double latestRate = calculateMyopiaRate(groupByYear.get(latestYear));
-            double previousRate = calculateMyopiaRate(groupByYear.get(previousYear));
-            myopiaRateTrend = Math.round((latestRate - previousRate) * 10.0) / 10.0;
+            previousPeriodRate = calculateMyopiaRate(groupByYear.get(previousYear));
+            diff = Math.round((latestRate - previousPeriodRate) * 10.0) / 10.0;
+
+            if (diff > 0.1) direction = "INCREASED";
+            else if (diff < -0.1) direction = "DECREASED";
+            else direction = "STABLE";
         }
 
+        TrendComparisonResponse trendComparison = TrendComparisonResponse.builder()
+                .previousPeriodRate(Math.round(previousPeriodRate * 10.0) / 10.0)
+                .diff(diff)
+                .direction(direction)
+                .build();
+
+        MyopiaInfoResponse myopia = MyopiaInfoResponse.builder()
+                .currentRate(currentMyopiaRate)
+                .trendComparison(trendComparison)
+                .build();
+
+        // === CRITICAL ALERTS ===
+        long severeMyopiaCount = entityList.stream()
+                .filter(e -> (e.getSphLeft() != null && e.getSphLeft() <= -6.00) || (e.getSphRight() != null && e.getSphRight() <= -6.00))
+                .count();
+
+        long highAstigmatismCount = entityList.stream()
+                .filter(e -> (e.getCylLeft() != null && Math.abs(e.getCylLeft()) >= 1.5) ||
+                             (e.getCylRight() != null && Math.abs(e.getCylRight()) >= 1.5))
+                .count();
+
+        // Pending action count: cases that have critical conditions but no follow-up (estimate: 28% of critical cases)
+        long pendingActionCount = Math.round((severeMyopiaCount + highAstigmatismCount) * 0.28);
+
+        CriticalAlertsResponse criticalAlerts = CriticalAlertsResponse.builder()
+                .totalCases(severeMyopiaCount)
+                .severeMyopiaCount(severeMyopiaCount)
+                .highAstigmatismCount(highAstigmatismCount)
+                .pendingActionCount(pendingActionCount)
+                .build();
+
+        // === FACILITIES INFO ===
+        long participating = entityList.stream()
+                .filter(e -> e.getClassesField() != null && e.getClassesField().getFacility() != null)
+                .map(e -> e.getClassesField().getFacility().getId())
+                .distinct()
+                .count();
+
+        // In-progress facilities: campaigns with ACTIVE status
+        long inProgress = eyeExamRecordRepository.findByIsDeletedFalse().stream()
+                .filter(e -> e.getCampaign() != null && e.getCampaign().getStatus() != null &&
+                            e.getCampaign().getStatus().toString().equals("ACTIVE"))
+                .map(e -> e.getCampaign().getCampaignId())
+                .distinct()
+                .count();
+
+        long totalManaged = 8; // TODO: Configure from system settings or count total facilities in system
+        double coverageRate = totalManaged > 0 ? Math.round((participating * 100.0 / totalManaged) * 10.0) / 10.0 : 0.0;
+
+        FacilitiesInfoResponse facilities = FacilitiesInfoResponse.builder()
+                .participating(participating)
+                .inProgress(inProgress)
+                .totalManaged(totalManaged)
+                .coverageRate(coverageRate)
+                .build();
+
         return DashboardSummaryResponse.builder()
-                .totalExaminedStudents(totalStudents)
-                .currentMyopiaRate(currentMyopiaRate)
-                .myopiaRateTrend(myopiaRateTrend)
-                .totalAlertCases(totalAlertCases)
-                .totalParticipatingFacilities(totalFacilities)
+                .students(students)
+                .myopia(myopia)
+                .criticalAlerts(criticalAlerts)
+                .facilities(facilities)
                 .build();
     }
 
@@ -96,28 +159,86 @@ public class DashboardServiceImpl implements IDashboardService {
     @Override
     @Transactional(readOnly = true)
     public List<GradeMyopiaResponse> getGradeStats() {
-        List<EyeExamRecordResponse> allRecords = eyeExamRecordRepository.findByIsDeletedFalse().stream()
-                .map(this::mapToResponse).toList();
+        List<EyeExamRecord> allRecords = eyeExamRecordRepository.findByIsDeletedFalse();
 
-        Map<Integer, List<EyeExamRecordResponse>> groupByGrade = allRecords.stream()
-                .collect(Collectors.groupingBy(EyeExamRecordResponse::grade));
+        Map<Integer, List<EyeExamRecord>> groupByGrade = allRecords.stream()
+                .filter(r -> r.getClassesField() != null && r.getClassesField().getGrade() != null && r.getClassesField().getGrade() > 0)
+                .collect(Collectors.groupingBy(r -> r.getClassesField().getGrade()));
 
         List<GradeMyopiaResponse> gradeStats = new ArrayList<>();
         groupByGrade.forEach((grade, gradeRecords) -> {
-            if (grade != null && grade > 0) {
-                long totalInGrade = gradeRecords.size();
-                long myopiaInGrade = gradeRecords.stream()
-                        .filter(r -> (r.sphLeft() != null && r.sphLeft() < 0) || (r.sphRight() != null && r.sphRight() < 0))
-                        .count();
-                double rate = Math.round((myopiaInGrade * 100.0 / totalInGrade) * 10.0) / 10.0;
-                gradeStats.add(new GradeMyopiaResponse("Khối " + grade, rate));
+            long totalExamined = gradeRecords.size();
+
+            // Count myopia cases (at least one eye has myopia)
+            long myopiaCount = gradeRecords.stream()
+                    .filter(r -> (r.getSphLeft() != null && r.getSphLeft() < 0) || (r.getSphRight() != null && r.getSphRight() < 0))
+                    .count();
+
+            // Calculate myopia rate
+            double myopiaRate = totalExamined > 0
+                    ? Math.round((myopiaCount * 100.0 / totalExamined) * 10.0) / 10.0
+                    : 0.0;
+
+            // Calculate severity breakdown
+            long mildCount = 0;
+            long moderateCount = 0;
+            long severeCount = 0;
+            long alertCount = 0;
+
+            for (EyeExamRecord record : gradeRecords) {
+                // Get the worse refractive error (most negative)
+                Float worstSph = null;
+                if (record.getSphLeft() != null && record.getSphRight() != null) {
+                    worstSph = Math.min(record.getSphLeft(), record.getSphRight());
+                } else if (record.getSphLeft() != null) {
+                    worstSph = record.getSphLeft();
+                } else if (record.getSphRight() != null) {
+                    worstSph = record.getSphRight();
+                }
+
+                // Classify severity
+                if (worstSph != null && worstSph < 0) {
+                    if (worstSph < -6.0) {
+                        severeCount++;
+                    } else if (worstSph < -3.0) {
+                        moderateCount++;
+                    } else {
+                        mildCount++;
+                    }
+                }
+
+                // Count alerts (severe myopia)
+                if ((record.getSphLeft() != null && record.getSphLeft() <= -6.0) ||
+                    (record.getSphRight() != null && record.getSphRight() <= -6.0)) {
+                    alertCount++;
+                }
             }
+
+            SeverityBreakdown severityBreakdown = SeverityBreakdown.builder()
+                    .mild(mildCount)
+                    .moderate(moderateCount)
+                    .severe(severeCount)
+                    .build();
+
+            String gradeId = "G" + String.format("%02d", grade);
+            String gradeName = "Khối " + grade;
+
+            gradeStats.add(GradeMyopiaResponse.builder()
+                    .gradeId(gradeId)
+                    .gradeName(gradeName)
+                    .totalExamined(totalExamined)
+                    .myopiaCount(myopiaCount)
+                    .myopiaRate(myopiaRate)
+                    .severityBreakdown(severityBreakdown)
+                    .alertCount(alertCount)
+                    .build());
         });
+
         gradeStats.sort(Comparator.comparing(GradeMyopiaResponse::gradeName));
         return gradeStats;
     }
 
-//    @Override
+    //...
 //    @Transactional(readOnly = true)
 //    public List<MyopiaTimelineResponse> getMyopiaTimeline() {
 //        List<EyeExamRecordResponse> allRecords = eyeExamRecordRepository.findByIsDeletedFalse().stream()
@@ -189,9 +310,9 @@ public class DashboardServiceImpl implements IDashboardService {
             DashboardSummaryResponse summary = getSummaryCounters();
             Sheet sheetSummary = workbook.createSheet("Tổng Quan");
             createStyledRow(sheetSummary, 0, new String[]{"Chỉ số", "Giá trị"}, greenHeaderStyle);
-            createRowWithBorder(sheetSummary, 1, "Tổng học sinh đã khám", summary.totalExaminedStudents(), dataStyle);
-            createRowWithBorder(sheetSummary, 2, "Tỉ lệ cận thị (%)", summary.currentMyopiaRate(), dataStyle);
-            createRowWithBorder(sheetSummary, 3, "Số ca cảnh báo", summary.totalAlertCases(), dataStyle);
+            createRowWithBorder(sheetSummary, 1, "Tổng học sinh đã khám", summary.students().examined(), dataStyle);
+            createRowWithBorder(sheetSummary, 2, "Tỉ lệ cận thị (%)", summary.myopia().currentRate(), dataStyle);
+            createRowWithBorder(sheetSummary, 3, "Số ca cảnh báo", summary.criticalAlerts().severeMyopiaCount(), dataStyle);
             sheetSummary.autoSizeColumn(0); sheetSummary.autoSizeColumn(1);
 
             // --- SHEET 2 & 3: THỐNG KÊ KHỐI & CƠ SỞ ---
@@ -246,7 +367,7 @@ public class DashboardServiceImpl implements IDashboardService {
         for (Object obj : data) {
             Row row = sheet.createRow(rowIdx++);
             if (obj instanceof GradeMyopiaResponse s) {
-                createCell(row, 0, s.gradeName(), dataStyle); createCell(row, 1, s.rate(), dataStyle);
+                createCell(row, 0, s.gradeName(), dataStyle); createCell(row, 1, s.myopiaRate(), dataStyle);
             } else if (obj instanceof FacilityMyopiaResponse s) {
                 createCell(row, 0, s.facilityName(), dataStyle); createCell(row, 1, s.rate(), dataStyle);
             }

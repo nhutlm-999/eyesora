@@ -25,7 +25,11 @@ public interface CampaignRepository extends JpaRepository<ExamCampaign, String> 
     @EntityGraph(attributePaths = {"organization", "targetfacility"})
     Optional<ExamCampaign> findWithDetailByCampaignId(String campaignId);
 
-    @Query("SELECT COUNT(p) FROM Patient p WHERE p.examCampaign.campaignId = :campaignId")
+    @Query("""
+        SELECT COUNT(DISTINCT er.patient.patientId) 
+        FROM EyeExamRecord er 
+        WHERE er.campaign.campaignId = :campaignId
+    """)
     Long countPatientsByCampaignId(@Param("campaignId") String campaignId);
 
     boolean existsByTargetfacility_IdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
