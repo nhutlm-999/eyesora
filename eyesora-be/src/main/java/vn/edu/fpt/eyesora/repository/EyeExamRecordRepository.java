@@ -12,6 +12,7 @@ import vn.edu.fpt.eyesora.entity.ExamCampaign;
 import vn.edu.fpt.eyesora.entity.EyeExamRecord;
 import vn.edu.fpt.eyesora.entity.Patient;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,4 +31,9 @@ public interface EyeExamRecordRepository extends JpaRepository<EyeExamRecord, St
     WHERE er.campaign.campaignId = :campaignId
 """)
     Integer countPatientsByCampaignId(@Param("campaignId") String campaignId);
+
+    @Query("SELECT e FROM EyeExamRecord e WHERE e.isDeleted = false " +
+            "AND (e.sphLeft <= -6.0 OR e.sphRight <= -6.0 " +
+            "OR ABS(e.cylLeft) >= 1.5 OR ABS(e.cylRight) >= 1.5)")
+    Page<EyeExamRecord> findCriticalAlerts(Pageable pageable);
 }

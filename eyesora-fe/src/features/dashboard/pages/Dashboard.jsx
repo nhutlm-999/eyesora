@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import  { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import axiosClient from "../../../shared/axios/axiosClient.js";
 
@@ -92,28 +92,28 @@ const Dashboard = () => {
         }
     };
 
-    const fetchData = useCallback(async (page = 0) => {
+    const [statusFilter, setStatusFilter] = useState('ALL');
+
+    const fetchData = useCallback(async (page = 0, filter = 'ALL') => {
         try {
-            const res = await axiosClient.get(`/eye-exam-records`, {
+            const res = await axiosClient.get(`/dashboard/critical-alerts`, {
                 params: {
+                    statusFilter: filter,
                     page: page,
-                    size: 5
+                    size: 10
                 }
             });
 
             const data = res.data;
-            const dataArray = data && data.content ? data.content : [];
-
-            const heavyCases = dataArray.filter(r => (r.sphLeft <= -6.00) || (r.sphRight <= -6.00));
-
-            setRecords(heavyCases);
+            setRecords(data?.content || []);
             setPageData({
                 page: data.number !== undefined ? data.number : page,
                 totalPages: data.totalPages || 1,
                 totalElements: data.totalElements || 0
             });
+            setStatusFilter(filter);
         } catch (error) {
-            console.error("Lỗi khi nạp dữ liệu phân trang danh sách ca cảnh báo:", error);
+            console.error(error);
         }
     }, []);
 
@@ -122,12 +122,13 @@ const Dashboard = () => {
             setLoading(true);
             await Promise.all([
                 fetchDashboardStaticData(),
-                fetchData(0)
+                fetchData(0, 'ALL')
             ]);
             setLoading(false);
         };
-        initDashboard();
-    }, [fetchData]);
+
+        initDashboard().catch(console.error);
+    }, []);
 
     const openDetail = async (record) => {
         try {
@@ -135,6 +136,7 @@ const Dashboard = () => {
             setSelectedRecord(res.data);
             setIsDetailOpen(true);
         } catch (error) {
+            console.error("Chi tiết lỗi:", error);
             alert("Lỗi khi tải chi tiết hồ sơ khám mắt");
         }
     };
@@ -147,7 +149,10 @@ const Dashboard = () => {
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const year = date.getFullYear();
             return `${day}/${month}/${year}`;
-        } catch (e) { return '---'; }
+        } catch (error) {
+            console.error(error);
+            return '---';
+        }
     };
 
     const formatVA = (value) => {
@@ -196,6 +201,8 @@ const Dashboard = () => {
                 records={records}
                 pageData={pageData}
                 fetchData={fetchData}
+                statusFilter={statusFilter}
+                onFilterChange={(newFilter) => fetchData(0, newFilter)}
                 openDetail={openDetail}
                 formatDiopter={formatDiopter}
             />
