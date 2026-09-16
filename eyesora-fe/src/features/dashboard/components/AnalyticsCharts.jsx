@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Y_AXIS_STEPS = [100, 75, 50, 25, 0];
 
 const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = true }) => {
@@ -50,13 +48,7 @@ const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = tr
                                             const rate = item.myopiaRate || 0;
 
                                             // Đổi màu theo tỷ lệ
-                                            let barColor = "bg-orange-400 hover:bg-orange-500";
-
-                                            if (rate >= 80) {
-                                                barColor = "bg-red-500 hover:bg-red-600";
-                                            } else if (rate >= 50) {
-                                                barColor = "bg-orange-500 hover:bg-orange-600";
-                                            }
+                                            let barColor = "bg-gradient-to-b from-sky-300/80 to-sky-600";
 
                                             return (
                                                 <div
@@ -122,24 +114,24 @@ const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = tr
                 <div className="w-full h-80 flex items-center pt-6">
                     {facilityStats && facilityStats.length > 0 ? (
                         isSingleFacility ? (
-                            <div className="flex flex-col items-center justify-center w-full h-full bg-orange-50/40 rounded-xl p-6 border border-orange-100">
-                                <span className="text-xs font-semibold text-orange-800 uppercase tracking-wider mb-2">
+                            <div className="flex flex-col items-center justify-center w-full h-full bg-sky-50/40 rounded-xl p-6 border border-sky-100">
+                                <span className="text-xs font-semibold text-sky-800 uppercase tracking-wider mb-2">
                                     {facilityStats[0].facilityName}
                                 </span>
 
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-5xl font-extrabold text-orange-600 tracking-tight">
+                                    <span className="text-5xl font-extrabold text-sky-600 tracking-tight">
                                         {facilityStats[0].rate}
                                     </span>
 
-                                    <span className="text-2xl font-bold text-orange-500">
+                                    <span className="text-2xl font-bold text-sky-500">
                                         %
                                     </span>
                                 </div>
 
                                 <div className="w-48 bg-gray-200 rounded-full h-2.5 mt-4 overflow-hidden">
                                     <div
-                                        className="bg-orange-500 h-2.5 rounded-full transition-all duration-1000 ease-out"
+                                        className="bg-gradient-to-l from-sky-300/80 to-sky-600 h-2.5 rounded-full transition-all duration-1000 ease-out"
                                         style={{
                                             width: animateBars
                                                 ? `${facilityStats[0].rate}%`
@@ -158,12 +150,12 @@ const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = tr
                                     const rate = item.rate || 0;
 
                                     // Đổi màu theo tỷ lệ
-                                    let progressColor = "bg-orange-400";
+                                    let progressColor = "bg-sky-400";
 
                                     if (rate >= 80) {
                                         progressColor = "bg-red-500";
                                     } else if (rate >= 50) {
-                                        progressColor = "bg-orange-500";
+                                        progressColor = "bg-sky-500";
                                     }
 
                                     return (
@@ -179,7 +171,7 @@ const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = tr
                                                     {item.facilityName}
                                                 </span>
 
-                                                <span className="text-orange-600 font-bold">
+                                                <span className="text-sky-600 font-bold">
                                                     {rate}%
                                                 </span>
                                             </div>
