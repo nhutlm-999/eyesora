@@ -24,9 +24,7 @@ import vn.edu.fpt.eyesora.service.IEyeExamRecordService;
 import vn.edu.fpt.eyesora.util.SecurityUtil;
 
 import java.io.InputStream;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
@@ -741,4 +739,5 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
 
                 .build();
     }
+
 }

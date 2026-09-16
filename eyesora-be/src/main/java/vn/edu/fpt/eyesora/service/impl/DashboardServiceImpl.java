@@ -1,8 +1,11 @@
 package vn.edu.fpt.eyesora.service.impl;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.fpt.eyesora.dto.response.*;
@@ -11,10 +14,10 @@ import vn.edu.fpt.eyesora.exceptions.BusinessException;
 import vn.edu.fpt.eyesora.repository.EyeExamRecordRepository;
 import vn.edu.fpt.eyesora.service.IDashboardService;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.*;
+import jakarta.persistence.criteria.Predicate;
 import java.util.stream.Collectors;
 
 
@@ -37,6 +40,8 @@ public class DashboardServiceImpl implements IDashboardService {
                 .schoolYear(entity.getClassesField() != null ? entity.getClassesField().getSchoolYear() : "N/A")
                 .sphLeft(entity.getSphLeft())
                 .sphRight(entity.getSphRight())
+                .cylLeft(entity.getCylLeft())
+                .cylRight(entity.getCylRight())
                 .build();
     }
 
@@ -238,41 +243,50 @@ public class DashboardServiceImpl implements IDashboardService {
         return gradeStats;
     }
 
-    //...
-//    @Transactional(readOnly = true)
-//    public List<MyopiaTimelineResponse> getMyopiaTimeline() {
-//        List<EyeExamRecordResponse> allRecords = eyeExamRecordRepository.findByIsDeletedFalse().stream()
-//                .map(this::mapToResponse).toList();
-//
-//        Map<String, List<EyeExamRecordResponse>> groupByYear = allRecords.stream()
-//                .filter(r -> r.schoolYear() != null && !r.schoolYear().equals("N/A"))
-//                .collect(Collectors.groupingBy(EyeExamRecordResponse::schoolYear));
-//
-//        List<MyopiaTimelineResponse> timelineStats = new ArrayList<>();
-//        groupByYear.forEach((schoolYear, yearRecords) -> {
-//            long totalInYear = yearRecords.size();
-//            long myopiaInYear = yearRecords.stream()
-//                    .filter(r -> (r.sphLeft() != null && r.sphLeft() < 0) || (r.sphRight() != null && r.sphRight() < 0))
-//                    .count();
-//            double rate = Math.round((myopiaInYear * 100.0 / totalInYear) * 10.0) / 10.0;
-//            timelineStats.add(new MyopiaTimelineResponse(schoolYear, rate, "ACTUAL"));
-//        });
-//        timelineStats.sort(Comparator.comparing(MyopiaTimelineResponse::schoolYear));
-//
-//        if (timelineStats.size() >= 2) {
-//            MyopiaTimelineResponse latest = timelineStats.get(timelineStats.size() - 1);
-//            MyopiaTimelineResponse previous = timelineStats.get(timelineStats.size() - 2);
-//            double diff = Math.round((latest.rate() - previous.rate()) * 10.0) / 10.0;
-//
-//            try {
-//                int startYear = Integer.parseInt(latest.schoolYear().substring(0, 4));
-//                String nextSchoolYear = (startYear + 1) + "-" + (startYear + 2);
-//                double predictedRate = Math.round((latest.rate() + diff) * 10.0) / 10.0;
-//                timelineStats.add(new MyopiaTimelineResponse(nextSchoolYear, Math.max(0, predictedRate), "PREDICTED"));
-//            } catch (Exception ignored) {}
-//        }
-//        return timelineStats;
-//    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EyeExamRecordResponse> getCriticalAlerts(String statusFilter, Pageable pageable) {
+        Specification<EyeExamRecord> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("isDeleted"), false));
+
+            // Điều kiện 1: Cận nặng (SPH <= -6.0)
+            Predicate severeMyopiaL = cb.lessThanOrEqualTo(root.get("sphLeft"), -6.0f);
+            Predicate severeMyopiaR = cb.lessThanOrEqualTo(root.get("sphRight"), -6.0f);
+            Predicate isMyopia = cb.or(severeMyopiaL, severeMyopiaR);
+
+            // Điều kiện 2: Loạn thị cao (CYL >= 1.5 hoặc <= -1.5)
+            Predicate highAstigL = cb.or(
+                    cb.greaterThanOrEqualTo(root.get("cylLeft"), 1.5f),
+                    cb.lessThanOrEqualTo(root.get("cylLeft"), -1.5f)
+            );
+            Predicate highAstigR = cb.or(
+                    cb.greaterThanOrEqualTo(root.get("cylRight"), 1.5f),
+                    cb.lessThanOrEqualTo(root.get("cylRight"), -1.5f)
+            );
+            Predicate isAstigmatism = cb.or(highAstigL, highAstigR);
+
+            // Xử lý các loại Filter
+            if ("MYOPIA".equals(statusFilter)) {
+                predicates.add(isMyopia);
+                predicates.add(cb.not(isAstigmatism)); // Chỉ cận, không loạn
+            } else if ("ASTIGMATISM".equals(statusFilter)) {
+                predicates.add(isAstigmatism);
+                predicates.add(cb.not(isMyopia)); // Chỉ loạn, không cận
+            } else if ("BOTH".equals(statusFilter)) {
+                predicates.add(isMyopia);
+                predicates.add(isAstigmatism); // Bị cả 2
+            } else {
+                predicates.add(cb.or(isMyopia, isAstigmatism)); // ALL (Bị cận HOẶC loạn)
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // eyeExamRecordRepository của bạn đã hỗ trợ Specification rồi nên gọi thẳng findAll(spec, pageable)
+        return eyeExamRecordRepository.findAll(spec, pageable).map(this::mapToResponse);
+    }
 
     @Override
     @Transactional(readOnly = true)
