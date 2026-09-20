@@ -18,6 +18,7 @@ import vn.edu.fpt.eyesora.dto.response.ExcelImportResponse;
 import vn.edu.fpt.eyesora.dto.response.EyeExamRecordResponse;
 import vn.edu.fpt.eyesora.dto.response.RowError;
 import vn.edu.fpt.eyesora.entity.*;
+import vn.edu.fpt.eyesora.exceptions.BusinessException;
 import vn.edu.fpt.eyesora.exceptions.ResourceNotFoundException;
 import vn.edu.fpt.eyesora.repository.*;
 import vn.edu.fpt.eyesora.service.IEyeExamRecordService;
@@ -40,7 +41,6 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
     private static final DateTimeFormatter DATE_FORMATTER = new DateTimeFormatterBuilder()
             .appendPattern("dd/MM/yyyy")
             .toFormatter();
-    ;
     private final EyeExamRecordRepository eyeExamRecordRepository;
     private final CampaignRepository campaignRepository;
     private final ClassesRepository classesRepository;
@@ -48,6 +48,7 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
     private final UserRepository userRepository;
     private final FacilityRepository facilityRepository;
     private final WardRepository wardRepository;
+    private final ClassEnrollmentRepository classEnrollmentRepository;
 
     @Override
     @Transactional
@@ -221,6 +222,14 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
 
             newPatient.setIsDeleted(false);
             patient = patientRepository.save(newPatient);
+
+            if (patientClass != null) {
+                ClassEnrollment enrollment = new ClassEnrollment();
+                enrollment.setPatient(patient);
+                enrollment.setClasses(patientClass);
+                enrollment.setStatus(ClassEnrollment.EnrollmentStatus.ACTIVE);
+                classEnrollmentRepository.save(enrollment);
+            }
         }
 
         entity.setPatient(patient);
@@ -287,9 +296,20 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
         Facility facility = facilityRepository.findById(facilityId)
                 .orElseThrow(() -> new NoSuchElementException("Không tìm thấy cơ sở/trường học với ID: " + facilityId));
 
-        // 2. Khởi tạo campagin & examiner
-        ExamCampaign campaign = campaignId != null ? campaignRepository.findById(campaignId).orElse(null) : null;
-        User examiner = examinerId != null ? userRepository.findById(examinerId).orElse(null) : null;
+        // 2. Kiểm tra và lấy Campaign
+        if (campaignId == null || campaignId.isBlank()) {
+            throw new IllegalArgumentException("Mã chiến dịch (Campaign ID) không được để trống.");
+        }
+        ExamCampaign campaign = campaignRepository.findById(campaignId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chiến dịch với ID: " + campaignId));
+
+        if (campaign.getStatus() == ExamCampaign.CampaignStatus.LOCKED) {
+            throw new BusinessException("Chiến dịch đã bị khóa, không thể import hồ sơ khám!");
+        }
+
+        User examiner = (examinerId != null && !examinerId.isBlank())
+                ? userRepository.findById(examinerId).orElse(null)
+                : null;
 
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -368,33 +388,45 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
                                                List<String> localErrors) {
 
         // 1. XỬ LÝ LỚP HỌC THEO CƠ SỞ
-        String className = getCellValueAsString(row.getCell(3));
+        String className = getCellValueAsString(row.getCell(3)).trim();
         if (className.isEmpty()) {
             localErrors.add("Tên lớp (Class Name) không được để trống");
             return null;
         }
 
-        Classes clazz = classCache.get(className);
+        String classCacheKey = className.toUpperCase();
+        Classes clazz = classCache.get(classCacheKey);
         if (clazz == null) {
-            clazz = classesRepository.findByClassNameAndFacility(className, facility).orElse(null);
+            clazz = classesRepository.findByClassNameIgnoreCaseAndFacilityAndIsDeletedFalse(className, facility)
+                    .orElseGet(() -> classesRepository.findByClassNameAndFacility(className, facility).orElse(null));
 
             if (clazz == null) {
                 Classes newClass = new Classes();
                 newClass.setClassName(className);
                 newClass.setFacility(facility);
+                newClass.setDeleted(false);
 
                 try {
-                    // Lấy tất cả các chữ số đầu tiên của tên lớp (Ví dụ: "10A1" -> "10", "6B" -> "6")
-                    String gradeNumbers = className.replaceAll("^(\\d+).*$", "$1");
-                    newClass.setGrade(Integer.parseInt(gradeNumbers));
+                    // Trích xuất số khối lớp (grade) từ tên lớp (ví dụ: "10A1" -> 10, "Lớp 6/2" -> 6)
+                    Matcher matcher = Pattern.compile("\\d+").matcher(className);
+                    if (matcher.find()) {
+                        newClass.setGrade(Integer.parseInt(matcher.group()));
+                    } else {
+                        newClass.setGrade(null);
+                    }
                 } catch (Exception e) {
-                    newClass.setGrade(99); // Đặt một giá trị mặc định tạm thời để không bị lỗi NOT NULL
+                    newClass.setGrade(null);
                 }
-//                newClass.updateSchoolYear();
+
+                if (campaign.getFacilityYear() != null && !campaign.getFacilityYear().isBlank()) {
+                    newClass.setSchoolYear(campaign.getFacilityYear());
+                } else {
+                    newClass.setSchoolYear(newClass.calculateSchoolYear());
+                }
 
                 clazz = classesRepository.save(newClass);
             }
-            classCache.put(className, clazz);
+            classCache.put(classCacheKey, clazz);
         }
 
         // 2. XỬ LÝ THÔNG TIN BỆNH NHAN
@@ -407,9 +439,9 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
         }
 
         Patient.Gender gender = Patient.Gender.OTHER;
-        if (genderStr.equalsIgnoreCase("1") || genderStr.equalsIgnoreCase("nam")) {
+        if (genderStr.equalsIgnoreCase("1") || genderStr.equalsIgnoreCase("nam") || genderStr.equalsIgnoreCase("m") || genderStr.equalsIgnoreCase("male")) {
             gender = Patient.Gender.MALE;
-        } else if (genderStr.equalsIgnoreCase("0") || genderStr.equalsIgnoreCase("nữ")) {
+        } else if (genderStr.equalsIgnoreCase("0") || genderStr.equalsIgnoreCase("nữ") || genderStr.equalsIgnoreCase("nu") || genderStr.equalsIgnoreCase("f") || genderStr.equalsIgnoreCase("female")) {
             gender = Patient.Gender.FEMALE;
         }
 
@@ -430,8 +462,23 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
                 newPatient.setIsDeleted(false);
 //                newPatient.setExamCampaign(campaign);
                 patient = patientRepository.save(newPatient);
+
+                ClassEnrollment enrollment = new ClassEnrollment();
+                enrollment.setPatient(patient);
+                enrollment.setClasses(clazz);
+                enrollment.setStatus(ClassEnrollment.EnrollmentStatus.ACTIVE);
+                classEnrollmentRepository.save(enrollment);
             }
             patientCache.put(patientCacheKey, patient);
+        }
+        else {
+            if (!classEnrollmentRepository.existsByPatient_PatientIdAndClasses_Id(patient.getPatientId(), clazz.getId())) {
+                ClassEnrollment enrollment = new ClassEnrollment();
+                enrollment.setPatient(patient);
+                enrollment.setClasses(clazz);
+                enrollment.setStatus(ClassEnrollment.EnrollmentStatus.ACTIVE);
+                classEnrollmentRepository.save(enrollment);
+            }
         }
 
         // 3. KHỞI TẠO HOẶC CẬP NHẬT RECORD
@@ -446,10 +493,14 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
             record.setCampaign(campaign);
             record.setPatient(patient);
             record.setClassesField(clazz);
+            record.setExaminer(examiner);
             record.setIsDeleted(false);
         } else {
             // Nếu đã tồn tại và bạn muốn cho phép ghi đè/cập nhật,
             record.setClassesField(clazz);
+            if (examiner != null) {
+                record.setExaminer(examiner);
+            }
         }
 
         record.setExamDate(LocalDate.now());

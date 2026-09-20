@@ -40,6 +40,7 @@ public class PatientServiceImpl implements IPatientService {
     private final ClassesRepository classesRepository;
     private final WardRepository wardRepository;
     private final EyeExamRecordRepository eyeExamRecordRepository;
+    private final ClassEnrollmentRepository classEnrollmentRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -175,7 +176,12 @@ public class PatientServiceImpl implements IPatientService {
 
         patient.setIsDeleted(false);
 
-        patientRepository.save(patient);
+        Patient savedPatient = patientRepository.save(patient);
+        ClassEnrollment enrollment = new ClassEnrollment();
+        enrollment.setPatient(savedPatient);
+        enrollment.setClasses(patientClass);
+        enrollment.setStatus(ClassEnrollment.EnrollmentStatus.ACTIVE);
+        classEnrollmentRepository.save(enrollment);
     }
 
     @Override

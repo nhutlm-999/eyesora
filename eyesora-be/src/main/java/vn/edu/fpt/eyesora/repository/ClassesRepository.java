@@ -10,12 +10,12 @@ import vn.edu.fpt.eyesora.entity.Facility;
 import java.util.Optional;
 
 @Repository
-public interface ClassesRepository extends JpaRepository<Classes,String>, JpaSpecificationExecutor<Classes> {
-
-    @EntityGraph(attributePaths = {"patients", "patients.ward"})
-    Optional<Classes> findWithPatientsById(String id);
+public interface ClassesRepository extends JpaRepository<Classes, String>, JpaSpecificationExecutor<Classes> {
 
     Optional<Classes> findByClassNameAndFacility(String className, Facility facility);
 
+    Optional<Classes> findByClassNameIgnoreCaseAndFacility(String className, Facility facility);
+
+    Optional<Classes> findByClassNameIgnoreCaseAndFacilityAndIsDeletedFalse(String className, Facility facility);
     
 }

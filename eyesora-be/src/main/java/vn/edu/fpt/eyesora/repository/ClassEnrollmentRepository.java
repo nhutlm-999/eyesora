@@ -9,6 +9,7 @@ import vn.edu.fpt.eyesora.dto.response.StudentInClassDto;
 import vn.edu.fpt.eyesora.entity.ClassEnrollment;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ClassEnrollmentRepository extends JpaRepository<ClassEnrollment, String> {
 
@@ -57,4 +58,8 @@ public interface ClassEnrollmentRepository extends JpaRepository<ClassEnrollment
 
     // Kiểm tra lớp có học sinh đang hoạt động hay không
     boolean existsByClasses_IdAndStatus(String classId, ClassEnrollment.EnrollmentStatus status);
+
+    boolean existsByPatient_PatientIdAndClasses_Id(String patientId, String classId);
+
+    Optional<ClassEnrollment> findByPatient_PatientIdAndClasses_Id(String patientId, String classId);
 }
