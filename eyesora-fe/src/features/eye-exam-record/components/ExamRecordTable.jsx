@@ -1,5 +1,4 @@
-import React from 'react';
-import { View, SquarePen, Trash } from "lucide-react";
+import { Eye, SquarePen, Trash } from "lucide-react";
 import Pagination from "../../../shared/components/Pagination.jsx";
 
 const ExamRecordTable = ({
@@ -50,7 +49,14 @@ const ExamRecordTable = ({
                                 <td className="px-6 py-5 text-gray-600 text-sm">{formatDate(record.examDate)}</td>
 
                                 <td className="px-6 py-5 text-right flex justify-end gap-3">
-                                    <button type="button" onClick={() => openDetail(record)} className="text-green-600 hover:text-green-900 transition-colors cursor-pointer" title="Xem chi tiết"><View size={20} /></button>
+                                    <button
+                                        type="button"
+                                        onClick={() => openDetail(record)}
+                                        className="text-gray-400 hover:text-green-600 transition-colors cursor-pointer"
+                                        title="Xem chi tiết"
+                                    >
+                                        <Eye size={18} />
+                                    </button>
                                     <button type="button" onClick={() => openUpdateModal(record)} className="text-blue-700 hover:text-blue-900 transition-colors cursor-pointer" title="Chỉnh sửa"><SquarePen size={20}/></button>
                                     <button type="button" onClick={() => triggerDeleteModal(record)} className="text-red-600 hover:text-red-800 transition-colors cursor-pointer" title="Xóa hồ sơ"><Trash size={20}/></button>
                                 </td>
