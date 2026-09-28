@@ -175,6 +175,13 @@ const Dashboard = () => {
         return `${value}°`;
     };
 
+    const handleViewAlerts = () => {
+        const tableEl = document.getElementById('alert-records-table');
+        if (tableEl) {
+            tableEl.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full bg-gray-50">
@@ -188,7 +195,7 @@ const Dashboard = () => {
 
     return (
         <div className="p-6 bg-[#f5f7fa] h-full overflow-y-auto scrollbar-thin text-gray-950">
-            <StatsCards summary={summary} />
+            <StatsCards summary={summary} onViewAlerts={handleViewAlerts} />
 
             {/* Đã dọn dẹp các prop timelineStats, path, circles không cần thiết */}
             <AnalyticsCharts

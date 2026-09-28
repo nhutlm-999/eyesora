@@ -1,28 +1,16 @@
-import {Download, Upload, Plus} from "lucide-react";
+import { Plus } from "lucide-react";
 
-const CampaignActions = ({onAdd, onImport, onExport}) => {
-    return (<div className="flex items-center gap-2">
-        {/*<button*/}
-        {/*    onClick={onExport}*/}
-        {/*    className="flex items-center gap-1 px-3 py-2 text-blue-900 font-bold hover:bg-gray-50 transition-colors text-sm rounded-lg border border-gray-200 cursor-pointer"*/}
-        {/*>*/}
-        {/*    <Download size={18}/> Tải xuống mẫu*/}
-        {/*</button>*/}
-
-        {/*<button*/}
-        {/*    onClick={onImport}*/}
-        {/*    className="flex items-center gap-1 px-3 py-2 text-blue-900 font-bold hover:bg-gray-50 transition-colors text-sm rounded-lg border border-gray-200 cursor-pointer"*/}
-        {/*>*/}
-        {/*    <Upload size={18}/> Nhập Excel*/}
-        {/*</button>*/}
-
-        <button
-            onClick={onAdd}
-            className="flex items-center gap-1 px-4 py-2 bg-blue-900 text-white font-bold hover:bg-blue-800 active:scale-95 transition-all text-sm rounded-lg shadow-sm cursor-pointer"
-        >
-            <Plus size={18}/> Thêm chiến dịch
-        </button>
-    </div>);
+const CampaignActions = ({ onAdd }) => {
+    return (
+        <div className="flex items-center gap-2">
+            <button
+                onClick={onAdd}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-l from-blue-500 to-[#004194] text-white font-semibold hover:from-blue-600 hover:to-blue-900 active:scale-95 transition-all text-xs rounded-xl shadow-sm cursor-pointer"
+            >
+                <Plus size={16}/> Thêm chiến dịch
+            </button>
+        </div>
+    );
 };
 
 export default CampaignActions;

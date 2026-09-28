@@ -22,7 +22,7 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
     const totalPages = pageData.totalPages || 1;
 
     return (
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mt-6 font-sans">
+        <div id="alert-records-table" className="bg-white border border-gray-200 rounded-2xl shadow-sm mt-6 font-sans">
             {/* Header & Công cụ */}
             <div className="px-6 py-5 border-b border-gray-200 flex flex-wrap justify-between items-center bg-gradient-to-l from-gray-50/90 to-gray-100/60 gap-4">
                 <h3 className="text-base font-bold text-gray-900 flex items-center gap-2.5">
