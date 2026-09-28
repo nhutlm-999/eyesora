@@ -29,7 +29,7 @@ const Header = ({ onMenuClick }) => {
     }, []);
 
     return (
-        <header className="sticky top-0 bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between z-30 gap-4 shadow-2xs font-sans">
+        <header className="sticky top-0 bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between z-30 gap-4 ">
 
             <div className="flex items-center gap-3">
                 <button
@@ -38,12 +38,9 @@ const Header = ({ onMenuClick }) => {
                 >
                     <span className="material-symbols-outlined">menu</span>
                 </button>
-                <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-l from-blue-500 to-[#004194]"></span>
-                    <h1 className="text-sm md:text-base font-extrabold text-gray-900 min-w-max tracking-tight">
-                        Hệ thống Giám sát & Quản lý Tật Khúc Xạ REMS
-                    </h1>
-                </div>
+                <h1 className="text-base md:text-lg font-semibold text-blue-900 min-w-max">
+                    Refractive Management
+                </h1>
             </div>
 
             <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
