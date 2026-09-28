@@ -80,62 +80,77 @@ export default function LoginPage() {
 
     return (
         <main className="flex min-h-screen bg-[#f8fafc] text-gray-900 font-sans antialiased">
-            {/* LEFT SIDE: Professional Medical Banner (Split Screen Classic Navy Theme) */}
-            <section className="hidden md:flex md:w-7/12 bg-gradient-to-br from-[#001f4d] via-[#004194] to-[#005bb5] relative flex-col justify-between p-12 lg:p-16 overflow-hidden border-r border-blue-900/30 text-white">
-                {/* Background Subtle Glowing Circles */}
-                <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+            {/* LEFT SIDE: Professional Medical Banner (Split Screen Premium Navy Theme) */}
+            <section className="hidden md:flex md:w-7/12 bg-gradient-to-br from-[#001838] via-[#00377a] to-[#0052b3] relative flex-col justify-between p-12 lg:p-16 overflow-hidden border-r border-blue-900/30 text-white">
+                {/* Background Subtle Glowing Circles & Ambient Light */}
+                <div className="absolute -top-24 -right-24 w-96 h-96 bg-sky-400/15 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none opacity-60" />
 
                 {/* Top Brand Logo Header */}
-                <div className="flex items-center space-x-4 z-10">
-                    <div className="w-13 h-13 rounded-2xl flex items-center justify-center bg-white/10 backdrop-blur-md border border-white/25 shadow-md">
-                        <img src="/favicon.svg" alt="Eyesora Logo" className="w-8 h-8" />
+                <div className="flex items-center space-x-3.5 z-10">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white/10 backdrop-blur-md border border-white/25 shadow-lg">
+                        <img src="/favicon.svg" alt="Eyesora Logo" className="w-7 h-7" />
                     </div>
                     <div>
                         <span className="font-extrabold text-2xl tracking-tight text-white font-mono block leading-none">Eyesora</span>
-                        <span className="text-xs font-bold text-blue-200/90 tracking-wider uppercase mt-1 block">Hệ thống Y tế REMS</span>
                     </div>
                 </div>
 
                 {/* Hero Body Content */}
-                <div className="max-w-xl my-auto z-10 space-y-7 py-6">
+                <div className="max-w-xl my-auto z-10 space-y-8 py-6">
                     <div className="space-y-4">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-xs font-bold text-sky-100 tracking-wide">
+                            <span className="w-2 h-2 rounded-full bg-sky-300"></span>
+                            Phòng Chống & Quản Lý Tật Khúc Xạ
+                        </div>
+
                         <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
                             Hệ thống Giám sát & Quản lý Tật Khúc Xạ
                         </h1>
+
                         <p className="text-base font-semibold text-blue-100/90 leading-relaxed">
                             Nền tảng chuẩn hóa dữ liệu khám mắt học đường, số hóa hồ sơ thị lực và hỗ trợ theo dõi sức khỏe khúc xạ cho các cơ sở y tế & trường học.
                         </p>
                     </div>
 
-                    {/* 3 Key Feature Cards */}
+                    {/* 3 Enhanced Key Feature Cards */}
                     <div className="grid grid-cols-3 gap-4 pt-2">
-                        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-sm flex flex-col items-center text-center space-y-2 hover:bg-white/15 transition-all">
-                            <div className="p-3 bg-white/15 text-white rounded-xl shadow-xs">
-                                <BarChart3 size={22} />
+                        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-md flex flex-col items-center text-center space-y-2 hover:bg-white/15 transition-all transform hover:-translate-y-1">
+                            <div className="p-3 bg-sky-500/20 text-sky-200 rounded-xl shadow-xs border border-sky-400/30">
+                                <BarChart3 size={24} />
                             </div>
-                            <span className="text-xs md:text-sm font-bold text-white">Phân Tích Số Liệu</span>
+                            <div>
+                                <p className="text-xs md:text-sm font-extrabold text-white">Phân Tích Số Liệu</p>
+                                <p className="text-[10px] font-medium text-blue-200/80 mt-0.5">Thống kê trực quan</p>
+                            </div>
                         </div>
 
-                        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-sm flex flex-col items-center text-center space-y-2 hover:bg-white/15 transition-all">
-                            <div className="p-3 bg-white/15 text-white rounded-xl shadow-xs">
-                                <FileText size={22} />
+                        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-md flex flex-col items-center text-center space-y-2 hover:bg-white/15 transition-all transform hover:-translate-y-1">
+                            <div className="p-3 bg-indigo-500/20 text-indigo-200 rounded-xl shadow-xs border border-indigo-400/30">
+                                <FileText size={24} />
                             </div>
-                            <span className="text-xs md:text-sm font-bold text-white">Số Hóa Hồ Sơ</span>
+                            <div>
+                                <p className="text-xs md:text-sm font-extrabold text-white">Số Hóa Hồ Sơ</p>
+                                <p className="text-[10px] font-medium text-blue-200/80 mt-0.5">Lưu trữ điện tử</p>
+                            </div>
                         </div>
 
-                        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-sm flex flex-col items-center text-center space-y-2 hover:bg-white/15 transition-all">
-                            <div className="p-3 bg-white/15 text-white rounded-xl shadow-xs">
-                                <EyeIcon size={22} />
+                        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 shadow-md flex flex-col items-center text-center space-y-2 hover:bg-white/15 transition-all transform hover:-translate-y-1">
+                            <div className="p-3 bg-amber-500/20 text-amber-200 rounded-xl shadow-xs border border-amber-400/30">
+                                <EyeIcon size={24} />
                             </div>
-                            <span className="text-xs md:text-sm font-bold text-white">Giám Sát Thị Lực</span>
+                            <div>
+                                <p className="text-xs md:text-sm font-extrabold text-white">Giám Sát Thị Lực</p>
+                                <p className="text-[10px] font-medium text-blue-200/80 mt-0.5">Cảnh báo kịp thời</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Footer Copyright */}
-                <div className="z-10 text-xs font-semibold text-blue-200/80">
-                    © 2026 Eyesora
+                <div className="z-10 text-xs font-semibold text-blue-200/80 flex items-center justify-between pt-4 border-t border-white/10">
+                    <span>© 2026 Eyesora</span>
                 </div>
             </section>
 
