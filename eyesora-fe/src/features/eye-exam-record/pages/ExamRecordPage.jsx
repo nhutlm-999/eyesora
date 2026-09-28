@@ -173,15 +173,18 @@ const ExamRecordPage = () => {
     const formatAxis = (value) => (value === null || value === undefined || value === "") ? "0°" : `${value}°`;
 
     return (
-        <div className="p-6 h-full overflow-y-auto bg-[#f5f7fa] text-gray-950 scrollbar-thin">
+        <div className="p-6 h-full overflow-y-auto bg-[#f5f7fa] text-gray-950 scrollbar-thin font-sans">
 
             <div className="bg-white border border-gray-200 p-6 rounded-2xl shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                        Quản lý hồ sơ khám mắt
-                    </h2>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                        Tổng số: {pageData.totalElements} bản ghi
+                    <div className="flex items-center gap-2.5">
+                        <span className="w-3 h-3 rounded-full bg-gradient-to-l from-blue-500 to-[#004194] shadow-xs"></span>
+                        <h2 className="text-xl font-black text-gray-900 tracking-tight">
+                            Quản lý hồ sơ khám mắt
+                        </h2>
+                    </div>
+                    <p className="text-xs font-semibold text-gray-500 mt-1">
+                        Tổng số: <span className="text-[#004194] font-bold">{pageData.totalElements}</span> bản ghi
                     </p>
                 </div>
 
@@ -206,7 +209,7 @@ const ExamRecordPage = () => {
                     <select
                         value={selectedFacility}
                         onChange={(e) => setSelectedFacility(e.target.value)}
-                        className="bg-white border border-gray-200 text-sm font-medium text-gray-700 px-4 py-2.5 rounded-xl shadow-sm outline-none focus:border-blue-900 transition-all cursor-pointer min-w-[160px] max-w-[200px]"
+                        className="bg-white border border-gray-300 text-xs font-semibold text-gray-900 px-4 py-2.5 rounded-xl shadow-xs outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-[#004194] transition-all cursor-pointer min-w-[160px] max-w-[200px]"
                     >
                         <option value="">Tất cả trường học</option>
                         {facilities.map((fac, index) => (
@@ -219,7 +222,7 @@ const ExamRecordPage = () => {
                     <select
                         value={selectedCampaign}
                         onChange={(e) => setSelectedCampaign(e.target.value)}
-                        className="bg-white border border-gray-200 text-sm font-medium text-gray-700 px-4 py-2.5 rounded-xl shadow-sm outline-none focus:border-blue-900 transition-all cursor-pointer min-w-[160px] max-w-[200px]"
+                        className="bg-white border border-gray-300 text-xs font-semibold text-gray-900 px-4 py-2.5 rounded-xl shadow-xs outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-[#004194] transition-all cursor-pointer min-w-[160px] max-w-[200px]"
                     >
                         <option value="">Tất cả chiến dịch</option>
                         {campaigns.map((cam, index) => (

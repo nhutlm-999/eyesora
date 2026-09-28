@@ -115,7 +115,7 @@ const ExamRecordDetailModal = ({ isOpen, onClose, record, formatDate, formatVA, 
                                     <span className="text-gray-500 font-medium">Thị lực (Không kính)</span>
                                     <span className="font-bold text-gray-900">{formatVA(record.vaLeftWithoutGlasses)}</span>
                                 </div>
-                                <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                                <div className="flex justify-benpm tween items-center py-1 border-b border-gray-50">
                                     <span className="text-gray-500 font-medium">Thị lực (Kính cũ)</span>
                                     <span className="font-bold text-gray-900">{formatVA(record.vaLeftOldGlasses)}</span>
                                 </div>

@@ -4,19 +4,19 @@ import {useNavigate} from "react-router-dom";
 const ExamRecordAction = ({onAddClick}) => {
     const navigate = useNavigate();
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
             <button
-                className="flex items-center gap-1 px-3 py-2 text-blue-900 font-bold hover:bg-gray-50 transition-colors text-sm rounded-lg border border-gray-200 cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2.5 text-[#004194] bg-white font-semibold hover:bg-gray-50 transition-all text-xs rounded-xl border border-gray-200 hover:border-blue-300 shadow-xs cursor-pointer"
                 onClick={() => navigate('/eye-exam-records/import')}
             >
-                <span><Upload size={18}/></span>
+                <Upload size={16}/>
                 Nhập dữ liệu Excel
             </button>
             <button
                 onClick={onAddClick}
-                className="flex items-center gap-1 px-3 py-2 bg-blue-900 text-white font-bold hover:bg-blue-800 active:scale-95 transition-all text-sm rounded-lg shadow-sm cursor-pointer"
+                className="flex items-center gap-1.5 bg-gradient-to-l from-blue-500 to-[#004194] text-white px-4 py-2.5 rounded-xl text-xs font-semibold hover:from-blue-600 hover:to-blue-900 transition-all cursor-pointer shadow-sm active:scale-95"
             >
-                <span><Plus size={18}/></span>
+                <Plus size={16}/>
                 Thêm bản ghi
             </button>
         </div>

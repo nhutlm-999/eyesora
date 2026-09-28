@@ -76,18 +76,18 @@ const PatientDetailPage = () => {
     }
 
     return (
-        <div className="p-6 bg-[#f5f7fa] h-full overflow-y-auto scrollbar-thin space-y-6">
+        <div className="p-6 bg-[#f5f7fa] h-full overflow-y-auto scrollbar-thin space-y-6 text-gray-950">
 
             {/* Header Toolbar */}
             <div className="flex items-center gap-3 w-full">
                 <button
                     onClick={() => navigate('/patients')}
-                    className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-blue-900 shadow-sm transition-colors cursor-pointer flex items-center justify-center"
+                    className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-blue-900 shadow-xs transition-colors cursor-pointer flex items-center justify-center"
                 >
                     <ArrowLeft size={18} />
                 </button>
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900">Chi tiết hồ sơ học sinh</h1>
+                    <h1 className="text-xl font-bold text-gray-900">Chi tiết hồ sơ học sinh</h1>
                     <p className="text-xs text-gray-500">Xem toàn bộ thông tin hành chính và lịch sử khám lâm sàng</p>
                 </div>
             </div>

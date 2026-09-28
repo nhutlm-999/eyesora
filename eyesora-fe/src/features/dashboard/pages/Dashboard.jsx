@@ -4,8 +4,8 @@ import axiosClient from "../../../shared/axios/axiosClient.js";
 import StatsCards from "../components/StatsCards.jsx";
 import AnalyticsCharts from '../components/AnalyticsCharts.jsx';
 import AlertRecordsTable from '../components/AlertRecordsTable.jsx';
-import MyopiaTimelineChart from '../components/MyopiaTimelineChart.jsx';
-import DrillDownTree from '../components/DrillDownTree.jsx';
+// import MyopiaTimelineChart from '../components/MyopiaTimelineChart.jsx';
+// import DrillDownTree from '../components/DrillDownTree.jsx';
 
 import ExamRecordDetailModal from "../../eye-exam-record/components/ExamRecordDetailModal.jsx";
 
@@ -182,6 +182,13 @@ const Dashboard = () => {
         return `${value}°`;
     };
 
+    const handleViewAlerts = () => {
+        const tableEl = document.getElementById('alert-records-table');
+        if (tableEl) {
+            tableEl.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full bg-gray-50">
@@ -218,7 +225,7 @@ const Dashboard = () => {
                 )}
             </div>
 
-            <StatsCards summary={summary} />
+            <StatsCards summary={summary} onViewAlerts={handleViewAlerts} />
 
             {/*<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">*/}
             {/*    <MyopiaTimelineChart data={timelineData} />*/}

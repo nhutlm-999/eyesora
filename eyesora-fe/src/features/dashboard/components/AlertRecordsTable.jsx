@@ -22,18 +22,18 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
     const totalPages = pageData.totalPages || 1;
 
     return (
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm mt-6 font-sans">
+        <div id="alert-records-table" className="bg-white border border-gray-200 rounded-2xl shadow-sm mt-6 font-sans">
             {/* Header & Công cụ */}
-            <div className="px-6 py-5 border-b border-gray-200 flex flex-wrap justify-between items-center bg-gradient-to-l from-gray-50/90 to-gray-100/60 gap-4">
+            <div className="px-6 py-5 border-b border-gray-200 flex flex-wrap justify-between items-center bg-gray-50 gap-4">
                 <h3 className="text-base font-bold text-gray-900 flex items-center gap-2.5">
                     <span
-                        className="w-3 h-3 rounded-full bg-gradient-to-l from-red-400 to-red-600 animate-pulse shadow-xs"></span>
+                        className="w-3 h-3 rounded-full bg-red-600 animate-pulse shadow-xs"></span>
                     Danh sách ca bệnh cần lưu ý khẩn cấp
                     <div className="relative flex items-center group ml-1">
                         <Info className="w-4 h-4 text-gray-400 hover:text-sky-500 cursor-help transition-colors"/>
                         <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 w-84 p-4 bg-gray-900/95 backdrop-blur-md text-white text-xs font-normal rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-2xl border border-gray-800 text-left leading-relaxed">
                             <div className="font-bold text-sm mb-2 pb-2 border-b border-gray-800 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-gradient-to-r from-orange-400 to-red-500"></span>
+                                <span className="w-2 h-2 rounded-full bg-red-500"></span>
                                 Tiêu chí cảnh báo khẩn cấp
                             </div>
                             <p className="text-gray-300 mb-2.5">
@@ -44,12 +44,12 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
                                 <li className="flex items-start gap-1.5">
                                     <span className="text-sky-400 font-bold">•</span>
                                     <span><strong>Cận thị nặng:</strong> Độ cầu (SPH) từ <strong
-                                        className="bg-gradient-to-r from-orange-300 to-orange-400 bg-clip-text text-transparent">-6.00 Diop</strong> trở xuống.</span>
+                                        className="text-orange-400 font-bold">-6.00 Diop</strong> trở xuống.</span>
                                 </li>
                                 <li className="flex items-start gap-1.5">
                                     <span className="text-sky-400 font-bold">•</span>
                                     <span><strong>Loạn thị cao:</strong> Độ trụ (CYL) từ <strong
-                                        className="bg-gradient-to-r from-amber-300 to-amber-400 bg-clip-text text-transparent">1.50 Diop</strong> trở lên.</span>
+                                        className="text-amber-400 font-bold">1.50 Diop</strong> trở lên.</span>
                                 </li>
                             </ul>
                         </div>
@@ -75,7 +75,7 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
                     </div>
 
                     <button onClick={handleExport}
-                            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gradient-to-l from-blue-500 to-[#004194] text-white text-xs font-semibold hover:from-blue-600 hover:to-blue-900 transition-all cursor-pointer shadow-sm">
+                            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#004194] text-white text-xs font-semibold hover:bg-blue-900 transition-all cursor-pointer shadow-sm">
                         <Download className="w-4 h-4"/> Xuất báo cáo
                     </button>
                 </div>
@@ -193,17 +193,17 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
                                     <td className="px-6 py-4 text-center align-middle">
                                         {isSevereMyopia && isHighAstigmatism ? (
                                             <span
-                                                className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-red-700 text-white border border-red-500 whitespace-nowrap shadow-xs">
+                                                className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-red-700 text-white border border-red-800 whitespace-nowrap shadow-xs">
                                                 Cận & Loạn Cao
                                             </span>
                                         ) : isSevereMyopia ? (
                                             <span
-                                                className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-orange-800 text-white border border-orange-500 whitespace-nowrap shadow-xs">
+                                                className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-red-600 text-white border border-red-600 whitespace-nowrap shadow-xs">
                                                 Cận nặng
                                             </span>
                                         ) : isHighAstigmatism ? (
                                             <span
-                                                className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-amber-600 text-white border border-amber-400 whitespace-nowrap shadow-xs">
+                                                className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-amber-600 text-white border border-amber-600 whitespace-nowrap shadow-xs">
                                                 Loạn thị cao
                                             </span>
                                         ) : null}
@@ -230,7 +230,7 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
 
             {/* Phân trang */}
             <div
-                className="flex items-center justify-between px-6 py-4 bg-gradient-to-l from-gray-50/50 to-gray-100/80 border-t border-gray-200">
+                className="flex items-center justify-between px-6 py-4 bg-gray-50 border-t border-gray-200">
                 <div className="text-xs font-semibold text-gray-600">
                     Trang <span className="text-blue-700 font-bold">{pageData.page + 1}</span> / {totalPages}
                 </div>

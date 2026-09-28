@@ -48,7 +48,7 @@ axiosClient.interceptors.response.use(
             try {
                 // Refresh token is in HttpOnly cookie, just call the endpoint
                 await axiosClient.post('/auth/refresh');
-                
+
                 processQueue(null);
                 return axiosClient(originalRequest);
             } catch (refreshError) {
