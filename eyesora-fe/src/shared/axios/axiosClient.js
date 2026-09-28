@@ -1,34 +1,22 @@
 import axios from 'axios';
 
 const axiosClient = axios.create({
-    baseURL: 'http://localhost:8080/api',
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true,
 });
-
-axiosClient.interceptors.request.use(
-    (config) => {
-        if (!config.url.includes('/auth/refresh')) {
-            const token = localStorage.getItem('accessToken');
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
 
 let isRefreshing = false;
 let failedQueue = [];
 
-const processQueue = (error, token = null) => {
+const processQueue = (error) => {
     failedQueue.forEach(prom => {
         if (error) {
             prom.reject(error);
         } else {
-            prom.resolve(token);
+            prom.resolve();
         }
     });
     failedQueue = [];
@@ -40,12 +28,14 @@ axiosClient.interceptors.response.use(
         const originalRequest = error.config;
 
         if (error.response && error.response.status === 401 && !originalRequest._retry) {
+            if (originalRequest.url.includes('/auth/login') || originalRequest.url.includes('/auth/me')) {
+                return Promise.reject(error);
+            }
 
             if (isRefreshing) {
                 return new Promise(function(resolve, reject) {
                     failedQueue.push({ resolve, reject });
-                }).then(token => {
-                    originalRequest.headers.Authorization = 'Bearer ' + token;
+                }).then(() => {
                     return axiosClient(originalRequest);
                 }).catch(err => {
                     return Promise.reject(err);
@@ -56,30 +46,13 @@ axiosClient.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                const oldRefreshToken = localStorage.getItem('refreshToken');
-                if (!oldRefreshToken) throw new Error("Không có refresh token");
-
-                const res = await axiosClient.post('/auth/refresh', {
-                    refreshToken: oldRefreshToken
-                });
-
-                const { accessToken, refreshToken } = res.data;
-                localStorage.setItem('accessToken', accessToken);
-                localStorage.setItem('refreshToken', refreshToken);
-
-                originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-
-                // Giải phóng hàng đợi, báo cho các request đang chờ biết token mới đã có
-                processQueue(null, accessToken);
-
+                // Refresh token is in HttpOnly cookie, just call the endpoint
+                await axiosClient.post('/auth/refresh');
+                
+                processQueue(null);
                 return axiosClient(originalRequest);
-
             } catch (refreshError) {
-                processQueue(refreshError, null);
-
-                localStorage.removeItem("accessToken");
-                localStorage.removeItem("refreshToken");
-
+                processQueue(refreshError);
                 window.location.href = '/login';
                 return Promise.reject(refreshError);
             } finally {

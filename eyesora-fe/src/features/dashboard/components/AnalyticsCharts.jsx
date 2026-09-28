@@ -56,11 +56,12 @@ const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = tr
                                                     className="flex flex-col items-center h-full justify-end group z-10 w-full max-w-[64px]"
                                                 >
                                                     <div
-                                                        className={`relative w-9 sm:w-11 rounded-t-md transition-all duration-700 ease-out shadow-xs ${barColor}`}
-                                                        style={{
-                                                            height: animateBars ? `${rate}%` : '0%'
-                                                        }}
+                                                        className="relative w-9 sm:w-11 rounded-t-md flex flex-col justify-end group-hover:opacity-80"
+                                                        style={{ height: animateBars ? `${rate}%` : '0%' }}
                                                     >
+                                                        <div className="w-full bg-red-600 transition-all duration-1000" style={{ height: item.severeRate ? `${(item.severeRate / rate) * 100}%` : '0%' }}></div>
+                                                        <div className="w-full bg-orange-500 transition-all duration-1000" style={{ height: item.moderateRate ? `${(item.moderateRate / rate) * 100}%` : '0%' }}></div>
+                                                        <div className="w-full bg-yellow-400 transition-all duration-1000" style={{ height: item.mildRate ? `${(item.mildRate / rate) * 100}%` : (rate > 0 ? '100%' : '0%') }}></div>
                                                         <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 text-xs font-extrabold text-gray-900 bg-white border border-gray-200 px-1.5 py-0.5 rounded-md shadow-xs select-none whitespace-nowrap z-20">
                                                             {rate}%
                                                         </span>

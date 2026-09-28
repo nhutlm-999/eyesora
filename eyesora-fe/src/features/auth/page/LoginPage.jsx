@@ -33,7 +33,7 @@ export default function LoginPage() {
             try {
                 const data = await authService.login(username, password);
 
-                loginSuccess(data);
+                await loginSuccess();
 
                 if (data.roles?.includes("ROLE_ADMIN")) {
                     window.location.href = "/";

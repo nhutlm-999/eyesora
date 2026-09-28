@@ -27,7 +27,20 @@ import ForgotPasswordPage from "./features/auth/page/ForgotPassword.jsx";
 import ResetPasswordPage from "./features/auth/page/ResetPasswordPage.jsx";
 import PatientDetailPage from "./features/patient/pages/PatientDetailsPage.jsx";
 
+import { useEffect } from 'react';
+import { useAuthStore } from './features/auth/store/authStore';
+
 function App() {
+    const { initAuth, isInitialized } = useAuthStore();
+
+    useEffect(() => {
+        initAuth();
+    }, [initAuth]);
+
+    if (!isInitialized) {
+        return <div>Loading...</div>;
+    }
+
     return (
         <BrowserRouter>
             <Routes>
