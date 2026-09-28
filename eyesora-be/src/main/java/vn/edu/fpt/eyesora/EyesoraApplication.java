@@ -10,7 +10,7 @@ public class EyesoraApplication {
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.configure()
                 .directory("eyesora-be")
-                .ignoreIfMissing() // Ignore if file is missing
+                .ignoreIfMissing()
                 .load();
 
         // Load environment variables from .env file into system properties

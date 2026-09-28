@@ -34,13 +34,26 @@ import java.util.stream.Collectors;
 @Transactional
 public class PatientServiceImpl implements IPatientService {
 
+    private void checkPatientOwnership(Patient patient) {
+        vn.edu.fpt.eyesora.entity.User currentUser = vn.edu.fpt.eyesora.util.SecurityUtil.getCurrentUser();
+        boolean isFacilityAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("FACILITY_ADMIN"));
+        if (isFacilityAdmin) {
+            if (currentUser.getFacility() == null || 
+                patient.getFacility() == null ||
+                !currentUser.getFacility().getId().equals(patient.getFacility().getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Không có quyền truy cập bệnh nhân này");
+            }
+        }
+    }
+
+
     private final PatientRepository patientRepository;
     private final CampaignRepository campaignRepository;
     private final FacilityRepository facilityRepository;
     private final ClassesRepository classesRepository;
     private final WardRepository wardRepository;
     private final EyeExamRecordRepository eyeExamRecordRepository;
-    private final ClassEnrollmentRepository classEnrollmentRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -176,12 +189,7 @@ public class PatientServiceImpl implements IPatientService {
 
         patient.setIsDeleted(false);
 
-        Patient savedPatient = patientRepository.save(patient);
-        ClassEnrollment enrollment = new ClassEnrollment();
-        enrollment.setPatient(savedPatient);
-        enrollment.setClasses(patientClass);
-        enrollment.setStatus(ClassEnrollment.EnrollmentStatus.ACTIVE);
-        classEnrollmentRepository.save(enrollment);
+        patientRepository.save(patient);
     }
 
     @Override

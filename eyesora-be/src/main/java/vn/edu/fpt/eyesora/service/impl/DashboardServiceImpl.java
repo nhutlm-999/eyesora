@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 public class DashboardServiceImpl implements IDashboardService {
 
     private final EyeExamRecordRepository eyeExamRecordRepository;
+    private final vn.edu.fpt.eyesora.repository.PatientRepository patientRepository;
+    private final vn.edu.fpt.eyesora.repository.FacilityRepository facilityRepository;
 
     private EyeExamRecordResponse mapToResponse(EyeExamRecord entity) {
         return EyeExamRecordResponse.builder()
@@ -47,13 +49,24 @@ public class DashboardServiceImpl implements IDashboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public DashboardSummaryResponse getSummaryCounters() {
+    public DashboardSummaryResponse getSummaryCounters(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
         List<EyeExamRecord> entityList = eyeExamRecordRepository.findByIsDeletedFalse();
+        
+        // Filter
+        if (startDate != null) {
+            entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
+        }
+        if (endDate != null) {
+            entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
+        }
+        if (campaignId != null && !campaignId.trim().isEmpty()) {
+            entityList = entityList.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        }
 
         // === STUDENTS INFO ===
         long examined = entityList.size();
-        long target = 1500; // TODO: Configure from application properties
-        double completionRate = examined > 0 ? Math.round((examined * 100.0 / target) * 10.0) / 10.0 : 0.0;
+        long target = patientRepository.count();
+        double completionRate = target > 0 ? Math.round((examined * 100.0 / target) * 10.0) / 10.0 : 0.0;
         StudentsInfoResponse students = StudentsInfoResponse.builder()
                 .examined(examined)
                 .target(target)
@@ -110,8 +123,10 @@ public class DashboardServiceImpl implements IDashboardService {
                              (e.getCylRight() != null && Math.abs(e.getCylRight()) >= 1.5))
                 .count();
 
-        // Pending action count: cases that have critical conditions but no follow-up (estimate: 28% of critical cases)
-        long pendingActionCount = Math.round((severeMyopiaCount + highAstigmatismCount) * 0.28);
+        // Pending action count: cases that have critical conditions but no follow-up
+        long pendingActionCount = entityList.stream()
+                .filter(e -> e.getFollowupDate() != null && e.getFollowupDate().isAfter(java.time.LocalDate.now()))
+                .count();
 
         CriticalAlertsResponse criticalAlerts = CriticalAlertsResponse.builder()
                 .totalCases(severeMyopiaCount)
@@ -135,7 +150,7 @@ public class DashboardServiceImpl implements IDashboardService {
                 .distinct()
                 .count();
 
-        long totalManaged = 8; // TODO: Configure from system settings or count total facilities in system
+        long totalManaged = facilityRepository.countByFacilityType(vn.edu.fpt.eyesora.entity.Facility.FacilityType.SCHOOL);
         double coverageRate = totalManaged > 0 ? Math.round((participating * 100.0 / totalManaged) * 10.0) / 10.0 : 0.0;
 
         FacilitiesInfoResponse facilities = FacilitiesInfoResponse.builder()
@@ -163,8 +178,17 @@ public class DashboardServiceImpl implements IDashboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<GradeMyopiaResponse> getGradeStats() {
+    public List<GradeMyopiaResponse> getGradeStats(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
         List<EyeExamRecord> allRecords = eyeExamRecordRepository.findByIsDeletedFalse();
+        if (startDate != null) {
+            allRecords = allRecords.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
+        }
+        if (endDate != null) {
+            allRecords = allRecords.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
+        }
+        if (campaignId != null && !campaignId.trim().isEmpty()) {
+            allRecords = allRecords.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        }
 
         Map<Integer, List<EyeExamRecord>> groupByGrade = allRecords.stream()
                 .filter(r -> r.getClassesField() != null && r.getClassesField().getGrade() != null && r.getClassesField().getGrade() > 0)
@@ -246,7 +270,7 @@ public class DashboardServiceImpl implements IDashboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<EyeExamRecordResponse> getCriticalAlerts(String statusFilter, Pageable pageable) {
+    public Page<EyeExamRecordResponse> getCriticalAlerts(String statusFilter, java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId, Pageable pageable) {
         Specification<EyeExamRecord> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("isDeleted"), false));
@@ -281,17 +305,35 @@ public class DashboardServiceImpl implements IDashboardService {
                 predicates.add(cb.or(isMyopia, isAstigmatism)); // ALL (Bị cận HOẶC loạn)
             }
 
+                        if (startDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("examDate"), startDate));
+            }
+            if (endDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("examDate"), endDate));
+            }
+            if (campaignId != null && !campaignId.trim().isEmpty()) {
+                predicates.add(cb.equal(root.get("campaign").get("campaignId"), campaignId));
+            }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        // eyeExamRecordRepository của bạn đã hỗ trợ Specification rồi nên gọi thẳng findAll(spec, pageable)
         return eyeExamRecordRepository.findAll(spec, pageable).map(this::mapToResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<FacilityMyopiaResponse> getFacilityStats() {
+    public List<FacilityMyopiaResponse> getFacilityStats(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
         List<EyeExamRecord> entityList = eyeExamRecordRepository.findByIsDeletedFalse();
+        if (startDate != null) {
+            entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
+        }
+        if (endDate != null) {
+            entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
+        }
+        if (campaignId != null && !campaignId.trim().isEmpty()) {
+            entityList = entityList.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        }
 
         Map<String, List<EyeExamRecord>> groupByFacility = entityList.stream()
                 .filter(e -> e.getClassesField() != null && e.getClassesField().getFacility() != null && e.getClassesField().getFacility().getFacilityName() != null)
@@ -321,7 +363,7 @@ public class DashboardServiceImpl implements IDashboardService {
             CellStyle dataStyle = createDataBorderStyle(workbook);
 
             // --- SHEET 1: TỔNG QUAN---
-            DashboardSummaryResponse summary = getSummaryCounters();
+            DashboardSummaryResponse summary = getSummaryCounters(null, null, null);
             Sheet sheetSummary = workbook.createSheet("Tổng Quan");
             createStyledRow(sheetSummary, 0, new String[]{"Chỉ số", "Giá trị"}, greenHeaderStyle);
             createRowWithBorder(sheetSummary, 1, "Tổng học sinh đã khám", summary.students().examined(), dataStyle);
@@ -330,8 +372,8 @@ public class DashboardServiceImpl implements IDashboardService {
             sheetSummary.autoSizeColumn(0); sheetSummary.autoSizeColumn(1);
 
             // --- SHEET 2 & 3: THỐNG KÊ KHỐI & CƠ SỞ ---
-            createStatSheet(workbook.createSheet("Thống Kê Theo Khối"), greenHeaderStyle, "Khối Lớp", "Tỉ lệ cận thị (%)", getGradeStats());
-            createStatSheet(workbook.createSheet("Thống Kê Cơ Sở"), greenHeaderStyle, "Tên Cơ Sở", "Tỉ lệ cận thị (%)", getFacilityStats());
+            createStatSheet(workbook.createSheet("Thống Kê Theo Khối"), greenHeaderStyle, "Khối Lớp", "Tỉ lệ cận thị (%)", getGradeStats(null, null, null));
+            createStatSheet(workbook.createSheet("Thống Kê Cơ Sở"), greenHeaderStyle, "Tên Cơ Sở", "Tỉ lệ cận thị (%)", getFacilityStats(null, null, null));
 
             // --- SHEET 4: DANH SÁCH CA BỆNH CẦN CẢNH BÁO GẤP ---
             Sheet sheetHeavy = workbook.createSheet("Danh sách ca bệnh cần cảnh báo gấp");
@@ -447,6 +489,118 @@ public class DashboardServiceImpl implements IDashboardService {
         if (style != null) cell.setCellStyle(style);
         if (value instanceof Number n) cell.setCellValue(n.doubleValue());
         else cell.setCellValue(value != null ? value.toString() : "");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MyopiaTimelineResponse> getMyopiaTimeline(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        List<EyeExamRecord> records = eyeExamRecordRepository.findByIsDeletedFalse();
+        if (startDate != null) {
+            records = records.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
+        }
+        if (endDate != null) {
+            records = records.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
+        }
+        if (campaignId != null && !campaignId.trim().isEmpty()) {
+            records = records.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        }
+
+        Map<java.time.LocalDate, List<EyeExamRecord>> byDate = records.stream()
+                .filter(e -> e.getExamDate() != null)
+                .collect(Collectors.groupingBy(EyeExamRecord::getExamDate));
+
+        List<MyopiaTimelineResponse> result = new ArrayList<>();
+        for (Map.Entry<java.time.LocalDate, List<EyeExamRecord>> entry : byDate.entrySet()) {
+            long mild = 0, moderate = 0, severe = 0;
+            for (EyeExamRecord r : entry.getValue()) {
+                float sphL = r.getSphLeft() != null ? r.getSphLeft() : 0;
+                float sphR = r.getSphRight() != null ? r.getSphRight() : 0;
+                float minSph = Math.min(sphL, sphR);
+                if (minSph <= -6.0) severe++;
+                else if (minSph <= -3.0) moderate++;
+                else if (minSph < -0.5) mild++;
+            }
+            result.add(MyopiaTimelineResponse.builder()
+                    .date(entry.getKey())
+                    .mildCount(mild)
+                    .moderateCount(moderate)
+                    .severeCount(severe)
+                    .build());
+        }
+        result.sort(Comparator.comparing(MyopiaTimelineResponse::date));
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Object getDrillDown(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        List<EyeExamRecord> records = eyeExamRecordRepository.findByIsDeletedFalse();
+        if (startDate != null) {
+            records = records.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
+        }
+        if (endDate != null) {
+            records = records.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
+        }
+        if (campaignId != null && !campaignId.trim().isEmpty()) {
+            records = records.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        }
+        
+        List<Map<String, Object>> schools = new ArrayList<>();
+        Map<String, List<EyeExamRecord>> bySchool = records.stream()
+                .filter(e -> e.getClassesField() != null && e.getClassesField().getFacility() != null)
+                .collect(Collectors.groupingBy(e -> e.getClassesField().getFacility().getFacilityName()));
+
+        for (Map.Entry<String, List<EyeExamRecord>> schoolEntry : bySchool.entrySet()) {
+            Map<String, Object> schoolMap = new HashMap<>();
+            schoolMap.put("schoolName", schoolEntry.getKey());
+
+            List<Map<String, Object>> classes = new ArrayList<>();
+            Map<String, List<EyeExamRecord>> byClass = schoolEntry.getValue().stream()
+                    .collect(Collectors.groupingBy(e -> e.getClassesField().getClassName()));
+
+            for (Map.Entry<String, List<EyeExamRecord>> classEntry : byClass.entrySet()) {
+                Map<String, Object> classMap = new HashMap<>();
+                classMap.put("className", classEntry.getKey());
+
+                List<Map<String, Object>> students = new ArrayList<>();
+                
+                // Group by student to get latest exam status
+                Map<String, EyeExamRecord> latestByStudent = new HashMap<>();
+                for (EyeExamRecord record : classEntry.getValue()) {
+                    if (record.getPatient() != null) {
+                        String studentId = record.getPatient().getPatientId();
+                        if (!latestByStudent.containsKey(studentId) || 
+                            record.getExamDate().isAfter(latestByStudent.get(studentId).getExamDate())) {
+                            latestByStudent.put(studentId, record);
+                        }
+                    }
+                }
+
+                for (EyeExamRecord latestRec : latestByStudent.values()) {
+                    Map<String, Object> studentMap = new HashMap<>();
+                    studentMap.put("studentName", latestRec.getPatient().getPatientName());
+                    
+                    String severity = "NORMAL";
+                    float sphL = latestRec.getSphLeft() != null ? latestRec.getSphLeft() : 0;
+                    float sphR = latestRec.getSphRight() != null ? latestRec.getSphRight() : 0;
+                    float minSph = Math.min(sphL, sphR);
+                    if (minSph <= -6.0) severity = "SEVERE";
+                    else if (minSph <= -3.0) severity = "MODERATE";
+                    else if (minSph < -0.5) severity = "MILD";
+                    
+                    studentMap.put("severity", severity);
+                    students.add(studentMap);
+                }
+                
+                classMap.put("students", students);
+                classes.add(classMap);
+            }
+            
+            schoolMap.put("classes", classes);
+            schools.add(schoolMap);
+        }
+        
+        return schools;
     }
 
     private CellStyle createLightGreenHeaderStyle(Workbook wb) {

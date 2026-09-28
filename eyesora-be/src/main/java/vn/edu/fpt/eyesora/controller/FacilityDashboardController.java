@@ -3,6 +3,7 @@ package vn.edu.fpt.eyesora.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import vn.edu.fpt.eyesora.dto.response.FacilityGradeMyopiaResponse;
 import vn.edu.fpt.eyesora.dto.response.FacilitySelectResponse;
 import vn.edu.fpt.eyesora.dto.response.FacilitySummaryResponse;
@@ -11,6 +12,7 @@ import vn.edu.fpt.eyesora.service.IFacilityDashboardService;
 
 import java.util.List;
 
+@PreAuthorize("hasRole('FACILITY_ADMIN')")
 @RestController
 @RequestMapping("/api/dashboard/facility")
 @RequiredArgsConstructor

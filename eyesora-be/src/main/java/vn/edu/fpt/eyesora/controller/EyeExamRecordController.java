@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.fpt.eyesora.dto.request.EyeExamRecordRequest;
 import vn.edu.fpt.eyesora.dto.request.EyeExamRecordUpdateRequest;
@@ -18,6 +19,7 @@ import vn.edu.fpt.eyesora.service.IEyeExamRecordService;
 
 import java.util.List;
 
+@PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'EXAMINER')")
 @RestController
 @RequestMapping("/api/eye-exam-records")
 @RequiredArgsConstructor

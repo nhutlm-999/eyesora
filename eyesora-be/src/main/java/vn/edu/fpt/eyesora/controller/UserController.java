@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import vn.edu.fpt.eyesora.dto.request.ChangePasswordRequest;
 import vn.edu.fpt.eyesora.dto.request.UserCreateRequest;
 import vn.edu.fpt.eyesora.dto.request.UserStatusRequest;
@@ -18,6 +19,7 @@ import vn.edu.fpt.eyesora.service.IUserService;
 
 import java.security.Principal;
 
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor

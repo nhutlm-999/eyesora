@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import vn.edu.fpt.eyesora.dto.request.CampaignRequest;
 import vn.edu.fpt.eyesora.dto.response.CampaignResponse;
 import vn.edu.fpt.eyesora.service.ICampaignService;
@@ -15,6 +16,7 @@ import vn.edu.fpt.eyesora.service.IPatientService;
 import java.util.List;
 import java.util.Map;
 
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/api/campaigns")
 @RequiredArgsConstructor

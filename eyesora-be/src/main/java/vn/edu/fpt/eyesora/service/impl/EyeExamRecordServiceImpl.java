@@ -18,7 +18,6 @@ import vn.edu.fpt.eyesora.dto.response.ExcelImportResponse;
 import vn.edu.fpt.eyesora.dto.response.EyeExamRecordResponse;
 import vn.edu.fpt.eyesora.dto.response.RowError;
 import vn.edu.fpt.eyesora.entity.*;
-import vn.edu.fpt.eyesora.exceptions.BusinessException;
 import vn.edu.fpt.eyesora.exceptions.ResourceNotFoundException;
 import vn.edu.fpt.eyesora.repository.*;
 import vn.edu.fpt.eyesora.service.IEyeExamRecordService;
@@ -36,9 +35,25 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
 
+    private void checkExamRecordOwnership(EyeExamRecord record) {
+        vn.edu.fpt.eyesora.entity.User currentUser = vn.edu.fpt.eyesora.util.SecurityUtil.getCurrentUser();
+        boolean isFacilityAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("FACILITY_ADMIN"));
+        if (isFacilityAdmin) {
+            if (currentUser.getFacility() == null || 
+                record.getClassesField() == null || 
+                record.getClassesField().getFacility() == null ||
+                !currentUser.getFacility().getId().equals(record.getClassesField().getFacility().getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Không có quyền truy cập hồ sơ này");
+            }
+        }
+    }
+
+
     private static final DateTimeFormatter DATE_FORMATTER = new DateTimeFormatterBuilder()
             .appendPattern("dd/MM/yyyy")
             .toFormatter();
+    ;
     private final EyeExamRecordRepository eyeExamRecordRepository;
     private final CampaignRepository campaignRepository;
     private final ClassesRepository classesRepository;
@@ -46,7 +61,6 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
     private final UserRepository userRepository;
     private final FacilityRepository facilityRepository;
     private final WardRepository wardRepository;
-    private final ClassEnrollmentRepository classEnrollmentRepository;
 
     @Override
     @Transactional
@@ -143,6 +157,7 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
         entity.setVaRightWithGlasses(request.vaRightWithGlasses());
         entity.setPdLeft(request.pdLeft());
         entity.setPdRight(request.pdRight());
+        entity.setFollowupDate(request.followupDate());
 
         EyeExamRecord updatedEntity = eyeExamRecordRepository.save(entity);
 
@@ -220,14 +235,6 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
 
             newPatient.setIsDeleted(false);
             patient = patientRepository.save(newPatient);
-
-            if (patientClass != null) {
-                ClassEnrollment enrollment = new ClassEnrollment();
-                enrollment.setPatient(patient);
-                enrollment.setClasses(patientClass);
-                enrollment.setStatus(ClassEnrollment.EnrollmentStatus.ACTIVE);
-                classEnrollmentRepository.save(enrollment);
-            }
         }
 
         entity.setPatient(patient);
@@ -248,6 +255,7 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
         entity.setVaRightWithGlasses(request.vaRightWithGlasses());
         entity.setPdLeft(request.pdLeft());
         entity.setPdRight(request.pdRight());
+        entity.setFollowupDate(request.followupDate());
 
         EyeExamRecord savedEntity = eyeExamRecordRepository.save(entity);
 
@@ -283,31 +291,25 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
     @Override
     @Transactional
     public ExcelImportResponse importExamRecordsFromExcel(MultipartFile file, String campaignId, String examinerId, String facilityId) {
+        vn.edu.fpt.eyesora.entity.User currentUser = vn.edu.fpt.eyesora.util.SecurityUtil.getCurrentUser();
+        boolean isFacilityAdmin = currentUser.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("FACILITY_ADMIN"));
+        if (isFacilityAdmin && currentUser.getFacility() != null) { facilityId = currentUser.getFacility().getId(); }
+
         List<RowError> errorList = new ArrayList<>();
         List<EyeExamRecord> recordsToSave = new ArrayList<>();
         int totalRows = 0;
 
+        String finalFacilityId = facilityId;
         // 1. Kiểm tra và lấy Facility
-        if (facilityId == null || facilityId.isBlank()) {
+        if (finalFacilityId == null || finalFacilityId.isBlank()) {
             throw new IllegalArgumentException("Mã cơ sở (Facility ID) không được để trống.");
         }
-        Facility facility = facilityRepository.findById(facilityId)
-                .orElseThrow(() -> new NoSuchElementException("Không tìm thấy cơ sở/trường học với ID: " + facilityId));
+        Facility facility = facilityRepository.findById(finalFacilityId)
+                .orElseThrow(() -> new NoSuchElementException("Không tìm thấy cơ sở/trường học với ID: " + finalFacilityId));
 
-        // 2. Kiểm tra và lấy Campaign
-        if (campaignId == null || campaignId.isBlank()) {
-            throw new IllegalArgumentException("Mã chiến dịch (Campaign ID) không được để trống.");
-        }
-        ExamCampaign campaign = campaignRepository.findById(campaignId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chiến dịch với ID: " + campaignId));
-
-        if (campaign.getStatus() == ExamCampaign.CampaignStatus.LOCKED) {
-            throw new BusinessException("Chiến dịch đã bị khóa, không thể import hồ sơ khám!");
-        }
-
-        User examiner = (examinerId != null && !examinerId.isBlank())
-                ? userRepository.findById(examinerId).orElse(null)
-                : null;
+        // 2. Khởi tạo campagin & examiner
+        ExamCampaign campaign = campaignId != null ? campaignRepository.findById(campaignId).orElse(null) : null;
+        User examiner = examinerId != null ? userRepository.findById(examinerId).orElse(null) : null;
 
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -386,45 +388,33 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
                                                List<String> localErrors) {
 
         // 1. XỬ LÝ LỚP HỌC THEO CƠ SỞ
-        String className = getCellValueAsString(row.getCell(3)).trim();
+        String className = getCellValueAsString(row.getCell(3));
         if (className.isEmpty()) {
             localErrors.add("Tên lớp (Class Name) không được để trống");
             return null;
         }
 
-        String classCacheKey = className.toUpperCase();
-        Classes clazz = classCache.get(classCacheKey);
+        Classes clazz = classCache.get(className);
         if (clazz == null) {
-            clazz = classesRepository.findByClassNameIgnoreCaseAndFacilityAndIsDeletedFalse(className, facility)
-                    .orElseGet(() -> classesRepository.findByClassNameAndFacility(className, facility).orElse(null));
+            clazz = classesRepository.findByClassNameAndFacility(className, facility).orElse(null);
 
             if (clazz == null) {
                 Classes newClass = new Classes();
                 newClass.setClassName(className);
                 newClass.setFacility(facility);
-                newClass.setDeleted(false);
 
                 try {
-                    // Trích xuất số khối lớp (grade) từ tên lớp (ví dụ: "10A1" -> 10, "Lớp 6/2" -> 6)
-                    Matcher matcher = Pattern.compile("\\d+").matcher(className);
-                    if (matcher.find()) {
-                        newClass.setGrade(Integer.parseInt(matcher.group()));
-                    } else {
-                        newClass.setGrade(null);
-                    }
+                    // Lấy tất cả các chữ số đầu tiên của tên lớp (Ví dụ: "10A1" -> "10", "6B" -> "6")
+                    String gradeNumbers = className.replaceAll("^(\\d+).*$", "$1");
+                    newClass.setGrade(Integer.parseInt(gradeNumbers));
                 } catch (Exception e) {
-                    newClass.setGrade(null);
+                    newClass.setGrade(99); // Đặt một giá trị mặc định tạm thời để không bị lỗi NOT NULL
                 }
-
-                if (campaign.getFacilityYear() != null && !campaign.getFacilityYear().isBlank()) {
-                    newClass.setSchoolYear(campaign.getFacilityYear());
-                } else {
-                    newClass.setSchoolYear(newClass.calculateSchoolYear());
-                }
+//                newClass.updateSchoolYear();
 
                 clazz = classesRepository.save(newClass);
             }
-            classCache.put(classCacheKey, clazz);
+            classCache.put(className, clazz);
         }
 
         // 2. XỬ LÝ THÔNG TIN BỆNH NHAN
@@ -437,9 +427,9 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
         }
 
         Patient.Gender gender = Patient.Gender.OTHER;
-        if (genderStr.equalsIgnoreCase("1") || genderStr.equalsIgnoreCase("nam") || genderStr.equalsIgnoreCase("m") || genderStr.equalsIgnoreCase("male")) {
+        if (genderStr.equalsIgnoreCase("1") || genderStr.equalsIgnoreCase("nam")) {
             gender = Patient.Gender.MALE;
-        } else if (genderStr.equalsIgnoreCase("0") || genderStr.equalsIgnoreCase("nữ") || genderStr.equalsIgnoreCase("nu") || genderStr.equalsIgnoreCase("f") || genderStr.equalsIgnoreCase("female")) {
+        } else if (genderStr.equalsIgnoreCase("0") || genderStr.equalsIgnoreCase("nữ")) {
             gender = Patient.Gender.FEMALE;
         }
 
@@ -460,23 +450,8 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
                 newPatient.setIsDeleted(false);
 //                newPatient.setExamCampaign(campaign);
                 patient = patientRepository.save(newPatient);
-
-                ClassEnrollment enrollment = new ClassEnrollment();
-                enrollment.setPatient(patient);
-                enrollment.setClasses(clazz);
-                enrollment.setStatus(ClassEnrollment.EnrollmentStatus.ACTIVE);
-                classEnrollmentRepository.save(enrollment);
             }
             patientCache.put(patientCacheKey, patient);
-        }
-        else {
-            if (!classEnrollmentRepository.existsByPatient_PatientIdAndClasses_Id(patient.getPatientId(), clazz.getId())) {
-                ClassEnrollment enrollment = new ClassEnrollment();
-                enrollment.setPatient(patient);
-                enrollment.setClasses(clazz);
-                enrollment.setStatus(ClassEnrollment.EnrollmentStatus.ACTIVE);
-                classEnrollmentRepository.save(enrollment);
-            }
         }
 
         // 3. KHỞI TẠO HOẶC CẬP NHẬT RECORD
@@ -491,14 +466,10 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
             record.setCampaign(campaign);
             record.setPatient(patient);
             record.setClassesField(clazz);
-            record.setExaminer(examiner);
             record.setIsDeleted(false);
         } else {
             // Nếu đã tồn tại và bạn muốn cho phép ghi đè/cập nhật,
             record.setClassesField(clazz);
-            if (examiner != null) {
-                record.setExaminer(examiner);
-            }
         }
 
         record.setExamDate(LocalDate.now());
@@ -760,6 +731,18 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
             facilityName = entity.getClassesField().getFacility().getFacilityName(); // Đổi thành .getName() nếu biến là name
         }
 
+        String severity = "NORMAL";
+        float sphL = entity.getSphLeft() != null ? entity.getSphLeft() : 0;
+        float sphR = entity.getSphRight() != null ? entity.getSphRight() : 0;
+        float minSph = Math.min(sphL, sphR);
+        if (minSph <= -6.0) {
+            severity = "SEVERE";
+        } else if (minSph <= -3.0) {
+            severity = "MODERATE";
+        } else if (minSph < -0.5) {
+            severity = "MILD";
+        }
+
         return EyeExamRecordResponse.builder()
                 .examId(entity.getExamId())
                 .examDate(entity.getExamDate())
@@ -787,7 +770,8 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
                 .axisRight(entity.getAxisRight())
                 .pdLeft(entity.getPdLeft())
                 .pdRight(entity.getPdRight())
-
+                .followupDate(entity.getFollowupDate())
+                .severity(severity)
                 .build();
     }
 

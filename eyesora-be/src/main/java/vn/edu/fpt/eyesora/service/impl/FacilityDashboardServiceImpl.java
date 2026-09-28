@@ -19,6 +19,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FacilityDashboardServiceImpl implements IFacilityDashboardService {
 
+    private void checkFacilityOwnership(String facilityId) {
+        vn.edu.fpt.eyesora.entity.User currentUser = vn.edu.fpt.eyesora.util.SecurityUtil.getCurrentUser();
+        boolean isFacilityAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("FACILITY_ADMIN"));
+        if (isFacilityAdmin) {
+            if (currentUser.getFacility() == null || !currentUser.getFacility().getId().equals(facilityId)) {
+                throw new org.springframework.security.access.AccessDeniedException("Không có quyền truy cập dữ liệu của cơ sở này");
+            }
+        }
+    }
+
+
     private final EyeExamRecordRepository eyeExamRecordRepository;
 
     @Override
@@ -35,6 +47,7 @@ public class FacilityDashboardServiceImpl implements IFacilityDashboardService {
     @Override
     @Transactional(readOnly = true)
     public List<FacilityGradeMyopiaResponse> getFacilityGradeStats(String facilityId) {
+        checkFacilityOwnership(facilityId);
         List<EyeExamRecord> records = eyeExamRecordRepository.findByIsDeletedFalse().stream()
                 .filter(e -> e.getClassesField() != null
                         && e.getClassesField().getFacility() != null
@@ -66,6 +79,7 @@ public class FacilityDashboardServiceImpl implements IFacilityDashboardService {
     @Override
     @Transactional(readOnly = true)
     public FacilitySummaryResponse getFacilitySummary(String facilityId) {
+        checkFacilityOwnership(facilityId);
         List<EyeExamRecord> records = eyeExamRecordRepository.findByIsDeletedFalse().stream()
                 .filter(e -> e.getClassesField() != null
                         && e.getClassesField().getFacility() != null
@@ -95,6 +109,7 @@ public class FacilityDashboardServiceImpl implements IFacilityDashboardService {
     @Override
     @Transactional(readOnly = true)
     public List<FacilityAlertRecordResponse> getFacilityAlertRecords(String facilityId) {
+        checkFacilityOwnership(facilityId);
         return eyeExamRecordRepository.findByIsDeletedFalse().stream()
                 .filter(e -> e.getClassesField() != null
                         && e.getClassesField().getFacility() != null

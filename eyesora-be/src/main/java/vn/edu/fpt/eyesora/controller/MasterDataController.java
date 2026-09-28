@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import vn.edu.fpt.eyesora.dto.request.*;
 import vn.edu.fpt.eyesora.dto.response.*;
@@ -15,6 +16,7 @@ import vn.edu.fpt.eyesora.service.IAddressService;
 import vn.edu.fpt.eyesora.service.IClassesService;
 import vn.edu.fpt.eyesora.service.IFacilityService;
 
+@PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'EXAMINER')")
 @RestController
 @RequestMapping("/api/master-data")
 @RequiredArgsConstructor

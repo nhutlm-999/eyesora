@@ -6,13 +6,17 @@ import org.springframework.data.domain.Page;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
+import java.time.LocalDate;
+
 public interface IDashboardService {
-    DashboardSummaryResponse getSummaryCounters();
-    List<GradeMyopiaResponse> getGradeStats();
-//    List<MyopiaTimelineResponse> getMyopiaTimeline();
-    List<FacilityMyopiaResponse> getFacilityStats();
+    DashboardSummaryResponse getSummaryCounters(LocalDate startDate, LocalDate endDate, String campaignId);
+    List<GradeMyopiaResponse> getGradeStats(LocalDate startDate, LocalDate endDate, String campaignId);
+    List<MyopiaTimelineResponse> getMyopiaTimeline(LocalDate startDate, LocalDate endDate, String campaignId);
+    List<FacilityMyopiaResponse> getFacilityStats(LocalDate startDate, LocalDate endDate, String campaignId);
+    
+    Object getDrillDown(LocalDate startDate, LocalDate endDate, String campaignId);
 
-    ByteArrayInputStream  exportDashboardReport();
+    ByteArrayInputStream exportDashboardReport();
 
-    Page<EyeExamRecordResponse> getCriticalAlerts(String statusFilter, Pageable pageable);
+    Page<EyeExamRecordResponse> getCriticalAlerts(String statusFilter, LocalDate startDate, LocalDate endDate, String campaignId, Pageable pageable);
 }

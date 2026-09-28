@@ -67,6 +67,8 @@ public record EyeExamRecordRequest(
         Float vaRightWithGlasses,
 
         String pdLeft,
-        String pdRight
+        String pdRight,
+        
+        LocalDate followupDate
 ) {
 }

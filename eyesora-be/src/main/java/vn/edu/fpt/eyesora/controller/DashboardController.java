@@ -17,7 +17,9 @@ import org.springframework.data.domain.Page;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
+@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/api/dashboard")
 @RequiredArgsConstructor
@@ -26,23 +28,35 @@ public class DashboardController {
     private final IDashboardService dashboardService;
 
     @GetMapping("/counters")
-    public ResponseEntity<DashboardSummaryResponse> getSummaryCounters() {
-        return ResponseEntity.ok(dashboardService.getSummaryCounters());
+    public ResponseEntity<DashboardSummaryResponse> getSummaryCounters(
+            @RequestParam(required = false) java.time.LocalDate startDate,
+            @RequestParam(required = false) java.time.LocalDate endDate,
+            @RequestParam(required = false) String campaignId) {
+        return ResponseEntity.ok(dashboardService.getSummaryCounters(startDate, endDate, campaignId));
     }
 
     @GetMapping("/grade-stats")
-    public ResponseEntity<List<GradeMyopiaResponse>> getGradeStats() {
-        return ResponseEntity.ok(dashboardService.getGradeStats());
+    public ResponseEntity<List<GradeMyopiaResponse>> getGradeStats(
+            @RequestParam(required = false) java.time.LocalDate startDate,
+            @RequestParam(required = false) java.time.LocalDate endDate,
+            @RequestParam(required = false) String campaignId) {
+        return ResponseEntity.ok(dashboardService.getGradeStats(startDate, endDate, campaignId));
     }
 
-//    @GetMapping("/myopia-timeline")
-//    public ResponseEntity<List<MyopiaTimelineResponse>> getMyopiaTimeline() {
-//        return ResponseEntity.ok(dashboardService.getMyopiaTimeline());
-//    }
+    @GetMapping("/myopia-timeline")
+    public ResponseEntity<List<MyopiaTimelineResponse>> getMyopiaTimeline(
+            @RequestParam(required = false) java.time.LocalDate startDate,
+            @RequestParam(required = false) java.time.LocalDate endDate,
+            @RequestParam(required = false) String campaignId) {
+        return ResponseEntity.ok(dashboardService.getMyopiaTimeline(startDate, endDate, campaignId));
+    }
 
     @GetMapping("/facility-stats")
-    public ResponseEntity<List<FacilityMyopiaResponse>> getFacilityStats() {
-        return ResponseEntity.ok(dashboardService.getFacilityStats());
+    public ResponseEntity<List<FacilityMyopiaResponse>> getFacilityStats(
+            @RequestParam(required = false) java.time.LocalDate startDate,
+            @RequestParam(required = false) java.time.LocalDate endDate,
+            @RequestParam(required = false) String campaignId) {
+        return ResponseEntity.ok(dashboardService.getFacilityStats(startDate, endDate, campaignId));
     }
 
     @GetMapping("/export/city")
@@ -59,10 +73,21 @@ public class DashboardController {
     @GetMapping("/critical-alerts")
     public ResponseEntity<Page<EyeExamRecordResponse>> getCriticalAlerts(
             @RequestParam(defaultValue = "ALL") String statusFilter,
+            @RequestParam(required = false) java.time.LocalDate startDate,
+            @RequestParam(required = false) java.time.LocalDate endDate,
+            @RequestParam(required = false) String campaignId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
 
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-        return ResponseEntity.ok(dashboardService.getCriticalAlerts(statusFilter, pageable));
+        return ResponseEntity.ok(dashboardService.getCriticalAlerts(statusFilter, startDate, endDate, campaignId, pageable));
+    }
+
+    @GetMapping("/drilldown")
+    public ResponseEntity<?> getDrillDown(
+            @RequestParam(required = false) java.time.LocalDate startDate,
+            @RequestParam(required = false) java.time.LocalDate endDate,
+            @RequestParam(required = false) String campaignId) {
+        return ResponseEntity.ok(dashboardService.getDrillDown(startDate, endDate, campaignId));
     }
 }
