@@ -125,6 +125,7 @@ public class ClassesServiceImpl implements IClassesService {
             return new PatientResponse(
                     p.getPatientId(),
                     p.getPatientName(),
+                    cls.getClassName(),
                     p.getFacility() != null ? p.getFacility().getId() : null,
                     p.getFacility() != null ? p.getFacility().getFacilityName() : null,
                     p.getDob(),

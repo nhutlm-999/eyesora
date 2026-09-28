@@ -8,7 +8,7 @@ public record PatientResponse(
         String patientName,
 
 //        String classId,
-//        String className,
+        String className,
 
         String facilityId,
         String facilityName,
