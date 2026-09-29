@@ -60,29 +60,32 @@ const ResetPasswordPage = () => {
         }
     };
 
-    const labelStyle = `text-xs font-bold text-slate-600 uppercase tracking-wider mb-1 block`;
-    const inputStyle = `block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl font-medium text-sm text-gray-800 placeholder-gray-400 bg-gray-50/50 focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900 focus:bg-white transition-all`;
+    const labelStyle = `text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block`;
+    const inputStyle = `block w-full pl-11 pr-4 py-2.5 border border-gray-300 rounded-xl font-semibold text-xs text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-[#004194] transition-all shadow-xs`;
 
     return (
-        <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center p-4 font-sans text-gray-950">
             <div className="bg-white border border-gray-200 rounded-2xl shadow-xl w-full max-w-md p-6 md:p-8">
 
                 <button
                     onClick={() => navigate('/forgot-password')}
-                    className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-blue-900 mb-6 transition-colors cursor-pointer"
+                    className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-[#004194] mb-6 transition-colors cursor-pointer"
                 >
                     <ArrowLeft size={14} /> <span>Quay lại nhập Email</span>
                 </button>
 
                 <div className="text-center mb-6">
-                    <h2 className="text-xl font-black text-blue-900 uppercase tracking-tight">Đặt lại mật khẩu mới</h2>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                        <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-l from-blue-500 to-[#004194] shadow-xs"></span>
+                        <h2 className="text-xl font-black text-gray-900 tracking-tight">Đặt lại mật khẩu mới</h2>
+                    </div>
+                    <p className="text-xs font-medium text-gray-500 mt-1">
                         {emailParam ? `Thiết lập mật khẩu mới cho tài khoản: ${emailParam}` : "Vui lòng nhập mật khẩu mới để bảo mật tài khoản của bạn"}
                     </p>
                 </div>
 
                 {errors.server && (
-                    <div className="mb-4 p-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-semibold flex items-start gap-2 animate-fade-in">
+                    <div className="mb-4 p-3.5 bg-rose-50/80 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold flex items-start gap-2 shadow-xs animate-fade-in">
                         <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
                         <span>{errors.server}</span>
                     </div>
@@ -94,7 +97,7 @@ const ResetPasswordPage = () => {
                     <div>
                         <label className={labelStyle}>Mật khẩu mới (*)</label>
                         <div className="relative group">
-                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-900 transition-colors">
+                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#004194] transition-colors">
                                 <Lock size={18} />
                             </div>
                             <input
@@ -102,18 +105,18 @@ const ResetPasswordPage = () => {
                                 value={resetData.newPassword}
                                 disabled={!tokenParam}
                                 onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
-                                className={`${inputStyle} ${errors.newPassword ? 'border-red-400 focus:ring-red-200' : ''} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className={`${inputStyle} ${errors.newPassword ? 'border-rose-500 focus:ring-rose-200' : ''} disabled:opacity-50 disabled:cursor-not-allowed`}
                                 placeholder="Từ 8-50 ký tự, đầy đủ định dạng"
                             />
                         </div>
-                        {errors.newPassword && <p className="text-red-500 text-xs font-medium mt-1.5">{errors.newPassword}</p>}
+                        {errors.newPassword && <p className="text-rose-600 text-xs font-bold mt-1.5 pl-1">{errors.newPassword}</p>}
                     </div>
 
                     {/* Confirm Password Field */}
                     <div>
                         <label className={labelStyle}>Xác nhận mật khẩu mới (*)</label>
                         <div className="relative group">
-                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-900 transition-colors">
+                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#004194] transition-colors">
                                 <KeyRound size={18} />
                             </div>
                             <input
@@ -121,17 +124,17 @@ const ResetPasswordPage = () => {
                                 value={resetData.confirmPassword}
                                 disabled={!tokenParam}
                                 onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
-                                className={`${inputStyle} ${errors.confirmPassword ? 'border-red-400 focus:ring-red-200' : ''} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className={`${inputStyle} ${errors.confirmPassword ? 'border-rose-500 focus:ring-rose-200' : ''} disabled:opacity-50 disabled:cursor-not-allowed`}
                                 placeholder="Nhập lại mật khẩu giống hệt phía trên"
                             />
                         </div>
-                        {errors.confirmPassword && <p className="text-red-500 text-xs font-medium mt-1.5">{errors.confirmPassword}</p>}
+                        {errors.confirmPassword && <p className="text-rose-600 text-xs font-bold mt-1.5 pl-1">{errors.confirmPassword}</p>}
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading || !tokenParam}
-                        className="w-full py-3 bg-blue-900 text-white font-bold text-sm rounded-xl shadow-md hover:bg-blue-800 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 bg-gradient-to-l from-blue-500 to-[#004194] text-white font-semibold text-xs rounded-xl shadow-md hover:from-blue-600 hover:to-blue-900 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {loading && <RefreshCw className="w-4 h-4 animate-spin" />}
                         <span>Xác nhận đổi mật khẩu</span>

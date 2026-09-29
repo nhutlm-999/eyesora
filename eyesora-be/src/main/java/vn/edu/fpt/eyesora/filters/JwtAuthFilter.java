@@ -32,13 +32,32 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     HttpServletResponse res,
                                     FilterChain chain) throws ServletException, IOException {
 
-        String header = req.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ")) {
+
+        
+        String path = req.getRequestURI();
+        if (path.startsWith("/api/auth/") && !path.equals("/api/auth/me") && !path.equals("/api/auth/logout")) {
             chain.doFilter(req, res);
             return;
         }
 
-        String token = header.substring(7);
+        String token = null;
+        String header = req.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            token = header.substring(7);
+        } else if (req.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie c : req.getCookies()) {
+                if ("accessToken".equals(c.getName())) {
+                    token = c.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (token == null) {
+            chain.doFilter(req, res);
+            return;
+        }
+
 
         try {
             String username = jwtUtil.extractUsername(token);
@@ -47,7 +66,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails user = userDetailsService.loadUserByUsername(username);
-                System.out.println("Load Ok: " + user.getUsername() + " - " + user.getAuthorities());
+                
 
                 if (jwtUtil.isValid(token, user)) {
                     var auth = new UsernamePasswordAuthenticationToken(

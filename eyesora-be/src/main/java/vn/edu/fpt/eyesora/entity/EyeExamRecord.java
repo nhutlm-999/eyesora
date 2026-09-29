@@ -114,4 +114,7 @@ public class EyeExamRecord {
     @ColumnDefault("0")
     @Column(name = "is_deleted")
     private Boolean isDeleted;
+
+    @Column(name = "followup_date")
+    private LocalDate followupDate;
 }

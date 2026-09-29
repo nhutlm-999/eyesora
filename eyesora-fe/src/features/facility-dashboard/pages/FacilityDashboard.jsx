@@ -143,17 +143,20 @@ const FacilityDashboard = () => {
     };
 
     return (
-        <div className="p-6 bg-[#f5f7fa] h-full overflow-y-auto text-gray-950">
+        <div className="p-6 bg-[#f5f7fa] h-full overflow-y-auto text-gray-950 scrollbar-thin">
             {/* Bộ lọc Select Box chọn trường */}
             <div
-                className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
+                className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white border border-gray-200 p-6 rounded-2xl shadow-sm">
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900">Báo cáo Thống kê theo Cơ sở</h1>
-                    {/*<p className="text-xs text-gray-500">Chọn cơ sở giáo dục có trong hệ thống để xem dữ liệu phân tích</p>*/}
+                    <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2.5">
+                        <span className="w-3 h-3 rounded-full bg-gradient-to-l from-blue-500 to-[#004194] shadow-xs"></span>
+                        Báo cáo Thống kê theo Cơ sở
+                    </h1>
+                    <p className="text-xs text-gray-500 mt-0.5">Dữ liệu tổng quan và chi tiết phân tích tật khúc xạ của trường học</p>
                 </div>
                 <div className="w-full sm:w-80">
                     <select
-                        className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#004194] focus:border-[#004194] p-2.5 outline-none font-semibold transition-all cursor-pointer"
+                        className="w-full bg-white border border-gray-300 text-gray-800 text-xs font-semibold rounded-xl focus:ring-2 focus:ring-blue-900/20 focus:border-[#004194] p-2.5 outline-none transition-all cursor-pointer shadow-xs disabled:bg-gray-100 disabled:cursor-not-allowed"
                         value={selectedFacilityId}
                         onChange={(e) => setSelectedFacilityId(e.target.value)}
                         disabled={isFacilityAdmin}

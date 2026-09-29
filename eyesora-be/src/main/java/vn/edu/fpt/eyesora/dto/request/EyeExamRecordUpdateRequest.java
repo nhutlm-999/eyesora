@@ -55,8 +55,9 @@ public record EyeExamRecordUpdateRequest(
 
         // ===== KCĐT =====
         String pdLeft,
-
-        String pdRight
+        String pdRight,
+        
+        java.time.LocalDate followupDate
 
 ) {
 }

@@ -35,6 +35,21 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
 
+    private void checkExamRecordOwnership(EyeExamRecord record) {
+        vn.edu.fpt.eyesora.entity.User currentUser = vn.edu.fpt.eyesora.util.SecurityUtil.getCurrentUser();
+        boolean isFacilityAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("FACILITY_ADMIN"));
+        if (isFacilityAdmin) {
+            if (currentUser.getFacility() == null || 
+                record.getClassesField() == null || 
+                record.getClassesField().getFacility() == null ||
+                !currentUser.getFacility().getId().equals(record.getClassesField().getFacility().getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Không có quyền truy cập hồ sơ này");
+            }
+        }
+    }
+
+
     private static final DateTimeFormatter DATE_FORMATTER = new DateTimeFormatterBuilder()
             .appendPattern("dd/MM/yyyy")
             .toFormatter();
@@ -142,6 +157,7 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
         entity.setVaRightWithGlasses(request.vaRightWithGlasses());
         entity.setPdLeft(request.pdLeft());
         entity.setPdRight(request.pdRight());
+        entity.setFollowupDate(request.followupDate());
 
         EyeExamRecord updatedEntity = eyeExamRecordRepository.save(entity);
 
@@ -239,6 +255,7 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
         entity.setVaRightWithGlasses(request.vaRightWithGlasses());
         entity.setPdLeft(request.pdLeft());
         entity.setPdRight(request.pdRight());
+        entity.setFollowupDate(request.followupDate());
 
         EyeExamRecord savedEntity = eyeExamRecordRepository.save(entity);
 
@@ -274,16 +291,21 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
     @Override
     @Transactional
     public ExcelImportResponse importExamRecordsFromExcel(MultipartFile file, String campaignId, String examinerId, String facilityId) {
+        vn.edu.fpt.eyesora.entity.User currentUser = vn.edu.fpt.eyesora.util.SecurityUtil.getCurrentUser();
+        boolean isFacilityAdmin = currentUser.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("FACILITY_ADMIN"));
+        if (isFacilityAdmin && currentUser.getFacility() != null) { facilityId = currentUser.getFacility().getId(); }
+
         List<RowError> errorList = new ArrayList<>();
         List<EyeExamRecord> recordsToSave = new ArrayList<>();
         int totalRows = 0;
 
+        String finalFacilityId = facilityId;
         // 1. Kiểm tra và lấy Facility
-        if (facilityId == null || facilityId.isBlank()) {
+        if (finalFacilityId == null || finalFacilityId.isBlank()) {
             throw new IllegalArgumentException("Mã cơ sở (Facility ID) không được để trống.");
         }
-        Facility facility = facilityRepository.findById(facilityId)
-                .orElseThrow(() -> new NoSuchElementException("Không tìm thấy cơ sở/trường học với ID: " + facilityId));
+        Facility facility = facilityRepository.findById(finalFacilityId)
+                .orElseThrow(() -> new NoSuchElementException("Không tìm thấy cơ sở/trường học với ID: " + finalFacilityId));
 
         // 2. Khởi tạo campagin & examiner
         ExamCampaign campaign = campaignId != null ? campaignRepository.findById(campaignId).orElse(null) : null;
@@ -709,6 +731,18 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
             facilityName = entity.getClassesField().getFacility().getFacilityName(); // Đổi thành .getName() nếu biến là name
         }
 
+        String severity = "NORMAL";
+        float sphL = entity.getSphLeft() != null ? entity.getSphLeft() : 0;
+        float sphR = entity.getSphRight() != null ? entity.getSphRight() : 0;
+        float minSph = Math.min(sphL, sphR);
+        if (minSph <= -6.0) {
+            severity = "SEVERE";
+        } else if (minSph <= -3.0) {
+            severity = "MODERATE";
+        } else if (minSph < -0.5) {
+            severity = "MILD";
+        }
+
         return EyeExamRecordResponse.builder()
                 .examId(entity.getExamId())
                 .examDate(entity.getExamDate())
@@ -736,7 +770,8 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
                 .axisRight(entity.getAxisRight())
                 .pdLeft(entity.getPdLeft())
                 .pdRight(entity.getPdRight())
-
+                .followupDate(entity.getFollowupDate())
+                .severity(severity)
                 .build();
     }
 

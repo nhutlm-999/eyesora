@@ -125,30 +125,30 @@ const PatientFormPage = () => {
         }
     };
 
-    const inputStyle = `w-full border border-gray-200 bg-white p-3 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900 transition-all text-sm outline-none`;
-    const labelStyle = `text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block`;
+    const inputStyle = `w-full border border-gray-300 bg-white px-4 py-2.5 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-[#004194] transition-all text-sm shadow-xs placeholder:text-gray-400 placeholder:font-normal`;
+    const labelStyle = `text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block`;
 
     if (pageLoading) {
         return (
             <div className="p-6 flex items-center justify-center h-full">
-                <p className="text-gray-500 font-medium">Đang tải dữ liệu hồ sơ...</p>
+                <p className="text-gray-500 font-semibold text-sm">Đang tải dữ liệu hồ sơ...</p>
             </div>
         );
     }
 
     return (
-        <div className="p-6 bg-[#f5f7fa] h-full overflow-y-auto scrollbar-thin">
+        <div className="p-6 bg-[#f5f7fa] h-full overflow-y-auto scrollbar-thin text-gray-950">
             <div className="flex items-center gap-3 mb-6 w-full">
-                <button onClick={() => navigate('/patients')} className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-blue-900 shadow-sm transition-colors cursor-pointer flex items-center justify-center">
+                <button onClick={() => navigate('/patients')} className="p-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-blue-900 shadow-xs transition-colors cursor-pointer flex items-center justify-center">
                     <ArrowLeft size={18} />
                 </button>
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900">{isEditMode ? "Chỉnh sửa hồ sơ học sinh" : "Thêm mới hồ sơ học sinh"}</h1>
+                    <h1 className="text-xl font-bold text-gray-900">{isEditMode ? "Chỉnh sửa hồ sơ học sinh" : "Thêm mới hồ sơ học sinh"}</h1>
                     <p className="text-xs text-gray-500">Quản lý và cập nhật thông tin y tế khúc xạ</p>
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm w-full p-6 md:p-8">
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm w-full p-6 md:p-8 max-w-4xl">
                 {errors.server && (
                     <div className="mb-6 p-4 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-bold flex items-center gap-2 w-full">
                         <AlertCircle size={16} />
@@ -232,8 +232,8 @@ const PatientFormPage = () => {
                     </div>
 
                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-8 w-full">
-                        <button type="button" onClick={() => navigate('/patients')} className="px-6 py-2.5 border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-all rounded-xl text-sm cursor-pointer">Hủy bỏ</button>
-                        <button type="submit" className="px-8 py-2.5 bg-blue-900 text-white font-bold hover:bg-blue-800 active:scale-95 transition-all rounded-xl text-sm shadow-sm cursor-pointer">Lưu hồ sơ bệnh nhân</button>
+                        <button type="button" onClick={() => navigate('/patients')} className="px-6 py-2.5 border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-all rounded-xl text-xs cursor-pointer">Hủy bỏ</button>
+                        <button type="submit" className="px-8 py-2.5 bg-gradient-to-l from-blue-500 to-[#004194] text-white font-semibold hover:from-blue-600 hover:to-blue-900 active:scale-95 transition-all rounded-xl text-xs cursor-pointer shadow-sm">Lưu hồ sơ bệnh nhân</button>
                     </div>
                 </form>
             </div>

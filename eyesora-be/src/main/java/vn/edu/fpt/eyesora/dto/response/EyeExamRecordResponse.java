@@ -33,5 +33,8 @@ public record EyeExamRecordResponse(
         Float sphRight,
         Float cylRight,
         Integer axisRight,
-        String pdRight
+        String pdRight,
+        
+        LocalDate followupDate,
+        String severity
 ){}

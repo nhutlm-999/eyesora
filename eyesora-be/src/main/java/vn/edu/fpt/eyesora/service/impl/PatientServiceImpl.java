@@ -34,6 +34,20 @@ import java.util.stream.Collectors;
 @Transactional
 public class PatientServiceImpl implements IPatientService {
 
+    private void checkPatientOwnership(Patient patient) {
+        vn.edu.fpt.eyesora.entity.User currentUser = vn.edu.fpt.eyesora.util.SecurityUtil.getCurrentUser();
+        boolean isFacilityAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("FACILITY_ADMIN"));
+        if (isFacilityAdmin) {
+            if (currentUser.getFacility() == null || 
+                patient.getFacility() == null ||
+                !currentUser.getFacility().getId().equals(patient.getFacility().getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Không có quyền truy cập bệnh nhân này");
+            }
+        }
+    }
+
+
     private final PatientRepository patientRepository;
     private final CampaignRepository campaignRepository;
     private final FacilityRepository facilityRepository;
@@ -250,16 +264,22 @@ public class PatientServiceImpl implements IPatientService {
 
         String wardId = p.getWard() != null ? p.getWard().getId() : null;
         String wardName = p.getWard() != null ? p.getWard().getWardName() : "Chưa cập nhật";
+        
+        String className = null;
+        if (p.getEnrollments() != null && !p.getEnrollments().isEmpty()) {
+            className = p.getEnrollments().stream()
+                    .filter(e -> e.getStatus() == vn.edu.fpt.eyesora.entity.ClassEnrollment.EnrollmentStatus.ACTIVE)
+                    .findFirst()
+                    .map(e -> e.getClasses().getClassName())
+                    .orElseGet(() -> p.getEnrollments().get(0).getClasses().getClassName());
+        }
 
         return new PatientResponse(
                 p.getPatientId(),
                 p.getPatientName(),
-//                p.getClasses() != null ? p.getClasses().getId() : null,
-//                p.getClasses() != null ? p.getClasses().getClassName() : null,
+                className,
                 p.getFacility() != null ? p.getFacility().getId() : null,
                 p.getFacility() != null ? p.getFacility().getFacilityName() : null,
-//                p.getExamCampaign() != null ? p.getExamCampaign().getCampaignId() : null,
-//                p.getExamCampaign() != null ? p.getExamCampaign().getCampaignTitle() : null,
                 p.getDob(),
                 p.getGender() != null ? p.getGender().name() : null,
                 p.getParentPhone(),

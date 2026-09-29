@@ -83,11 +83,11 @@ const ExamRecordImportPage = () => {
         }
     };
 
-    const inputStyle = `w-full border border-gray-200 bg-white p-3 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900 transition-all text-sm outline-none cursor-pointer`;
-    const labelStyle = `text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block`;
+    const inputStyle = `w-full border border-gray-300 bg-white px-4 py-2.5 rounded-xl text-gray-900 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-[#004194] transition-all shadow-xs cursor-pointer`;
+    const labelStyle = `text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block`;
 
     return (
-        <div className="p-6 bg-[#f5f7fa] h-full overflow-y-auto scrollbar-thin relative">
+        <div className="p-6 bg-[#f5f7fa] text-gray-950 font-sans h-full overflow-y-auto scrollbar-thin relative">
             <PageHeader
                 onBack={() => navigate('/eye-exam-records')}
                 onDownloadTemplate={() => {
@@ -102,7 +102,7 @@ const ExamRecordImportPage = () => {
 
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm w-full p-6 md:p-8 space-y-6">
                 {errors.server && (
-                    <div className="p-4 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-bold flex items-center gap-2">
+                    <div className="p-4 bg-red-50/80 text-red-700 border border-red-200 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs">
                         <CircleAlert size={18}/>{errors.server}
                     </div>
                 )}
@@ -114,15 +114,15 @@ const ExamRecordImportPage = () => {
                         <div>
                             <label className={labelStyle}>Cơ sở y tế / Trường học (*)</label>
                             <select
-                                className={`${inputStyle} text-blue-900`}
+                                className={`${inputStyle} text-[#004194]`}
                                 value={selectedFacility}
                                 onChange={e => e.target.value === '__NEW_FACILITY__' ? (setActiveModal('facility'), setSelectedFacility('')) : (setSelectedFacility(e.target.value), setImportResult(null))}
                             >
-                                <option value="" className="text-slate-700">Chọn cơ sở tiếp nhận...</option>
-                                <option value="__NEW_FACILITY__" className="text-blue-600 font-bold bg-blue-50">+ Thêm mới cơ sở...</option>
-                                {options.facilities.map(f => <option key={f.id} value={String(f.id)} className="text-slate-700">{f.facilityName}</option>)}
+                                <option value="" className="text-gray-700">Chọn cơ sở tiếp nhận...</option>
+                                <option value="__NEW_FACILITY__" className="text-[#004194] font-bold bg-blue-50">+ Thêm mới cơ sở...</option>
+                                {options.facilities.map(f => <option key={f.id} value={String(f.id)} className="text-gray-900">{f.facilityName}</option>)}
                             </select>
-                            {errors.facilityId && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.facilityId}</p>}
+                            {errors.facilityId && <p className="text-rose-600 text-[10px] font-bold mt-1.5">{errors.facilityId}</p>}
                         </div>
 
                         <div>
@@ -131,21 +131,21 @@ const ExamRecordImportPage = () => {
                                 <option value="">Chọn bác sĩ...</option>
                                 {options.examiners.map(e => <option key={e.id} value={String(e.id)}>{e.examinerName || e.fullName}</option>)}
                             </select>
-                            {errors.examinerId && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.examinerId}</p>}
+                            {errors.examinerId && <p className="text-rose-600 text-[10px] font-bold mt-1.5">{errors.examinerId}</p>}
                         </div>
 
                         <div>
                             <label className={labelStyle}>Chiến dịch (*)</label>
                             <select
-                                className={`${inputStyle} text-blue-900`}
+                                className={`${inputStyle} text-[#004194]`}
                                 value={selectedCampaign}
                                 onChange={e => e.target.value === '__NEW_CAMPAIGN__' ? (setActiveModal('campaign'), setSelectedCampaign('')) : (setSelectedCampaign(e.target.value), setImportResult(null))}
                             >
-                                <option value="" className="text-slate-700">Chọn chiến dịch...</option>
-                                <option value="__NEW_CAMPAIGN__" className="text-blue-600 font-bold bg-blue-50">+ Thêm mới chiến dịch...</option>
-                                {options.campaigns.map(c => <option key={c.campaignId} value={String(c.campaignId)} className="text-slate-700">{c.campaignTitle || c.name}</option>)}
+                                <option value="" className="text-gray-700">Chọn chiến dịch...</option>
+                                <option value="__NEW_CAMPAIGN__" className="text-[#004194] font-bold bg-blue-50">+ Thêm mới chiến dịch...</option>
+                                {options.campaigns.map(c => <option key={c.campaignId} value={String(c.campaignId)} className="text-gray-900">{c.campaignTitle || c.name}</option>)}
                             </select>
-                            {errors.campaignId && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.campaignId}</p>}
+                            {errors.campaignId && <p className="text-rose-600 text-[10px] font-bold mt-1.5">{errors.campaignId}</p>}
                         </div>
                     </div>
 
@@ -153,7 +153,7 @@ const ExamRecordImportPage = () => {
                         <div>
                             <label className={labelStyle}>Ngày khám lâm sàng (*)</label>
                             <input type="datetime-local" className={inputStyle} value={examDate} onChange={e => { setExamDate(e.target.value); setImportResult(null); }} />
-                            {errors.examDate && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.examDate}</p>}
+                            {errors.examDate && <p className="text-rose-600 text-[10px] font-bold mt-1.5">{errors.examDate}</p>}
                         </div>
                     </div>
 
@@ -165,9 +165,9 @@ const ExamRecordImportPage = () => {
                         onFileSelect={() => setImportResult(null)}
                     />
 
-                    <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-8 w-full">
-                        <button type="button" onClick={() => navigate('/eye-exam-records')} className="px-6 py-2.5 border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 rounded-xl text-sm" disabled={loading}>Hủy bỏ</button>
-                        <button type="submit" disabled={loading} className="px-8 py-2.5 bg-blue-900 text-white font-bold hover:bg-blue-800 rounded-xl text-sm shadow-sm flex items-center gap-2">
+                    <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100 mt-8 w-full">
+                        <button type="button" onClick={() => navigate('/eye-exam-records')} className="px-5 py-2.5 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-xs" disabled={loading}>Hủy bỏ</button>
+                        <button type="submit" disabled={loading} className="bg-gradient-to-l from-blue-500 to-[#004194] text-white px-6 py-2.5 rounded-xl text-xs font-semibold hover:from-blue-600 hover:to-blue-900 transition-all cursor-pointer shadow-sm active:scale-95 flex items-center gap-2">
                             {loading ? <><RefreshCcw className="w-4 h-4 animate-spin" /> Đang xử lý...</> : "Tiến hành Import"}
                         </button>
                     </div>
