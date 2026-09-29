@@ -90,4 +90,21 @@ public class DashboardController {
             @RequestParam(required = false) String campaignId) {
         return ResponseEntity.ok(dashboardService.getDrillDown(startDate, endDate, campaignId));
     }
+
+    @GetMapping("/analysis/facility")
+    public ResponseEntity<FacilityAnalysisResponse> getFacilityAnalysis(
+            @RequestParam(required = false) java.time.LocalDate startDate,
+            @RequestParam(required = false) java.time.LocalDate endDate,
+            @RequestParam(required = false) String campaignId) {
+        return ResponseEntity.ok(dashboardService.getFacilityAnalysis(startDate, endDate, campaignId));
+    }
+
+    @GetMapping("/analysis/grade")
+    public ResponseEntity<GradeAnalysisResponse> getGradeAnalysis(
+            @RequestParam(required = false) java.time.LocalDate startDate,
+            @RequestParam(required = false) java.time.LocalDate endDate,
+            @RequestParam(required = false) String campaignId) {
+        return ResponseEntity.ok(dashboardService.getGradeAnalysis(startDate, endDate, campaignId));
+    }
+
 }

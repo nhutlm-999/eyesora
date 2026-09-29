@@ -620,4 +620,76 @@ public class DashboardServiceImpl implements IDashboardService {
         s.setBorderRight(BorderStyle.THIN); s.setBorderTop(BorderStyle.THIN);
         return s;
     }
+
+    @Override
+    public FacilityAnalysisResponse getFacilityAnalysis(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        List<FacilityMyopiaResponse> stats = getFacilityStats(startDate, endDate, campaignId);
+        
+        List<vn.edu.fpt.eyesora.dto.response.FacilityRankDto> rankings = new ArrayList<>();
+        List<String> insights = new ArrayList<>();
+        
+        if (stats.isEmpty()) {
+            return new FacilityAnalysisResponse(rankings, insights);
+        }
+        
+        for (FacilityMyopiaResponse stat : stats) {
+            rankings.add(new vn.edu.fpt.eyesora.dto.response.FacilityRankDto(stat.facilityName(), stat.rate()));
+        }
+        
+        // Auto Insights
+        FacilityMyopiaResponse highest = stats.get(0);
+        if (highest.rate() > 40) {
+            insights.add(highest.facilityName() + " có tỷ lệ cận thị báo động (" + highest.rate() + "%). Cần triển khai kế hoạch y tế học đường gấp.");
+        } else {
+            insights.add("Tỷ lệ cận thị cao nhất thuộc về " + highest.facilityName() + " (" + highest.rate() + "%).");
+        }
+        
+        if (stats.size() >= 3) {
+            insights.add("Top 3 trường có tỷ lệ cận cao nhất: " + stats.get(0).facilityName() + ", " + stats.get(1).facilityName() + ", " + stats.get(2).facilityName() + ".");
+        }
+        
+        // Count total patients in risk (sph between -2.5 and -3.0)
+        List<EyeExamRecord> entityList = eyeExamRecordRepository.findByIsDeletedFalse();
+        if (startDate != null) entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
+        if (endDate != null) entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
+        if (campaignId != null && !campaignId.trim().isEmpty()) entityList = entityList.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        
+        long riskCount = entityList.stream().filter(e -> {
+            boolean leftRisk = e.getSphLeft() != null && e.getSphLeft() <= -2.5 && e.getSphLeft() >= -3.0;
+            boolean rightRisk = e.getSphRight() != null && e.getSphRight() <= -2.5 && e.getSphRight() >= -3.0;
+            return leftRisk || rightRisk;
+        }).count();
+        
+        if (riskCount > 0) {
+            insights.add("Có " + riskCount + " học sinh đang ở ngưỡng ranh giới cận nặng (-2.50 đến -3.00), cần theo dõi sát sao.");
+        }
+
+        return new FacilityAnalysisResponse(rankings, insights);
+    }
+
+    @Override
+    public GradeAnalysisResponse getGradeAnalysis(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        List<GradeMyopiaResponse> stats = getGradeStats(startDate, endDate, campaignId);
+        List<String> insights = new ArrayList<>();
+        
+        if (stats.isEmpty()) {
+            return new GradeAnalysisResponse(null, 0.0, null, 0.0, insights);
+        }
+        
+        stats.sort((a, b) -> Double.compare(b.myopiaRate(), a.myopiaRate()));
+        
+        GradeMyopiaResponse highest = stats.get(0);
+        GradeMyopiaResponse lowest = stats.get(stats.size() - 1);
+        
+        if (highest.myopiaRate() > 30) {
+            insights.add(highest.gradeName() + " có mức độ cận thị nghiêm trọng nhất (" + highest.myopiaRate() + "%).");
+        } else {
+            insights.add(highest.gradeName() + " đang dẫn đầu về tỷ lệ cận thị (" + highest.myopiaRate() + "%).");
+        }
+        
+        insights.add(lowest.gradeName() + " có tỷ lệ thấp nhất (" + lowest.myopiaRate() + "%), có thể do thời gian học tập với thiết bị điện tử ít hơn.");
+        
+        return new GradeAnalysisResponse(highest.gradeName(), highest.myopiaRate(), lowest.gradeName(), lowest.myopiaRate(), insights);
+    }
+
 }
