@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Eye, AlertTriangle, Building2, ArrowRight } from 'lucide-react';
 
@@ -58,17 +57,34 @@ const StatsCards = ({ summary, onViewAlerts }) => {
             actionTooltip: null,
             buttonLabel: null
         },
+        // {
+        //     id: 'alerts',
+        //     title: "Cảnh báo nguy cấp",
+        //     icon: <AlertTriangle className="w-5 h-5 text-[#ba1a1a]" />,
+        //     bgColor: "bg-red-100 text-[#ba1a1a]",
+        //     mainValue: (summary?.criticalAlerts?.severeMyopiaCount || 0).toString(),
+        //     mainLabel: "Cận nặng (Cần can thiệp)",
+        //     details: [
+        //         { label: "Loạn thị cao", value: (summary?.criticalAlerts?.highAstigmatismCount || 0).toString() },
+        //         { label: "Chưa xử lý", value: (summary?.criticalAlerts?.pendingActionCount || 0).toString() }
+        //     ],
+        //     isAlert: true,
+        //     action: handleViewAlertList,
+        //     actionTooltip: "Bấm để cuộn xuống danh sách các ca bệnh khẩn cấp",
+        //     buttonLabel: "Xem danh sách"
+        // },
         {
             id: 'alerts',
             title: "Cảnh báo nguy cấp",
             icon: <AlertTriangle className="w-5 h-5 text-[#ba1a1a]" />,
             bgColor: "bg-red-100 text-[#ba1a1a]",
+
             mainValue: (summary?.criticalAlerts?.severeMyopiaCount || 0).toString(),
-            mainLabel: "Cận nặng (Cần can thiệp)",
-            details: [
-                { label: "Loạn thị cao", value: (summary?.criticalAlerts?.highAstigmatismCount || 0).toString() },
-                { label: "Chưa xử lý", value: (summary?.criticalAlerts?.pendingActionCount || 0).toString() }
-            ],
+            mainLabel: "Cận nặng",
+
+            secondaryValue: (summary?.criticalAlerts?.highAstigmatismCount || 0).toString(),
+            secondaryLabel: "Loạn thị cao",
+
             isAlert: true,
             action: handleViewAlertList,
             actionTooltip: "Bấm để cuộn xuống danh sách các ca bệnh khẩn cấp",
@@ -93,7 +109,7 @@ const StatsCards = ({ summary, onViewAlerts }) => {
 
     return (
         <div className="mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {cards.map((card) => {
                     if (card.isAlert) {
                         return (
@@ -102,7 +118,7 @@ const StatsCards = ({ summary, onViewAlerts }) => {
                                 className="bg-gradient-to-br from-red-50 via-orange-50/50 to-red-100/60 rounded-2xl p-6 border border-red-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
                             >
                                 <div>
-                                    <div className="flex items-center justify-between mb-4">
+                                    <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                                         <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2.5">
                                             <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${card.bgColor} shadow-xs`}>
                                                 {card.icon}
@@ -121,31 +137,48 @@ const StatsCards = ({ summary, onViewAlerts }) => {
                                         </button>
                                     </div>
 
-                                    <div className="mb-4">
-                                        <p className="text-4xl font-black text-[#93000a]">{card.mainValue}</p>
-                                        <p className="text-xs font-semibold text-gray-600 mt-1">{card.mainLabel}</p>
+                                    <div className="mt-5 grid grid-cols-2 gap-3">
+                                        <div className="rounded-xl bg-white/70 border border-red-100 px-3 py-3">
+                                            <p className="text-3xl font-extrabold tracking-tight text-[#93000a]">
+                                                {card.mainValue}
+                                            </p>
+
+                                            <p className="text-xs font-semibold text-gray-600 mt-1">
+                                                {card.mainLabel}
+                                            </p>
+                                        </div>
+
+                                        <div className="rounded-xl bg-white/70 border border-red-100 px-3 py-3">
+                                            <p className="text-3xl font-extrabold tracking-tight text-[#93000a]">
+                                                {card.secondaryValue}
+                                            </p>
+
+                                            <p className="text-xs font-semibold text-gray-600 mt-1">
+                                                {card.secondaryLabel}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-2 mt-2 pt-3 border-t border-red-200/50">
-                                    {card.details.map((detail, idx) => (
-                                        <div key={idx} className="flex justify-between items-center bg-white/70 backdrop-blur-xs rounded-lg px-3 py-2 border border-red-100/50">
-                                            <span className="text-xs font-medium text-gray-700">{detail.label}</span>
-                                            <span className="text-xs font-bold text-gray-900">{detail.value}</span>
-                                        </div>
-                                    ))}
-                                </div>
+                                {/*<div className="space-y-2 mt-2 pt-3 border-t border-red-200/50">*/}
+                                {/*    {card.details.map((detail, idx) => (*/}
+                                {/*        <div key={idx} className="flex justify-between items-center bg-white/70 backdrop-blur-xs rounded-lg px-3 py-2 border border-red-100/50">*/}
+                                {/*            <span className="text-xs font-medium text-gray-700">{detail.label}</span>*/}
+                                {/*            <span className="text-xs font-bold text-gray-900">{detail.value}</span>*/}
+                                {/*        </div>*/}
+                                {/*    ))}*/}
+                                {/*</div>*/}
                             </div>
                         );
                     }
 
                     return (
                         <div 
-                            key={card.id} 
-                            className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
+                            key={card.id}
+                            className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm hover:shadow-md transition-all group"
                         >
                             <div>
-                                <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center justify-between gap-2 mb-5">
                                     <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2.5">
                                         <button
                                             type="button"
@@ -163,29 +196,34 @@ const StatsCards = ({ summary, onViewAlerts }) => {
                                             type="button"
                                             onClick={card.action}
                                             title={card.actionTooltip}
-                                            className="p-2 rounded-xl bg-gray-50 hover:bg-blue-50 text-gray-500 hover:text-blue-700 transition-all cursor-pointer border border-gray-200/60 hover:border-blue-200"
+                                            className="px-2.5 py-1.5 rounded-lg bg-[#001f54] hover:bg-[#003380] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer flex items-center gap-1 shrink-0"
                                         >
                                             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                                         </button>
                                     )}
                                 </div>
 
-                                <div className="mb-4">
-                                    <p className="text-4xl font-black text-gray-900">{card.mainValue}</p>
-                                    <p className="text-xs font-semibold text-gray-600 mt-1">{card.mainLabel}</p>
+                                <div className="mt-6">
+                                    <p className="text-4xl font-extrabold tracking-tight text-gray-900">
+                                        {card.mainValue}
+                                    </p>
+
+                                    <p className="text-sm font-medium text-gray-500 mt-1">
+                                        {card.mainLabel}
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="space-y-2 mt-2 pt-3 border-t border-gray-100">
-                                {card.details.map((detail, idx) => (
-                                    <div key={idx} className="flex justify-between items-center bg-gray-50/80 rounded-lg px-3 py-2 border border-gray-100">
-                                        <span className="text-xs font-medium text-gray-600">{detail.label}</span>
-                                        <span className={`text-xs ${detail.trend ? getTrendColor(detail.trend) : 'font-bold text-gray-900'}`}>
-                                            {detail.value}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
+                            {/*<div className="space-y-2 mt-2 pt-3 border-t border-gray-100">*/}
+                            {/*    {card.details.map((detail, idx) => (*/}
+                            {/*        <div key={idx} className="flex justify-between items-center bg-gray-50/80 rounded-lg px-3 py-2 border border-gray-100">*/}
+                            {/*            <span className="text-xs font-medium text-gray-600">{detail.label}</span>*/}
+                            {/*            <span className={`text-xs ${detail.trend ? getTrendColor(detail.trend) : 'font-bold text-gray-900'}`}>*/}
+                            {/*                {detail.value}*/}
+                            {/*            </span>*/}
+                            {/*        </div>*/}
+                            {/*    ))}*/}
+                            {/*</div>*/}
                         </div>
                     );
                 })}

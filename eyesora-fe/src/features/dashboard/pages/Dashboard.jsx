@@ -3,6 +3,7 @@ import axiosClient from "../../../shared/axios/axiosClient.js";
 
 import StatsCards from "../components/StatsCards.jsx";
 import AnalyticsCharts from '../components/AnalyticsCharts.jsx';
+import AnalyticsDrawer from '../components/AnalyticsDrawer.jsx';
 import AlertRecordsTable from '../components/AlertRecordsTable.jsx';
 // import MyopiaTimelineChart from '../components/MyopiaTimelineChart.jsx';
 // import DrillDownTree from '../components/DrillDownTree.jsx';
@@ -88,6 +89,8 @@ const Dashboard = () => {
     };
 
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
+    const [analysisType, setAnalysisType] = useState('grade');
 
     const fetchData = useCallback(async (page = 0, filter = 'ALL') => {
         try {
@@ -182,6 +185,11 @@ const Dashboard = () => {
         return `${value}°`;
     };
 
+    const handleOpenAnalysis = (type) => {
+        setAnalysisType(type);
+        setIsAnalysisOpen(true);
+    };
+
     const handleViewAlerts = () => {
         const tableEl = document.getElementById('alert-records-table');
         if (tableEl) {
@@ -201,7 +209,9 @@ const Dashboard = () => {
     }
 
     return (
-        <div className="p-6 bg-[#f5f7fa] h-full overflow-y-auto scrollbar-thin text-gray-950">
+        <div className="flex h-full bg-[#f5f7fa] overflow-hidden text-gray-950">
+            <div className={`transition-all duration-300 ease-in-out h-full overflow-y-auto scrollbar-thin ${isAnalysisOpen ? 'w-2/3' : 'w-full'}`}>
+                <div className="p-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex flex-wrap gap-4 items-center w-full md:w-auto">
                     <div className="flex items-center gap-2">
@@ -237,6 +247,7 @@ const Dashboard = () => {
                 gradeStats={gradeStats}
                 facilityStats={facilityStats}
                 animateBars={animateBars}
+                onOpenAnalysis={handleOpenAnalysis}
             />
 
             <AlertRecordsTable
@@ -249,6 +260,8 @@ const Dashboard = () => {
                 formatDiopter={formatDiopter}
             />
 
+            
+
             <ExamRecordDetailModal
                 isOpen={isDetailOpen}
                 onClose={() => setIsDetailOpen(false)}
@@ -258,6 +271,12 @@ const Dashboard = () => {
                 formatDiopter={formatDiopter}
                 formatAxis={formatAxis}
             />
+                        </div>
+            </div>
+
+            <div className={`transition-all duration-300 ease-in-out h-full bg-white shadow-xl flex-shrink-0 ${isAnalysisOpen ? 'w-1/3 border-l border-gray-200 opacity-100 visible' : 'w-0 opacity-0 invisible overflow-hidden'}`}>
+                <AnalyticsDrawer isOpen={isAnalysisOpen} onClose={() => setIsAnalysisOpen(false)} type={analysisType} gradeStats={gradeStats} facilityStats={facilityStats} />
+            </div>
         </div>
     );
 };

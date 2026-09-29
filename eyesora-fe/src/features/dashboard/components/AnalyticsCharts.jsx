@@ -1,6 +1,6 @@
 const Y_AXIS_STEPS = [100, 75, 50, 25, 0];
 
-const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = true }) => {
+const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = true, onOpenAnalysis }) => {
     const isSingleFacility = facilityStats && facilityStats.length === 1;
 
     return (
@@ -15,6 +15,7 @@ const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = tr
                     <span className="text-xs text-gray-800 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
                         Đơn vị: %
                     </span>
+                    <button onClick={() => onOpenAnalysis && onOpenAnalysis('grade')} className="ml-3 text-xs bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-1 rounded-full hover:bg-indigo-100 font-semibold flex items-center gap-1 transition-colors">✨ Xem phân tích</button>
                 </div>
 
                 <div className="w-full h-80 flex flex-col pt-2">
@@ -110,6 +111,7 @@ const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = tr
                     <span className="text-xs text-gray-800 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
                         Đơn vị: %
                     </span>
+                    <button onClick={() => onOpenAnalysis && onOpenAnalysis('facility')} className="ml-3 text-xs bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-1 rounded-full hover:bg-indigo-100 font-semibold flex items-center gap-1 transition-colors">✨ Xem phân tích</button>
                 </div>
 
                 <div className="w-full h-80 flex items-center pt-6">

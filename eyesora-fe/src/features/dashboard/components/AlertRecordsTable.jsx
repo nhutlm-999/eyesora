@@ -192,21 +192,22 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
 
                                     <td className="px-6 py-4 text-center align-middle">
                                         {isSevereMyopia && isHighAstigmatism ? (
-                                            <span
-                                                className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-red-700 text-white border border-red-800 whitespace-nowrap shadow-xs">
-                                                Cận & Loạn Cao
-                                            </span>
+                                            /* Cận & Loạn Cao: Đỏ đậm nổi bật nhất, chữ trắng */
+                                            <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-red-600 text-white border border-red-700 whitespace-nowrap shadow-xs">
+        Cận & Loạn Cao
+    </span>
                                         ) : isSevereMyopia ? (
-                                            <span
-                                                className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-red-600 text-white border border-red-600 whitespace-nowrap shadow-xs">
-                                                Cận nặng
-                                            </span>
+                                            /* Cận nặng: Chuyển sang tông Cam để không bị lẫn với Đỏ */
+                                            <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-orange-500 text-white border border-orange-600 whitespace-nowrap shadow-xs">
+        Cận nặng
+    </span>
                                         ) : isHighAstigmatism ? (
-                                            <span
-                                                className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-amber-600 text-white border border-amber-600 whitespace-nowrap shadow-xs">
-                                                Loạn thị cao
-                                            </span>
+                                            /* Loạn thị cao: Dùng màu Vàng chanh, đổi text thành màu Đậm để dễ đọc */
+                                            <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-yellow-400 text-yellow-950 border border-yellow-500 whitespace-nowrap shadow-xs">
+        Loạn thị cao
+    </span>
                                         ) : null}
+
                                     </td>
 
                                     {/* Thao tác */}

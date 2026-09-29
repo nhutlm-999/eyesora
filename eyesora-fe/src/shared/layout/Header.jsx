@@ -39,7 +39,7 @@ const Header = ({ onMenuClick }) => {
                     <span className="material-symbols-outlined">menu</span>
                 </button>
                 <h1 className="text-base md:text-lg font-semibold text-blue-900 min-w-max">
-                    Refractive Management
+                    Quản lí tật khúc xạ học đường
                 </h1>
             </div>
 
