@@ -275,7 +275,7 @@ const Dashboard = () => {
             </div>
 
             <div className={`transition-all duration-300 ease-in-out h-full bg-white shadow-xl flex-shrink-0 ${isAnalysisOpen ? 'w-1/3 border-l border-gray-200 opacity-100 visible' : 'w-0 opacity-0 invisible overflow-hidden'}`}>
-                <AnalyticsDrawer isOpen={isAnalysisOpen} onClose={() => setIsAnalysisOpen(false)} type={analysisType} gradeStats={gradeStats} facilityStats={facilityStats} />
+                <AnalyticsDrawer isOpen={isAnalysisOpen} onClose={() => setIsAnalysisOpen(false)} type={analysisType} campaignId={campaignId} startDate={startDate} endDate={endDate} />
             </div>
         </div>
     );
