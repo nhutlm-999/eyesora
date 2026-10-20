@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X, MapPin, ExternalLink } from "lucide-react";
 
 const FacilityDetailModal = ({ data, onClose }) => {
     if (!data) return null;
@@ -26,6 +26,22 @@ const FacilityDetailModal = ({ data, onClose }) => {
                             <span className="font-bold text-gray-900">{i.value || 'N/A'}</span>
                         </div>
                     ))}
+
+                    {data.googleMapsUrl && (
+                        <div className="flex justify-between items-center pt-2.5 border-t border-gray-200/60">
+                            <span className="font-bold text-gray-500 uppercase text-[10px] tracking-wider">Google Maps</span>
+                            <a
+                                href={data.googleMapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg font-bold text-xs transition-colors border border-red-200"
+                            >
+                                <MapPin size={14} className="text-red-500 shrink-0" />
+                                <span>Xem trên Google Maps</span>
+                                <ExternalLink size={12} className="opacity-70" />
+                            </a>
+                        </div>
+                    )}
                 </div>
 
                 <button onClick={onClose} className="w-full py-2.5 bg-gray-900 text-white rounded-xl font-bold text-xs hover:bg-gray-800 transition-all cursor-pointer shadow-sm">

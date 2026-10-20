@@ -1,4 +1,4 @@
-import { Eye, SquarePen } from "lucide-react";
+import { Eye, SquarePen, MapPin } from "lucide-react";
 
 const FacilityTable = ({ facilities, page, onEdit, onView }) => {
 
@@ -39,6 +39,17 @@ const FacilityTable = ({ facilities, page, onEdit, onView }) => {
                             </td>
                             <td className="px-6 py-4 text-center align-middle">
                                 <div className="flex items-center justify-center gap-2">
+                                    {f.googleMapsUrl && (
+                                        <a
+                                            href={f.googleMapsUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex p-2 bg-gradient-to-l from-white to-gray-50 border border-red-200 text-red-600 rounded-lg hover:text-red-700 hover:bg-red-50 hover:border-red-300 hover:shadow-xs transition-all cursor-pointer"
+                                            title="Mở Google Maps"
+                                        >
+                                            <MapPin size={16} />
+                                        </a>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={() => onView(f.id)}

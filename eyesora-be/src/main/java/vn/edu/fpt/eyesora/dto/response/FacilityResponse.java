@@ -10,5 +10,6 @@ public record FacilityResponse(
         String phone,
         String wardName,
         String wardId,
-        String districtId
+        String districtId,
+        String googleMapsUrl
 ) {}

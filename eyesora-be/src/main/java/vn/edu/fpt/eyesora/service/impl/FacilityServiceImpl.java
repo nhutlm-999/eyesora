@@ -41,6 +41,7 @@ public class FacilityServiceImpl implements IFacilityService {
         f.setFacilityType(req.facilityType());
         f.setAddress(req.address());
         f.setPhone(req.phone());
+        f.setGoogleMapsUrl(req.googleMapsUrl());
 
         f = facilityRepository.save(f);
         return mapToResponse(f);
@@ -55,6 +56,7 @@ public class FacilityServiceImpl implements IFacilityService {
         existing.setFacilityType(req.facilityType());
         existing.setAddress(req.address());
         existing.setPhone(req.phone());
+        existing.setGoogleMapsUrl(req.googleMapsUrl());
 
         // Kiểm tra an toàn: Lấy ID ward hiện tại nếu có
         String currentWardId = (existing.getWard() != null) ? existing.getWard().getId() : null;
@@ -91,7 +93,8 @@ public class FacilityServiceImpl implements IFacilityService {
                 f.getPhone(),
                 wardName,
                 wardId,
-                districtId
+                districtId,
+                f.getGoogleMapsUrl()
         );
     }
 

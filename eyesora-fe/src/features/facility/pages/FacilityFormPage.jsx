@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, MapPin } from "lucide-react";
 import axiosClient from "../../../shared/axios/axiosClient.js";
 
 const FacilityFormPage = () => {
@@ -14,7 +14,8 @@ const FacilityFormPage = () => {
         address: '',
         phone: '',
         wardId: '',
-        districtId: ''
+        districtId: '',
+        googleMapsUrl: ''
     });
     const [districts, setDistricts] = useState([]);
     const [wards, setWards] = useState([]);
@@ -39,7 +40,8 @@ const FacilityFormPage = () => {
                     address: data.address || '',
                     phone: data.phone || '',
                     wardId: data.wardId ? String(data.wardId) : '',
-                    districtId: data.districtId ? String(data.districtId) : ''
+                    districtId: data.districtId ? String(data.districtId) : '',
+                    googleMapsUrl: data.googleMapsUrl || ''
                 });
                 if (data.districtId) fetchWards(data.districtId);
             });
@@ -135,6 +137,31 @@ const FacilityFormPage = () => {
                         <label className={labelStyle}>Địa chỉ</label>
                         <input className={inputStyle} value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="Số nhà, đường..." />
                         <ErrorMsg field="address" />
+                    </div>
+
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <label className={labelStyle}>Liên kết Google Maps</label>
+                            {formData.googleMapsUrl && (
+                                <a
+                                    href={formData.googleMapsUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1"
+                                >
+                                    <MapPin size={12} className="text-red-500" /> Thử mở liên kết
+                                </a>
+                            )}
+                        </div>
+                        <input
+                            type="url"
+                            className={inputStyle}
+                            value={formData.googleMapsUrl || ''}
+                            onChange={e => setFormData({...formData, googleMapsUrl: e.target.value})}
+                            placeholder="VD: https://maps.app.goo.gl/... hoặc https://www.google.com/maps/place/..."
+                        />
+                        <span className="text-[11px] text-gray-500 mt-1 block">Dán liên kết vị trí từ Google Maps để người dùng có thể nhấp vào mở bản đồ trực tiếp.</span>
+                        <ErrorMsg field="googleMapsUrl" />
                     </div>
 
                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-8 w-full">
