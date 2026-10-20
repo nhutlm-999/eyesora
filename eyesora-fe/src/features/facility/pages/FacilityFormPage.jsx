@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, AlertCircle, MapPin } from "lucide-react";
+import { ArrowLeft, AlertCircle, MapPin, User, Phone } from "lucide-react";
 import axiosClient from "../../../shared/axios/axiosClient.js";
 
 const FacilityFormPage = () => {
@@ -15,11 +15,15 @@ const FacilityFormPage = () => {
         phone: '',
         wardId: '',
         districtId: '',
-        googleMapsUrl: ''
+        googleMapsUrl: '',
+        principalName: '',
+        principalPhone: ''
     });
     const [districts, setDistricts] = useState([]);
     const [wards, setWards] = useState([]);
     const [errors, setErrors] = useState({});
+
+    const isSchool = formData.facilityType === 'SCHOOL';
 
     const ErrorMsg = ({ field }) => errors[field] ? (
         <div className="flex items-center gap-1 mt-1.5 text-red-600">
@@ -41,7 +45,9 @@ const FacilityFormPage = () => {
                     phone: data.phone || '',
                     wardId: data.wardId ? String(data.wardId) : '',
                     districtId: data.districtId ? String(data.districtId) : '',
-                    googleMapsUrl: data.googleMapsUrl || ''
+                    googleMapsUrl: data.googleMapsUrl || '',
+                    principalName: data.principalName || '',
+                    principalPhone: data.principalPhone || ''
                 });
                 if (data.districtId) fetchWards(data.districtId);
             });
@@ -57,18 +63,42 @@ const FacilityFormPage = () => {
     const handleSave = async (e) => {
         e.preventDefault();
         setErrors({});
+
+        // Client-side validation: Bắt buộc nếu là trường học (SCHOOL)
+        const clientErrors = {};
+        if (isSchool) {
+            if (!formData.principalName?.trim()) {
+                clientErrors.principalName = "Tên hiệu trưởng là bắt buộc đối với trường học";
+            }
+            if (!formData.principalPhone?.trim()) {
+                clientErrors.principalPhone = "Số điện thoại hiệu trưởng là bắt buộc đối với trường học";
+            }
+        }
+
+        if (Object.keys(clientErrors).length > 0) {
+            setErrors(clientErrors);
+            return;
+        }
+
         try {
             // Đảm bảo wardId gửi lên là null nếu để trống (đúng chuẩn backend)
             const payload = {
                 ...formData,
-                wardId: formData.wardId === '' ? null : formData.wardId
+                wardId: formData.wardId === '' ? null : formData.wardId,
+                principalName: formData.principalName?.trim() || null,
+                principalPhone: formData.principalPhone?.trim() || null
             };
 
             if (isEditMode) await axiosClient.put(`/master-data/facilities/${id}`, payload);
             else await axiosClient.post("/master-data/facilities", payload);
             navigate('/facilities');
         } catch (err) {
-            setErrors(err.response?.data || { server: "Có lỗi xảy ra" });
+            const data = err.response?.data;
+            if (typeof data === 'string') {
+                setErrors({ server: data });
+            } else {
+                setErrors(data || { server: "Có lỗi xảy ra" });
+            }
         }
     };
 
@@ -108,6 +138,44 @@ const FacilityFormPage = () => {
                         </div>
                     </div>
 
+                    {/* Khối thông tin Hiệu trưởng / Người đại diện */}
+                    <div className={`p-5 rounded-2xl border transition-colors ${isSchool ? 'bg-blue-50/40 border-blue-200' : 'bg-gray-50/50 border-gray-200'}`}>
+                        <div className="mb-3 flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <User size={15} className={isSchool ? "text-[#004194]" : "text-gray-500"} />
+                                Thông tin Hiệu trưởng {isSchool && <span className="text-[#004194] text-[11px] font-bold lowercase">(bắt buộc đối với trường học)</span>}
+                            </span>
+                            {!isSchool && <span className="text-[11px] text-gray-400 italic">Không bắt buộc đối với phòng khám / bệnh viện</span>}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label className={labelStyle}>
+                                    Tên hiệu trưởng {isSchool && <span className="text-red-500">(*)</span>}
+                                </label>
+                                <input
+                                    className={inputStyle}
+                                    value={formData.principalName || ''}
+                                    onChange={e => setFormData({...formData, principalName: e.target.value})}
+                                    placeholder="Nhập họ và tên hiệu trưởng"
+                                />
+                                <ErrorMsg field="principalName" />
+                            </div>
+                            <div>
+                                <label className={labelStyle}>
+                                    SĐT hiệu trưởng {isSchool && <span className="text-red-500">(*)</span>}
+                                </label>
+                                <input
+                                    type="tel"
+                                    className={inputStyle}
+                                    value={formData.principalPhone || ''}
+                                    onChange={e => setFormData({...formData, principalPhone: e.target.value})}
+                                    placeholder="Nhập số điện thoại hiệu trưởng"
+                                />
+                                <ErrorMsg field="principalPhone" />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label className={labelStyle}>Quận/Huyện (*)</label>
@@ -128,8 +196,8 @@ const FacilityFormPage = () => {
                     </div>
 
                     <div>
-                        <label className={labelStyle}>Số điện thoại (*)</label>
-                        <input className={inputStyle} value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="Nhập số điện thoại" />
+                        <label className={labelStyle}>Số điện thoại cơ sở (*)</label>
+                        <input className={inputStyle} value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="Nhập số điện thoại cơ sở" />
                         <ErrorMsg field="phone" />
                     </div>
 

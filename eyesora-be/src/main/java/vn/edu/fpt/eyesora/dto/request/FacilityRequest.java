@@ -29,5 +29,11 @@ public record FacilityRequest(
         String wardId,
 
         @Size(max = 2048, message = "Liên kết Google Maps không được vượt quá 2048 ký tự")
-        String googleMapsUrl
+        String googleMapsUrl,
+
+        @Size(max = 150, message = "Tên hiệu trưởng không được vượt quá 150 ký tự")
+        String principalName,
+
+        @Size(max = 20, message = "Số điện thoại hiệu trưởng không được vượt quá 20 ký tự")
+        String principalPhone
 ) {}
