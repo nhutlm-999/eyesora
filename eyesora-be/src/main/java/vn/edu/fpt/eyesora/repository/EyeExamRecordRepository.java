@@ -36,4 +36,26 @@ public interface EyeExamRecordRepository extends JpaRepository<EyeExamRecord, St
             "AND (e.sphLeft <= -6.0 OR e.sphRight <= -6.0 " +
             "OR ABS(e.cylLeft) >= 1.5 OR ABS(e.cylRight) >= 1.5)")
     Page<EyeExamRecord> findCriticalAlerts(Pageable pageable);
+
+    @Query("""
+        SELECT e FROM EyeExamRecord e
+        WHERE e.isDeleted = false
+          AND e.patient.isDeleted = false
+          AND e.examDate = (
+              SELECT MAX(e2.examDate)
+              FROM EyeExamRecord e2
+              WHERE e2.patient = e.patient
+                AND e2.isDeleted = false
+          )
+          AND e.examDate <= :thresholdDate
+          AND (:facilityId IS NULL OR e.patient.facility.id = :facilityId OR (e.classesField IS NOT NULL AND e.classesField.facility.id = :facilityId))
+          AND (:keyword IS NULL OR LOWER(e.patient.patientName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+        ORDER BY e.examDate ASC
+    """)
+    Page<EyeExamRecord> findOverdueReExamRecords(
+            @Param("thresholdDate") LocalDate thresholdDate,
+            @Param("facilityId") String facilityId,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
 }

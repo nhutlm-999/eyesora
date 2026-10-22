@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import vn.edu.fpt.eyesora.dto.request.PatientRequest;
+import vn.edu.fpt.eyesora.dto.response.OverduePatientResponse;
 import vn.edu.fpt.eyesora.dto.response.PatientResponse;
 import vn.edu.fpt.eyesora.service.IPatientService;
 
@@ -22,6 +23,17 @@ import java.util.Map;
 public class PatientController {
 
     private final IPatientService patientService;
+
+    @GetMapping("/overdue-re-examination")
+    public ResponseEntity<Page<OverduePatientResponse>> getOverdueReExamPatients(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String facilityId,
+            @RequestParam(defaultValue = "6") int overdueMonths) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(patientService.getOverdueReExamPatients(keyword, facilityId, overdueMonths, pageable));
+    }
 
     @GetMapping
     public ResponseEntity<Page<PatientResponse>> getPatients(

@@ -13,6 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.fpt.eyesora.dto.request.PatientRequest;
+import vn.edu.fpt.eyesora.dto.response.OverduePatientResponse;
 import vn.edu.fpt.eyesora.dto.response.PatientResponse;
 import vn.edu.fpt.eyesora.entity.*;
 import vn.edu.fpt.eyesora.exceptions.BusinessException;
@@ -286,5 +287,58 @@ public class PatientServiceImpl implements IPatientService {
                 wardId,
                 wardName
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OverduePatientResponse> getOverdueReExamPatients(
+            String keyword,
+            String facilityId,
+            Integer overdueMonths,
+            Pageable pageable) {
+
+        int months = (overdueMonths != null && overdueMonths > 0) ? overdueMonths : 6;
+        LocalDate thresholdDate = LocalDate.now().minusMonths(months);
+
+        String searchKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        String filterFacilityId = (facilityId != null && !facilityId.isBlank()) ? facilityId.trim() : null;
+
+        Page<EyeExamRecord> records = eyeExamRecordRepository.findOverdueReExamRecords(
+                thresholdDate, filterFacilityId, searchKeyword, pageable
+        );
+
+        LocalDate today = LocalDate.now();
+
+        return records.map(record -> {
+            Patient p = record.getPatient();
+            long monthsDiff = java.time.temporal.ChronoUnit.MONTHS.between(record.getExamDate(), today);
+
+            String facilityName = null;
+            String facId = null;
+            if (record.getClassesField() != null && record.getClassesField().getFacility() != null) {
+                facId = record.getClassesField().getFacility().getId();
+                facilityName = record.getClassesField().getFacility().getFacilityName();
+            } else if (p.getFacility() != null) {
+                facId = p.getFacility().getId();
+                facilityName = p.getFacility().getFacilityName();
+            }
+
+            String className = record.getClassesField() != null ? record.getClassesField().getClassName() : "---";
+
+            return OverduePatientResponse.builder()
+                    .patientId(p.getPatientId())
+                    .patientName(p.getPatientName())
+                    .dob(p.getDob())
+                    .gender(p.getGender() != null ? p.getGender().name() : null)
+                    .parentPhone(p.getParentPhone())
+                    .className(className)
+                    .facilityId(facId)
+                    .facilityName(facilityName != null ? facilityName : "---")
+                    .lastExamDate(record.getExamDate())
+                    .monthsSinceLastExam(monthsDiff)
+                    .lastSphLeft(record.getSphLeft())
+                    .lastSphRight(record.getSphRight())
+                    .build();
+        });
     }
 }
