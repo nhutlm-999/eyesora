@@ -29,6 +29,7 @@ import PatientDetailPage from "./features/patient/pages/PatientDetailsPage.jsx";
 
 import { useEffect } from 'react';
 import { useAuthStore } from './features/auth/store/authStore';
+import OverdueReExamPage from "./features/patient/pages/OverdueReExamPage.jsx";
 
 function App() {
     const { initAuth, isInitialized } = useAuthStore();
@@ -70,6 +71,7 @@ function App() {
                         <Route path="/wards" element={<WardsPage/>}/>
                         <Route path="/wards/create" element={<WardsFormPage/>}/>
                         <Route path="/wards/edit/:id" element={<WardsFormPage/>}/>
+                        <Route path="/overdue-re-examinations" element={<OverdueReExamPage />} />
                     </Route>
 
                     {/* 2. Nhóm Route CHỈ DÀNH RIÊNG CHO FACILITY_ADMIN */}
@@ -97,6 +99,7 @@ function App() {
                         <Route path="/profile" element={<UserProfilePage/>}/>
                     </Route>
                 </Route>
+
 
                 {/*<Route element={<ProtectedRoute/>}>*/}
                 {/*    <Route path="/" element={<AppLayout/>}>*/}

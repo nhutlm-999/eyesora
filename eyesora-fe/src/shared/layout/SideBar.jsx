@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, University, GraduationCap, UsersRound, CalendarDays, ShieldAlert, ClipboardList, X } from "lucide-react";
 import { useAuthStore } from '../../features/auth/store/authStore';
+import { CalendarClock } from "lucide-react";
 
 const MENU_ITEMS = [
     { icon: <LayoutDashboard className="w-5 h-5" />, label: 'Bảng điều khiển', path: '/', roles: ['ROLE_ADMIN'] },
@@ -10,6 +11,7 @@ const MENU_ITEMS = [
     { icon: <CalendarDays className="w-5 h-5" />, label: 'Chiến dịch khám', path: '/campaigns', roles: ['ROLE_ADMIN'] },
     { icon: <ShieldAlert className="w-5 h-5" />, label: 'Quản lý tài khoản', path: '/admin/users', roles: ['ROLE_ADMIN'] },
     { icon: <University className="w-5 h-5" />, label: 'Trường học & Cơ sở', path: '/facilities', roles: ['ROLE_ADMIN'] },
+    { icon: <CalendarClock className="w-5 h-5" />, label: 'Quá hạn tái khám', path: '/overdue-re-examinations', roles: ['ROLE_ADMIN'] },
 ];
 
 const SideBar = ({ isOpen, setIsOpen }) => {
