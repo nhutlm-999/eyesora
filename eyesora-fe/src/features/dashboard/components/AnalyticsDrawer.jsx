@@ -38,37 +38,37 @@ const AnalyticsDrawer = ({ isOpen, onClose, type, campaignId, startDate, endDate
             <div className="space-y-6">
                 <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl">
                     <h4 className="font-bold text-orange-800 flex items-center gap-2 mb-2">
-                        <AlertTriangle className="w-4 h-4" /> Điểm nóng (Cần chú ý)
+                        <AlertTriangle className="w-4 h-4" /> Cảnh báo trọng điểm
                     </h4>
                     <p className="text-sm text-orange-900">
-                        <strong>{data.highestGrade}</strong> đang có tỷ lệ cận thị cao nhất ({data.highestRate}%). 
-                        Cần có biện pháp can thiệp và ưu tiên khám mắt định kỳ cho học sinh khối này.
+                        <strong>{data.highestGrade}</strong> ghi nhận tỷ lệ cận thị cao nhất ({data.highestRate}%). 
+                        Cần ưu tiên bố trí khám sàng lọc chuyên khoa mắt và kiểm soát tiến triển cận thị cho học sinh khối này.
                     </p>
                 </div>
                 
                 <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
                     <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-3">
-                        <Info className="w-4 h-4 text-blue-500" /> Tổng quan các khối
+                        <Info className="w-4 h-4 text-blue-500" /> Thống kê theo khối
                     </h4>
                     <ul className="space-y-2 text-sm text-gray-600">
                         <li className="flex justify-between border-b pb-2">
-                            <span>Khối nguy cơ cao nhất:</span>
+                            <span>Khối có tỷ lệ cao nhất:</span>
                             <span className="font-bold text-red-600">{data.highestGrade} ({data.highestRate}%)</span>
                         </li>
                         <li className="flex justify-between border-b pb-2">
-                            <span>Khối nguy cơ thấp nhất:</span>
-                            <span className="font-bold text-green-600">{data.lowestGrade} ({data.lowestRate}%)</span>
+                            <span>Khối có tỷ lệ thấp nhất:</span>
+                            <span className="font-bold text-emerald-600">{data.lowestGrade} ({data.lowestRate}%)</span>
                         </li>
                     </ul>
                 </div>
 
                 <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
-                    <h4 className="font-bold text-blue-800 mb-2">Insight Tự động (Từ hệ thống)</h4>
+                    <h4 className="font-bold text-blue-800 mb-2">Insight Y khoa (Hệ thống tự động)</h4>
                     <ul className="list-disc pl-4 text-sm text-blue-900 space-y-2">
                         {data.autoInsights && data.autoInsights.map((insight, idx) => (
                             <li key={idx}><strong>{insight}</strong></li>
                         ))}
-                        <li><strong>Dành cho Hiệu trưởng:</strong> Tăng cường các tiết hoạt động ngoài trời, giảm áp lực nhìn gần (màn hình) cho học sinh.</li>
+                        <li><strong>Khuyến nghị Ban Giám hiệu:</strong> Tăng cường thời gian hoạt động ngoài trời (tối thiểu 60 phút/ngày dưới ánh sáng tự nhiên), giảm áp lực nhìn gần (màn hình/sách vở) và đảm bảo ánh sáng phòng học đạt chuẩn (300-500 lux).</li>
                     </ul>
                 </div>
             </div>
@@ -85,11 +85,11 @@ const AnalyticsDrawer = ({ isOpen, onClose, type, campaignId, startDate, endDate
             <div className="space-y-6">
                 <div className="bg-red-50 border border-red-100 p-4 rounded-xl">
                     <h4 className="font-bold text-red-800 flex items-center gap-2 mb-3">
-                        <ShieldAlert className="w-4 h-4" /> Báo động đỏ (Top Trường tỷ lệ cao)
+                        <ShieldAlert className="w-4 h-4" /> Báo động trọng điểm (Top trường tỷ lệ cao)
                     </h4>
                     <div className="space-y-3">
                         {top3.map((school, idx) => (
-                            <div key={idx} className="flex justify-between items-center text-sm">
+                            <div key={idx} className="flex justify-between items-center text-sm border-b border-red-100/60 pb-1.5 last:border-b-0">
                                 <span className="text-red-900 font-medium">{idx + 1}. {school.facilityName}</span>
                                 <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold">{school.rate}%</span>
                             </div>
@@ -99,25 +99,25 @@ const AnalyticsDrawer = ({ isOpen, onClose, type, campaignId, startDate, endDate
 
                 <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
                     <h4 className="font-bold text-gray-800 flex items-center gap-2 mb-3">
-                        <TrendingUp className="w-4 h-4 text-green-500" /> Bảng xếp hạng toàn diện
+                        <TrendingUp className="w-4 h-4 text-emerald-600" /> Bảng xếp hạng các trường ({data.rankings.length})
                     </h4>
                     <div className="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                         {data.rankings.map((school, idx) => (
                             <div key={idx} className="flex justify-between text-xs border-b border-gray-50 pb-2">
-                                <span className="text-gray-600 truncate pr-2">{idx + 1}. {school.facilityName}</span>
-                                <span className="font-semibold text-gray-800">{school.rate}%</span>
+                                <span className="text-gray-700 truncate pr-2">{idx + 1}. {school.facilityName}</span>
+                                <span className="font-bold text-sky-700">{school.rate}%</span>
                             </div>
                         ))}
                     </div>
                 </div>
                 
                 <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
-                    <h4 className="font-bold text-blue-800 mb-2">Insight Tự động (Từ hệ thống)</h4>
+                    <h4 className="font-bold text-blue-800 mb-2">Insight Y khoa (Hệ thống tự động)</h4>
                     <ul className="list-disc pl-4 text-sm text-blue-900 space-y-2">
                         {data.autoInsights && data.autoInsights.map((insight, idx) => (
                             <li key={idx}><strong>{insight}</strong></li>
                         ))}
-                        <li><strong>Cơ sở y tế:</strong> Phối hợp với Top 3 trường để mở chiến dịch khám mắt lưu động khẩn cấp.</li>
+                        <li><strong>Khuyến nghị Y tế Cơ sở:</strong> Phối hợp với Ban Giám hiệu các trường có tỷ lệ cận cao để mở chiến dịch khám mắt lưu động, cấp đơn kính chuẩn và tư vấn giải pháp kiểm soát độ cận.</li>
                     </ul>
                 </div>
             </div>

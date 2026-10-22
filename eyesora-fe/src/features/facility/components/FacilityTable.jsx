@@ -1,4 +1,4 @@
-import { Eye, SquarePen } from "lucide-react";
+import { Eye, SquarePen, MapPin } from "lucide-react";
 
 const FacilityTable = ({ facilities, page, onEdit, onView }) => {
 
@@ -22,6 +22,7 @@ const FacilityTable = ({ facilities, page, onEdit, onView }) => {
                     <th className="px-4.5 py-4 text-center w-12">STT</th>
                     <th className="px-6 py-4">Tên cơ sở</th>
                     <th className="px-6 py-4 text-center">Loại hình</th>
+                    <th className="px-6 py-4">Hiệu trưởng / Liên hệ</th>
                     <th className="px-6 py-4 text-center">Hành động</th>
                 </tr>
                 </thead>
@@ -31,14 +32,43 @@ const FacilityTable = ({ facilities, page, onEdit, onView }) => {
                     return (
                         <tr key={f.id} className="hover:bg-blue-50/30 transition-colors duration-150">
                             <td className="px-4.5 py-4 text-center text-xs font-semibold text-gray-500">{(page * 10) + index + 1}</td>
-                            <td className="px-6 py-4 font-bold text-gray-900 text-sm">{f.facilityName}</td>
+                            <td className="px-6 py-4 font-bold text-gray-900 text-sm">
+                                {f.facilityName}
+                            </td>
                             <td className="px-6 py-4 text-center align-middle">
                                 <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide border shadow-xs ${config.style}`}>
                                     {config.label}
                                 </span>
                             </td>
+                            <td className="px-6 py-4 align-middle">
+                                {f.principalName || f.principalPhone ? (
+                                    <div className="flex flex-col gap-0.5">
+                                        {f.principalName && (
+                                            <span className="text-xs font-bold text-gray-900">{f.principalName}</span>
+                                        )}
+                                        {f.principalPhone && (
+                                            <span className="text-xs text-gray-600 font-medium">
+                                                {f.principalPhone}
+                                            </span>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <span className="text-xs text-gray-400 italic">--</span>
+                                )}
+                            </td>
                             <td className="px-6 py-4 text-center align-middle">
                                 <div className="flex items-center justify-center gap-2">
+                                    {f.googleMapsUrl && (
+                                        <a
+                                            href={f.googleMapsUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex p-2 bg-gradient-to-l from-white to-gray-50 border border-red-200 text-red-600 rounded-lg hover:text-red-700 hover:bg-red-50 hover:border-red-300 hover:shadow-xs transition-all cursor-pointer"
+                                            title="Mở Google Maps"
+                                        >
+                                            <MapPin size={16} />
+                                        </a>
+                                    )}
                                     <button
                                         type="button"
                                         onClick={() => onView(f.id)}

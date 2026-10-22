@@ -636,32 +636,56 @@ public class DashboardServiceImpl implements IDashboardService {
             rankings.add(new vn.edu.fpt.eyesora.dto.response.FacilityRankDto(stat.facilityName(), stat.rate()));
         }
         
-        // Auto Insights
+        // 1. Phân tích trường cao nhất (Highest Facility Rate)
         FacilityMyopiaResponse highest = stats.get(0);
-        if (highest.rate() > 40) {
-            insights.add(highest.facilityName() + " có tỷ lệ cận thị báo động (" + highest.rate() + "%). Cần triển khai kế hoạch y tế học đường gấp.");
+        if (highest.rate() >= 70.0) {
+            insights.add(highest.facilityName() + " ghi nhận tỷ lệ cận thị ở mức báo động đỏ (" + highest.rate() + "%). Cần khẩn cấp triển khai kế hoạch can thiệp y tế học đường.");
+        } else if (highest.rate() >= 50.0) {
+            insights.add(highest.facilityName() + " có tỷ lệ cận thị mức cao (" + highest.rate() + "%).");
         } else {
             insights.add("Tỷ lệ cận thị cao nhất thuộc về " + highest.facilityName() + " (" + highest.rate() + "%).");
         }
         
+        // 2. Top 3 trường tỷ lệ cao nhất
         if (stats.size() >= 3) {
-            insights.add("Top 3 trường có tỷ lệ cận cao nhất: " + stats.get(0).facilityName() + ", " + stats.get(1).facilityName() + ", " + stats.get(2).facilityName() + ".");
+            insights.add("Top 3 trường có tỷ lệ cận thị cao nhất: " + stats.get(0).facilityName() + " (" + stats.get(0).rate() + "%), " + stats.get(1).facilityName() + " (" + stats.get(1).rate() + "%), " + stats.get(2).facilityName() + " (" + stats.get(2).rate() + "%).");
         }
         
-        // Count total patients in risk (sph between -2.5 and -3.0)
+        // 3. Phân tích tỷ lệ trung bình & độ chênh lệch giữa các trường
+        if (stats.size() > 1) {
+            double avgRate = stats.stream().mapToDouble(FacilityMyopiaResponse::rate).average().orElse(0.0);
+            avgRate = Math.round(avgRate * 10.0) / 10.0;
+            FacilityMyopiaResponse lowest = stats.get(stats.size() - 1);
+            double gap = Math.round((highest.rate() - lowest.rate()) * 10.0) / 10.0;
+            
+            insights.add("Tỷ lệ cận thị trung bình giữa các trường là " + avgRate + "%. Mức chênh lệch giữa trường cao nhất và thấp nhất là " + gap + "%.");
+        }
+        
+        // 4. Thống kê học sinh ranh giới cận vừa (-2.50D đến -3.00D) - Chuẩn Y khoa
         List<EyeExamRecord> entityList = eyeExamRecordRepository.findByIsDeletedFalse();
         if (startDate != null) entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
         if (endDate != null) entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
         if (campaignId != null && !campaignId.trim().isEmpty()) entityList = entityList.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
         
-        long riskCount = entityList.stream().filter(e -> {
+        long moderateRiskCount = entityList.stream().filter(e -> {
             boolean leftRisk = e.getSphLeft() != null && e.getSphLeft() <= -2.5 && e.getSphLeft() >= -3.0;
             boolean rightRisk = e.getSphRight() != null && e.getSphRight() <= -2.5 && e.getSphRight() >= -3.0;
             return leftRisk || rightRisk;
         }).count();
         
-        if (riskCount > 0) {
-            insights.add("Có " + riskCount + " học sinh đang ở ngưỡng ranh giới cận nặng (-2.50 đến -3.00), cần theo dõi sát sao.");
+        if (moderateRiskCount > 0) {
+            insights.add("Ghi nhận " + moderateRiskCount + " học sinh đang ở ngưỡng cận trung bình (SPH từ -2.50D đến -3.00D), cần áp dụng giải pháp kiểm soát độ cận để tránh chuyển thành cận nặng.");
+        }
+
+        // 5. Thống kê ca cận thị nặng (SPH <= -6.00D)
+        long severeCount = entityList.stream().filter(e -> {
+            boolean leftSevere = e.getSphLeft() != null && e.getSphLeft() <= -6.0;
+            boolean rightSevere = e.getSphRight() != null && e.getSphRight() <= -6.0;
+            return leftSevere || rightSevere;
+        }).count();
+
+        if (severeCount > 0) {
+            insights.add("Có " + severeCount + " học sinh cận thị nặng (SPH ≤ -6.00D) cần được khám chuyên khoa mắt định kỳ và theo dõi nguy cơ biến chứng võng mạc.");
         }
 
         return new FacilityAnalysisResponse(rankings, insights);
@@ -676,18 +700,69 @@ public class DashboardServiceImpl implements IDashboardService {
             return new GradeAnalysisResponse(null, 0.0, null, 0.0, insights);
         }
         
-        stats.sort((a, b) -> Double.compare(b.myopiaRate(), a.myopiaRate()));
+        // Stats sorted by myopia rate descending for max/min finding
+        List<GradeMyopiaResponse> sortedByRate = new ArrayList<>(stats);
+        sortedByRate.sort((a, b) -> Double.compare(b.myopiaRate(), a.myopiaRate()));
         
-        GradeMyopiaResponse highest = stats.get(0);
-        GradeMyopiaResponse lowest = stats.get(stats.size() - 1);
+        GradeMyopiaResponse highest = sortedByRate.get(0);
+        GradeMyopiaResponse lowest = sortedByRate.get(sortedByRate.size() - 1);
         
-        if (highest.myopiaRate() > 30) {
-            insights.add(highest.gradeName() + " có mức độ cận thị nghiêm trọng nhất (" + highest.myopiaRate() + "%).");
+        // 1. Phân tích khối cao nhất (Highest Rate Analysis)
+        if (highest.myopiaRate() >= 70.0) {
+            insights.add(highest.gradeName() + " ghi nhận tỷ lệ cận thị ở mức báo động đỏ (" + highest.myopiaRate() + "%). Cần ưu tiên bố trí khám sàng lọc chuyên khoa và can thiệp khẩn cấp.");
+        } else if (highest.myopiaRate() >= 50.0) {
+            insights.add(highest.gradeName() + " đang có tỷ lệ cận thị ở mức cao (" + highest.myopiaRate() + "%).");
+        } else if (highest.myopiaRate() >= 30.0) {
+            insights.add(highest.gradeName() + " có tỷ lệ cận thị mức trung bình (" + highest.myopiaRate() + "%).");
         } else {
-            insights.add(highest.gradeName() + " đang dẫn đầu về tỷ lệ cận thị (" + highest.myopiaRate() + "%).");
+            insights.add(highest.gradeName() + " đang dẫn đầu về tỷ lệ cận thị nhưng vẫn trong ngưỡng kiểm soát tốt (" + highest.myopiaRate() + "%).");
         }
         
-        insights.add(lowest.gradeName() + " có tỷ lệ thấp nhất (" + lowest.myopiaRate() + "%), có thể do thời gian học tập với thiết bị điện tử ít hơn.");
+        // 2. Phân tích khối thấp nhất (Lowest Rate Analysis)
+        if (lowest.myopiaRate() >= 50.0) {
+            insights.add(lowest.gradeName() + " có tỷ lệ thấp nhất trong trường (" + lowest.myopiaRate() + "%), tuy nhiên mức này vẫn ở ngưỡng báo động rất cao, không thể chủ quan.");
+        } else if (lowest.myopiaRate() >= 20.0) {
+            insights.add(lowest.gradeName() + " có tỷ lệ cận thị thấp nhất (" + lowest.myopiaRate() + "%), cần duy trì các biện pháp phòng ngừa.");
+        } else {
+            insights.add(lowest.gradeName() + " có tỷ lệ cận thị thấp nhất (" + lowest.myopiaRate() + "%), là thời điểm vàng để triển khai các giải pháp phòng ngừa cận thị khởi phát.");
+        }
+
+        // 3. Phân tích phân bổ theo độ tuổi / cấp học (Grade Progression Trend)
+        if (stats.size() >= 2) {
+            GradeMyopiaResponse earliestGrade = stats.get(0);
+            GradeMyopiaResponse latestGrade = stats.get(stats.size() - 1);
+            double gap = Math.round((latestGrade.myopiaRate() - earliestGrade.myopiaRate()) * 10.0) / 10.0;
+
+            if (gap >= 15.0) {
+                insights.add("Xu hướng y khoa: Tỷ lệ cận thị gia tăng mạnh " + Math.abs(gap) + "% từ " + earliestGrade.gradeName() + " (" + earliestGrade.myopiaRate() + "%) đến " + latestGrade.gradeName() + " (" + latestGrade.myopiaRate() + "%), phản ánh sự tăng chiều dài trục nhãn cầu theo độ tuổi và tích tụ áp lực nhìn gần.");
+            } else if (Math.abs(gap) < 5.0) {
+                insights.add("Tỷ lệ cận thị phân bố tương đối đồng đều giữa các khối lớp (chênh lệch chỉ " + Math.abs(gap) + "%).");
+            }
+        }
+
+        // 4. Phát hiện cận thị khởi phát sớm ở tiểu học (Grade 1-5 early onset detection)
+        Optional<GradeMyopiaResponse> earlyOnsetGrade = stats.stream()
+                .filter(g -> {
+                    String name = g.gradeName().replaceAll("[^0-9]", "");
+                    if (!name.isEmpty()) {
+                        try {
+                            int num = Integer.parseInt(name);
+                            return num >= 1 && num <= 5 && g.myopiaRate() >= 35.0;
+                        } catch (NumberFormatException ignored) {}
+                    }
+                    return false;
+                })
+                .findFirst();
+
+        if (earlyOnsetGrade.isPresent()) {
+            insights.add("Cảnh báo cận thị sớm: " + earlyOnsetGrade.get().gradeName() + " đã ghi nhận tỷ lệ cận thị " + earlyOnsetGrade.get().myopiaRate() + "%. Cận thị xuất hiện ở độ tuổi tiểu học có nguy cơ cao tiến triển thành cận thị nặng khi lớn lên.");
+        }
+
+        // 5. Cảnh báo các ca cận thị nặng toàn trường (Severe Myopia Cases <= -6.00D)
+        long totalSevereAlerts = stats.stream().mapToLong(GradeMyopiaResponse::alertCount).sum();
+        if (totalSevereAlerts > 0) {
+            insights.add("Báo động lâm sàng: Toàn trường có " + totalSevereAlerts + " ca cận thị nặng (SPH ≤ -6.00D). Nhóm này cần được quản lý hồ sơ riêng để kiểm soát nguy cơ biến chứng võng mạc.");
+        }
         
         return new GradeAnalysisResponse(highest.gradeName(), highest.myopiaRate(), lowest.gradeName(), lowest.myopiaRate(), insights);
     }

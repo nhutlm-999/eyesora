@@ -18,6 +18,12 @@ const handleExport = async () => {
     }
 };
 
+const getInitials = (name) => {
+    if (!name) return "N/A";
+    const words = name.trim().split(/\s+/);
+    return words.map(w => w[0] ? w[0].toUpperCase() : '').join('');
+};
+
 const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilterChange, openDetail, formatDiopter}) => {
     const totalPages = pageData.totalPages || 1;
 
@@ -49,7 +55,7 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
                                 <li className="flex items-start gap-1.5">
                                     <span className="text-sky-400 font-bold">•</span>
                                     <span><strong>Loạn thị cao:</strong> Độ trụ (CYL) từ <strong
-                                        className="text-amber-400 font-bold">1.50 Diop</strong> trở lên.</span>
+                                        className="text-amber-400 font-bold">-1.50 Diop</strong> trở xuống.</span>
                                 </li>
                             </ul>
                         </div>
@@ -71,7 +77,7 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
                             <option value="BOTH">Bị cả Cận & Loạn</option>
                         </select>
                         <div
-                            className="absolute right-3 pointer-events-none border-[4px] border-transparent border-t-gray-500 mt-1"></div>
+                            className="absolute right-3 pointer-events-none border-4 border-transparent border-t-gray-500 mt-1"></div>
                     </div>
 
                     <button onClick={handleExport}
@@ -86,13 +92,13 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-50/80 border-b border-gray-200">
                     <tr className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        <th className="px-4.5 py-4 text-center w-12">STT</th>
-                        <th className="px-6 py-4">Học Sinh</th>
-                        <th className="px-6 py-4">Lớp / Trường</th>
-                        <th className="px-6 py-4">Mắt Trái (Khúc xạ)</th>
-                        <th className="px-6 py-4">Mắt Phải (Khúc xạ)</th>
-                        <th className="px-6 py-4 text-center">Trạng thái</th>
-                        <th className="px-6 py-4 text-center">Chi tiết</th>
+                        <th className="px-3 py-3.5 text-center w-10">STT</th>
+                        <th className="px-4 py-3.5 text-center w-28">Bệnh nhân</th>
+                        <th className="px-3 py-3.5 text-center w-24">Lớp</th>
+                        <th className="px-3 py-3.5 text-center text-xs font-bold text-gray-700 w-36">👁️ Mắt Trái (OS)</th>
+                        <th className="px-3 py-3.5 text-center text-xs font-bold text-gray-700 w-36">👁️ Mắt Phải (OD)</th>
+                        <th className="px-3 py-3.5 text-center w-32">Trạng thái</th>
+                        <th className="px-3 py-3.5 text-center w-16">Chi tiết</th>
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -113,110 +119,124 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
 
                             const isSevereMyopia = isSevereMyopiaLeft || isSevereMyopiaRight;
                             const isHighAstigmatism = isHighAstigmatismLeft || isHighAstigmatismRight;
+                            const initials = getInitials(record.patientName);
 
                             return (
-                                <tr key={index} className="hover:bg-blue-50/30 transition-colors duration-150">
+                                <tr key={index} className="hover:bg-blue-50/20 transition-colors duration-150">
                                     {/* STT */}
-                                    <td className="px-4.5 py-4 text-center text-xs font-semibold text-gray-500">
+                                    <td className="px-3 py-3 text-center text-xs font-semibold text-gray-500">
                                         {pageData.page * 10 + index + 1}
                                     </td>
 
-                                    {/* Học Sinh */}
-                                    <td className="px-6 py-4">
-                                        <div
-                                            className="text-sm font-bold text-gray-900">{record.patientName ?? "N/A"}</div>
-                                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
-                                            <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-700 font-medium">
-                                                {record.gender === "MALE" ? "Nam" : record.gender === "FEMALE" ? "Nữ" : "Khác"}
-                                            </span>
+                                    {/* Bệnh Nhân (Viết tắt 3 chữ cái đầu - Chữ to) */}
+                                    <td className="px-3 py-2.5 text-center">
+                                        <button
+                                            type="button"
+                                            onClick={() => openDetail(record)}
+                                            className="inline-flex items-center justify-center font-black text-sm text-sky-950 bg-sky-100 border border-sky-300 px-3 py-1 rounded-lg tracking-widest font-mono shadow-xs hover:bg-sky-200 hover:scale-105 transition-all cursor-pointer"
+                                            title={`Xem chi tiết tên đầy đủ: ${record.patientName ?? "N/A"}`}
+                                        >
+                                            {initials}
+                                        </button>
+                                        <div className="text-[10px] text-gray-400 mt-0.5 font-medium">
+                                            {record.gender === "MALE" ? "Nam" : record.gender === "FEMALE" ? "Nữ" : "Khác"}
                                         </div>
                                     </td>
 
-                                    {/* Lớp / Trường */}
-                                    <td className="px-6 py-4">
-                                        <div
-                                            className="text-sm font-semibold text-gray-800">{record.className ?? "-"}</div>
-                                        <div className="text-xs text-gray-500 mt-0.5 max-w-[180px] truncate"
-                                             title={record.facilityName}>
-                                            {record.facilityName ?? "-"}
+                                    {/* Lớp / Trường (Hiển thị dạng chữ thường, không bọc) */}
+                                    <td className="px-3 py-2.5 text-center">
+                                        <div className="text-xs font-bold text-gray-900">
+                                            {record.className ?? "-"}
                                         </div>
+                                        {record.facilityName && (
+                                            <div className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[100px] mx-auto"
+                                                 title={record.facilityName}>
+                                                {record.facilityName}
+                                            </div>
+                                        )}
                                     </td>
 
-                                    {/* Mắt Trái (Khúc xạ) */}
-                                    <td className="px-6 py-4">
+                                    {/* Mắt Trái (OS) - Chữ to rõ */}
+                                    <td className="px-3 py-2.5 w-40">
                                         <div className="flex flex-col gap-1.5">
-                                            <div
-                                                className={`text-xs font-mono px-3 py-1.5 rounded-lg border w-fit flex items-center gap-1.5 shadow-xs transition-all ${
-                                                    isSevereMyopiaLeft
-                                                        ? 'bg-red-100 text-red-950 border-red-400 font-extrabold'
-                                                        : 'bg-gray-50 text-gray-700 border-gray-200'
-                                                }`}>
-                                                <span className="text-[10px] text-gray-400 font-sans uppercase">SPH:</span>
-                                                <span>{formatDiopter(record.sphLeft)}</span>
+                                            <div className={`flex items-center justify-between px-2.5 py-1 rounded-md border transition-all ${
+                                                isSevereMyopiaLeft
+                                                    ? 'bg-red-50 border-red-300 text-red-950 font-extrabold'
+                                                    : 'bg-gray-50 border-gray-200 text-gray-800'
+                                            }`}>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="font-bold text-gray-700 text-xs">Độ cầu SPH</span>
+                                                    <span className="text-xs text-gray-500 font-medium">(Cận)</span>
+                                                </div>
+                                                <span className="font-mono font-extrabold text-sm">{formatDiopter(record.sphLeft)}</span>
                                             </div>
-                                            <div
-                                                className={`text-xs font-mono px-3 py-1.5 rounded-lg border w-fit flex items-center gap-1.5 shadow-xs transition-all ${
-                                                    isHighAstigmatismLeft
-                                                        ? 'bg-amber-100 text-amber-950 border-amber-400 font-extrabold'
-                                                        : 'bg-gray-50 text-gray-700 border-gray-200'
-                                                }`}>
-                                                <span className="text-[10px] text-gray-400 font-sans uppercase">CYL:</span>
-                                                <span>{formatDiopter(record.cylLeft)}</span>
+
+                                            <div className={`flex items-center justify-between px-2.5 py-1 rounded-md border transition-all ${
+                                                isHighAstigmatismLeft
+                                                    ? 'bg-amber-50 border-amber-300 text-amber-950 font-extrabold'
+                                                    : 'bg-gray-50 border-gray-200 text-gray-800'
+                                            }`}>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="font-bold text-gray-700 text-xs"> Độ trụ CYL</span>
+                                                    <span className="text-xs text-gray-500 font-medium">(Loạn)</span>
+                                                </div>
+                                                <span className="font-mono font-extrabold text-sm">{formatDiopter(record.cylLeft)}</span>
                                             </div>
                                         </div>
                                     </td>
 
-                                    {/* Mắt Phải (Khúc xạ)*/}
-                                    <td className="px-6 py-4">
+                                    {/* Mắt Phải (OD) - Chữ to rõ */}
+                                    <td className="px-3 py-2.5 w-40">
                                         <div className="flex flex-col gap-1.5">
-                                            <div
-                                                className={`text-xs font-mono px-3 py-1.5 rounded-lg border w-fit flex items-center gap-1.5 shadow-xs transition-all ${
-                                                    isSevereMyopiaRight
-                                                        ? 'bg-red-100 text-red-950 border-red-400 font-extrabold'
-                                                        : 'bg-gray-50 text-gray-700 border-gray-200'
-                                                }`}>
-                                                <span className="text-[10px] text-gray-400 font-sans uppercase">SPH:</span>
-                                                <span>{formatDiopter(record.sphRight)}</span>
+                                            <div className={`flex items-center justify-between px-2.5 py-1 rounded-md border transition-all ${
+                                                isSevereMyopiaRight
+                                                    ? 'bg-red-50 border-red-300 text-red-950 font-extrabold'
+                                                    : 'bg-gray-50 border-gray-200 text-gray-800'
+                                            }`}>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="font-bold text-gray-700 text-xs">Độ cầu SPH</span>
+                                                    <span className="text-xs text-gray-500 font-medium">(Cận)</span>
+                                                </div>
+                                                <span className="font-mono font-extrabold text-sm">{formatDiopter(record.sphRight)}</span>
                                             </div>
-                                            <div
-                                                className={`text-xs font-mono px-3 py-1.5 rounded-lg border w-fit flex items-center gap-1.5 shadow-xs transition-all ${
-                                                    isHighAstigmatismRight
-                                                        ? 'bg-amber-100 text-amber-950 border-amber-400 font-extrabold'
-                                                        : 'bg-gray-50 text-gray-700 border-gray-200'
-                                                }`}>
-                                                <span className="text-[10px] text-gray-400 font-sans uppercase">CYL:</span>
-                                                <span>{formatDiopter(record.cylRight)}</span>
+
+                                            <div className={`flex items-center justify-between px-2.5 py-1 rounded-md border transition-all ${
+                                                isHighAstigmatismRight
+                                                    ? 'bg-amber-50 border-amber-300 text-amber-950 font-extrabold'
+                                                    : 'bg-gray-50 border-gray-200 text-gray-800'
+                                            }`}>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="font-bold text-gray-700 text-xs">Độ trụ CYL</span>
+                                                    <span className="text-xs text-gray-500 font-medium">(Loạn)</span>
+                                                </div>
+                                                <span className="font-mono font-extrabold text-sm">{formatDiopter(record.cylRight)}</span>
                                             </div>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 text-center align-middle">
+                                    <td className="px-4 py-3 text-center align-middle">
                                         {isSevereMyopia && isHighAstigmatism ? (
-                                            /* Cận & Loạn Cao: Đỏ đậm nổi bật nhất, chữ trắng */
-                                            <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-red-600 text-white border border-red-700 whitespace-nowrap shadow-xs">
-        Cận & Loạn Cao
-    </span>
+                                            <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-red-600 text-white border border-red-700 whitespace-nowrap shadow-2xs">
+                                                Cận & Loạn Cao
+                                            </span>
                                         ) : isSevereMyopia ? (
-                                            /* Cận nặng: Chuyển sang tông Cam để không bị lẫn với Đỏ */
-                                            <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-orange-500 text-white border border-orange-600 whitespace-nowrap shadow-xs">
-        Cận nặng
-    </span>
+                                            <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-orange-500 text-white border border-orange-600 whitespace-nowrap shadow-2xs">
+                                                Cận nặng
+                                            </span>
                                         ) : isHighAstigmatism ? (
-                                            /* Loạn thị cao: Dùng màu Vàng chanh, đổi text thành màu Đậm để dễ đọc */
-                                            <span className="inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide bg-yellow-400 text-yellow-950 border border-yellow-500 whitespace-nowrap shadow-xs">
-        Loạn thị cao
-    </span>
+                                            <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-yellow-400 text-yellow-950 border border-yellow-500 whitespace-nowrap shadow-2xs">
+                                                Loạn thị cao
+                                            </span>
                                         ) : null}
-
                                     </td>
 
                                     {/* Thao tác */}
-                                    <td className="px-6 py-4 text-center align-middle">
+                                    <td className="px-4 py-3 text-center align-middle">
                                         <button
                                             type="button"
                                             onClick={() => openDetail(record)}
                                             className="inline-flex p-2 bg-gradient-to-l from-white to-gray-50 border border-gray-200 text-gray-600 rounded-lg hover:text-blue-600 hover:border-blue-300 hover:shadow-xs transition-all cursor-pointer"
-                                            title="Xem chi tiết hồ sơ"
+                                            title="Xem chi tiết đầy đủ hồ sơ"
                                         >
                                             <Eye className="w-4 h-4"/>
                                         </button>

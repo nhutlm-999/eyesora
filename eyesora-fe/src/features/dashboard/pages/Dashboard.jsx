@@ -224,7 +224,7 @@ const Dashboard = () => {
                     </div>
                     <select value={campaignId} onChange={e => setCampaignId(e.target.value)} className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500 min-w-[200px]">
                         <option value="">Tất cả chiến dịch</option>
-                        {campaigns.map(c => <option key={c.campaignId} value={c.campaignId}>{c.campaignName}</option>)}
+                        {campaigns.map(c => <option key={c.campaignId} value={c.campaignId}>{c.campaignTitle}</option>)}
                     </select>
                     <button onClick={fetchDashboardStaticData} className="bg-[#004194] text-white px-4 py-1.5 rounded text-sm hover:bg-blue-800 transition-colors font-medium">Lọc</button>
                 </div>

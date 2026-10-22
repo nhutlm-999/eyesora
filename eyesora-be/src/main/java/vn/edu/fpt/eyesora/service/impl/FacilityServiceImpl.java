@@ -9,6 +9,7 @@ import vn.edu.fpt.eyesora.dto.request.FacilityRequest;
 import vn.edu.fpt.eyesora.dto.response.FacilityResponse;
 import vn.edu.fpt.eyesora.entity.Facility;
 import vn.edu.fpt.eyesora.entity.Ward;
+import vn.edu.fpt.eyesora.exceptions.BusinessException;
 import vn.edu.fpt.eyesora.exceptions.ResourceNotFoundException;
 import vn.edu.fpt.eyesora.repository.FacilityRepository;
 import vn.edu.fpt.eyesora.repository.WardRepository;
@@ -30,6 +31,8 @@ public class FacilityServiceImpl implements IFacilityService {
 
     @Override
     public FacilityResponse createFacility(FacilityRequest req) {
+        validatePrincipalInfo(req);
+
         Facility f = new Facility();
         if (req.wardId() != null && !req.wardId().isBlank()) {
             Ward ward = wardRepository.findById(req.wardId())
@@ -41,6 +44,9 @@ public class FacilityServiceImpl implements IFacilityService {
         f.setFacilityType(req.facilityType());
         f.setAddress(req.address());
         f.setPhone(req.phone());
+        f.setGoogleMapsUrl(req.googleMapsUrl());
+        f.setPrincipalName(req.principalName() != null ? req.principalName().trim() : null);
+        f.setPrincipalPhone(req.principalPhone() != null ? req.principalPhone().trim() : null);
 
         f = facilityRepository.save(f);
         return mapToResponse(f);
@@ -48,6 +54,8 @@ public class FacilityServiceImpl implements IFacilityService {
 
     @Override
     public FacilityResponse updateFacility(String id, FacilityRequest req) {
+        validatePrincipalInfo(req);
+
         Facility existing = facilityRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy cơ sở với ID: " + id));
 
@@ -55,6 +63,9 @@ public class FacilityServiceImpl implements IFacilityService {
         existing.setFacilityType(req.facilityType());
         existing.setAddress(req.address());
         existing.setPhone(req.phone());
+        existing.setGoogleMapsUrl(req.googleMapsUrl());
+        existing.setPrincipalName(req.principalName() != null ? req.principalName().trim() : null);
+        existing.setPrincipalPhone(req.principalPhone() != null ? req.principalPhone().trim() : null);
 
         // Kiểm tra an toàn: Lấy ID ward hiện tại nếu có
         String currentWardId = (existing.getWard() != null) ? existing.getWard().getId() : null;
@@ -74,6 +85,17 @@ public class FacilityServiceImpl implements IFacilityService {
         return mapToResponse(facilityRepository.save(existing));
     }
 
+    private void validatePrincipalInfo(FacilityRequest req) {
+        if (req.facilityType() == Facility.FacilityType.SCHOOL) {
+            if (req.principalName() == null || req.principalName().trim().isEmpty()) {
+                throw new BusinessException("Tên hiệu trưởng là bắt buộc đối với trường học");
+            }
+            if (req.principalPhone() == null || req.principalPhone().trim().isEmpty()) {
+                throw new BusinessException("Số điện thoại hiệu trưởng là bắt buộc đối với trường học");
+            }
+        }
+    }
+
     private FacilityResponse mapToResponse(Facility f) {
         // Kiểm tra null ở mọi cấp độ để tránh NullPointerException
         String wardName = (f.getWard() != null) ? f.getWard().getWardName() : null;
@@ -91,7 +113,10 @@ public class FacilityServiceImpl implements IFacilityService {
                 f.getPhone(),
                 wardName,
                 wardId,
-                districtId
+                districtId,
+                f.getGoogleMapsUrl(),
+                f.getPrincipalName(),
+                f.getPrincipalPhone()
         );
     }
 

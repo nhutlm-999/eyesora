@@ -24,7 +24,7 @@ const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = tr
                             <div className="flex h-full w-full min-w-[540px] pr-2 pt-9">
 
                                 {/* Trục Y */}
-                                <div className="flex flex-col justify-between pr-3 text-[11px] font-medium text-gray-400 select-none pb-7 text-right w-10 shrink-0">
+                                <div className="flex flex-col justify-between pr-3 text-[13px] font-medium text-gray-800 select-none pb-7 text-right w-10 shrink-0">
                                     {Y_AXIS_STEPS.map((val) => (
                                         <span key={val}>{val}%</span>
                                     ))}
@@ -48,22 +48,16 @@ const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = tr
                                         {gradeStats.map((item, index) => {
                                             const rate = item.myopiaRate || 0;
 
-                                            // Đổi màu theo tỷ lệ
-                                            let barColor = "bg-gradient-to-b from-sky-300/80 to-sky-600";
-
                                             return (
                                                 <div
                                                     key={index}
                                                     className="flex flex-col items-center h-full justify-end group z-10 w-full max-w-[64px]"
                                                 >
                                                     <div
-                                                        className="relative w-9 sm:w-11 rounded-t-md flex flex-col justify-end group-hover:opacity-80"
+                                                        className="relative w-9 sm:w-11 rounded-t-md flex flex-col justify-end group-hover:opacity-80 bg-gradient-to-b from-yellow-400 to-yellow-600/80 transition-all duration-1000"
                                                         style={{ height: animateBars ? `${rate}%` : '0%' }}
                                                     >
-                                                        <div className="w-full bg-red-600 transition-all duration-1000" style={{ height: item.severeRate ? `${(item.severeRate / rate) * 100}%` : '0%' }}></div>
-                                                        <div className="w-full bg-orange-500 transition-all duration-1000" style={{ height: item.moderateRate ? `${(item.moderateRate / rate) * 100}%` : '0%' }}></div>
-                                                        <div className="w-full bg-yellow-400 transition-all duration-1000" style={{ height: item.mildRate ? `${(item.mildRate / rate) * 100}%` : (rate > 0 ? '100%' : '0%') }}></div>
-                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 text-xs font-extrabold text-gray-900 bg-white border border-gray-200 px-1.5 py-0.5 rounded-md shadow-xs select-none whitespace-nowrap z-20">
+                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 text-sm font-extrabold text-gray-900 bg-white border border-gray-200 px-1.5 py-0.5 rounded-md shadow-xs select-none whitespace-nowrap z-20">
                                                             {rate}%
                                                         </span>
                                                     </div>
@@ -80,7 +74,7 @@ const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = tr
                                                 className="w-full max-w-[64px] text-center"
                                             >
                                                 <p
-                                                    className="text-xs font-semibold text-gray-600 truncate"
+                                                    className="text-lg font-semibold text-black-600 truncate"
                                                     title={item.gradeName}
                                                 >
                                                     {item.gradeName}
