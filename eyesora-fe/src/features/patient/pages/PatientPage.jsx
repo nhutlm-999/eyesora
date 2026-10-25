@@ -15,12 +15,10 @@ const PatientPage = () => {
 
     // State quản lý bộ lọc
     const [selectedFacility, setSelectedFacility] = useState("");
-    const [selectedCampaign, setSelectedCampaign] = useState("");
     const [searchQuery, setSearchQuery] = useState('');
 
     // State lưu danh sách options cho Select
     const [facilities, setFacilities] = useState([]);
-    const [campaigns, setCampaigns] = useState([]);
 
     const [loading, setLoading] = useState(true);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -34,12 +32,8 @@ const PatientPage = () => {
         const fetchFilterOptions = async () => {
             try {
                 // Thay đổi URL chính xác theo API Backend của bạn nhé
-                const [facRes, camRes] = await Promise.all([
-                    axiosClient.get('/master-data/facilities?page=0&size=999'),
-                    axiosClient.get('/campaigns?page=0&size=999')
-                ]);
+                const facRes = await axiosClient.get('/master-data/facilities?page=0&size=999');
                 setFacilities(facRes.data.content || []);
-                setCampaigns(camRes.data.content || []);
             } catch (error) {
                 console.error("Lỗi khi fetch danh sách bộ lọc:", error);
             }
@@ -53,9 +47,8 @@ const PatientPage = () => {
         try {
             // Xây dựng query string động dựa trên các bộ lọc đã chọn
             let url = `/patients?page=${page}&size=${size}`;
-            if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+            if (searchQuery) url += `&name=${encodeURIComponent(searchQuery)}`;
             if (selectedFacility) url += `&facilityId=${selectedFacility}`;
-            if (selectedCampaign) url += `&campaignId=${selectedCampaign}`;
 
             const res = await axiosClient.get(url);
             const data = res.data;
@@ -77,16 +70,11 @@ const PatientPage = () => {
     // 3. Mỗi khi thay đổi trang, từ khóa tìm kiếm, trường học hoặc chiến dịch -> Gọi lại API
     useEffect(() => {
         fetchPatients(pageInfo.pageNumber, pageInfo.pageSize);
-    }, [pageInfo.pageNumber, selectedFacility, selectedCampaign, searchQuery]);
+    }, [pageInfo.pageNumber, selectedFacility, searchQuery]);
 
     // Trình lắng nghe reset về trang đầu tiên nếu người dùng đổi bộ lọc mới
     const handleFacilityChange = (e) => {
         setSelectedFacility(e.target.value);
-        setPageInfo(prev => ({ ...prev, pageNumber: 0 }));
-    };
-
-    const handleCampaignChange = (e) => {
-        setSelectedCampaign(e.target.value);
         setPageInfo(prev => ({ ...prev, pageNumber: 0 }));
     };
 
@@ -154,19 +142,6 @@ const PatientPage = () => {
                         {facilities?.map((fac, index) => (
                             <option key={fac.id || fac.facilityId || index} value={fac.id || fac.facilityId}>
                                 {fac.facilityName || fac.name}
-                            </option>
-                        ))}
-                    </select>
-
-                    <select
-                        value={selectedCampaign}
-                        onChange={handleCampaignChange}
-                        className="bg-white border border-gray-300 text-xs font-semibold text-gray-800 px-4 py-2.5 rounded-xl shadow-xs outline-none hover:bg-gray-50 focus:ring-2 focus:ring-blue-900/20 focus:border-[#004194] transition-all cursor-pointer min-w-[160px] max-w-[200px]"
-                    >
-                        <option value="">Tất cả chiến dịch</option>
-                        {campaigns.map((cam, index) => (
-                            <option key={cam.campaignId || cam.id || index} value={cam.campaignId || cam.id}>
-                                {cam.campaignTitle || cam.name}
                             </option>
                         ))}
                     </select>

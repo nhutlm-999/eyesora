@@ -267,17 +267,20 @@ public class PatientServiceImpl implements IPatientService {
         String wardName = p.getWard() != null ? p.getWard().getWardName() : "Chưa cập nhật";
         
         String className = null;
+        String classId = null;
         if (p.getEnrollments() != null && !p.getEnrollments().isEmpty()) {
-            className = p.getEnrollments().stream()
-                    .filter(e -> e.getStatus() == vn.edu.fpt.eyesora.entity.ClassEnrollment.EnrollmentStatus.ACTIVE)
+            ClassEnrollment enrollment = p.getEnrollments().stream()
+                    .filter(e -> e.getStatus() == ClassEnrollment.EnrollmentStatus.ACTIVE)
                     .findFirst()
-                    .map(e -> e.getClasses().getClassName())
-                    .orElseGet(() -> p.getEnrollments().get(0).getClasses().getClassName());
+                    .orElseGet(() -> p.getEnrollments().get(0));
+            className = enrollment.getClasses().getClassName();
+            classId = enrollment.getClasses().getId();
         }
 
         return new PatientResponse(
                 p.getPatientId(),
                 p.getPatientName(),
+                classId,
                 className,
                 p.getFacility() != null ? p.getFacility().getId() : null,
                 p.getFacility() != null ? p.getFacility().getFacilityName() : null,
