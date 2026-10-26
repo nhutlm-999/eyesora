@@ -12,7 +12,6 @@ public record PatientRequest(
         @NotBlank(message = "Mã lớp là bắt buộc")
         String classId,
 
-        @NotNull(message = "Ngày sinh là bắt buộc")
         @Past(message = "Ngày sinh phải là ngày trong quá khứ")
         LocalDate dob,
 
@@ -20,8 +19,8 @@ public record PatientRequest(
         String gender,
 
         @Pattern(
-                regexp = "^[0-9]{10,11}$",
-                message = "Số điện thoại phải có từ 10 đến 11 chữ số"
+                regexp = "^0\\d{9,10}$",
+                message = "Số điện thoại phải bắt đầu bằng 0 và có 10–11 chữ số"
         )
         String parentPhone,
 
@@ -31,6 +30,5 @@ public record PatientRequest(
         @NotBlank(message = "Mã cơ sở là bắt buộc")
         String facilityId,
 
-        @NotBlank(message = "Mã phường/xã là bắt buộc")
         String wardId
 ) {}

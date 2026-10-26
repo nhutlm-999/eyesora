@@ -1,12 +1,16 @@
 package vn.edu.fpt.eyesora.dto.response;
 
 import lombok.Builder;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Builder
 public record DashboardSummaryResponse(
-        long totalExaminedStudents,
-        double currentMyopiaRate,
-        Double myopiaRateTrend,
-        long totalAlertCases,
-        long totalParticipatingFacilities
-){}
+        @JsonProperty("students")
+        StudentsInfoResponse students,
+        @JsonProperty("myopia")
+        MyopiaInfoResponse myopia,
+        @JsonProperty("criticalAlerts")
+        CriticalAlertsResponse criticalAlerts,
+        @JsonProperty("facilities")
+        FacilitiesInfoResponse facilities
+) {}

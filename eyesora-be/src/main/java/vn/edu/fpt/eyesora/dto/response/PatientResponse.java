@@ -13,8 +13,8 @@ public record PatientResponse(
         String facilityId,
         String facilityName,
 
-        String campaignId,
-        String campaignTitle,
+//        String campaignId,
+//        String campaignTitle,
 
         LocalDate dob,
         String gender,

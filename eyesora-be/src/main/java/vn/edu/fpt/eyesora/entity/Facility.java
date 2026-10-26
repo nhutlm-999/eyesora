@@ -31,6 +31,15 @@ public class Facility {
     @Column(name = "phone", length = 15)
     private String phone;
 
+    @Column(name = "google_maps_url", length = 2048)
+    private String googleMapsUrl;
+
+    @Column(name = "principal_name", length = 150)
+    private String principalName;
+
+    @Column(name = "principal_phone", length = 20)
+    private String principalPhone;
+
     public enum FacilityType {
         SCHOOL, CLINIC, HOSPITAL
     }

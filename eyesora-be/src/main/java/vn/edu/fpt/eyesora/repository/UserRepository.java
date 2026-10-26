@@ -16,7 +16,6 @@ import java.util.Set;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
-    Optional<User> findByUsername(String username);
 
     boolean existsByUsername(String username);
 
@@ -26,4 +25,12 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
     Page<User> findByRoleName(@Param("roleName") String roleName, Pageable pageable);
+
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.facility WHERE u.username = :username")
+    Optional<User> findByUsername(@Param("username") String username);
+
+    @Query(value = "SELECT u FROM User u LEFT JOIN FETCH u.facility",
+            countQuery = "SELECT COUNT(u) FROM User u")
+    Page<User> findAll(Pageable pageable);
+
 }

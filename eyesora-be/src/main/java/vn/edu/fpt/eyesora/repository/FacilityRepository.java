@@ -18,4 +18,5 @@ public interface FacilityRepository extends JpaRepository<Facility, String> {
 
     Optional<Facility> findByFacilityName(String facilityName);
 
+    long countByFacilityType(Facility.FacilityType facilityType);
 }

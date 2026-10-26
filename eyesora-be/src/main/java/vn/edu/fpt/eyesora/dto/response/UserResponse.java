@@ -9,5 +9,6 @@ public record UserResponse(
         String fullName,
         String status,
         Set<String> roles,
-        String facilityName
+        String facilityName,
+        String facilityId
 ) {}

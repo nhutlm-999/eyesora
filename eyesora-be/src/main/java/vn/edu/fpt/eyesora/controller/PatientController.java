@@ -8,12 +8,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import vn.edu.fpt.eyesora.dto.request.PatientRequest;
+import vn.edu.fpt.eyesora.dto.response.OverduePatientResponse;
 import vn.edu.fpt.eyesora.dto.response.PatientResponse;
 import vn.edu.fpt.eyesora.service.IPatientService;
 
 import java.util.Map;
 
+@PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'EXAMINER')")
 @RestController
 @RequestMapping("/api/patients")
 @RequiredArgsConstructor
@@ -21,16 +24,29 @@ public class PatientController {
 
     private final IPatientService patientService;
 
+    @GetMapping("/overdue-re-examination")
+    public ResponseEntity<Page<OverduePatientResponse>> getOverdueReExamPatients(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String facilityId,
+            @RequestParam(defaultValue = "6") int overdueMonths) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(patientService.getOverdueReExamPatients(keyword, facilityId, overdueMonths, pageable));
+    }
+
     @GetMapping
     public ResponseEntity<Page<PatientResponse>> getPatients(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Integer birthYear,
+            @RequestParam(required = false) String classId,
+            @RequestParam(required = false) String facilityId,
             @RequestHeader(value = "Ward-Id", required = false) String wardId) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("patientName").ascending());
-        return ResponseEntity.ok(patientService.getPatients(wardId, name, birthYear, pageable));
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(patientService.getPatients(wardId, name, birthYear, classId, facilityId, pageable));
     }
 
     @GetMapping("/{id}")
@@ -57,5 +73,11 @@ public class PatientController {
 
         PatientResponse updatedPatient = patientService.updatePatient(id, req);
         return ResponseEntity.ok(updatedPatient);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deletePatient(@PathVariable String id) {
+        patientService.deletePatient(id);
+        return ResponseEntity.ok("Đã xóa bệnh nhân thành công!");
     }
 }

@@ -1,40 +1,54 @@
 import { create } from 'zustand';
+import axiosClient from "../../../shared/axios/axiosClient.js";
 
-export const useAuthStore = create((set) => ({
-    // Trạng thái ban đầu: Thử lấy dữ liệu cũ từ localStorage nếu có
-    user: localStorage.getItem('username')
-        ? {
-            id: localStorage.getItem('userId'),
-            username: localStorage.getItem('username'),
-            // img: localStorage.getItem('userImg'),
-            role: localStorage.getItem('userRole'),
+export const useAuthStore = create((set, get) => ({
+    user: null,
+    isAuthenticated: false,
+    isInitialized: false,
+
+    initAuth: async () => {
+        try {
+            const res = await axiosClient.get('/auth/me');
+            set({
+                isAuthenticated: true,
+                user: res.data,
+                isInitialized: true
+            });
+        } catch (error) {
+            set({
+                isAuthenticated: false,
+                user: null,
+                isInitialized: true
+            });
         }
-        : null,
-    isAuthenticated: !!localStorage.getItem('accessToken'),
-
-    // Hành động Đăng nhập thành công
-    loginSuccess: (tokenData) => {
-        localStorage.setItem('accessToken', tokenData.accessToken);
-        localStorage.setItem('refreshToken', tokenData.refreshToken);
-        localStorage.setItem('userId', tokenData.id);
-        localStorage.setItem('username', tokenData.username);
-        localStorage.setItem('userImg', tokenData.img || '');
-        localStorage.setItem('userRole', tokenData.role);
-
-        set({
-            isAuthenticated: true,
-            user: {
-                id: tokenData.id,
-                username: tokenData.username,
-                img: tokenData.img,
-                role: tokenData.role
-            }
-        });
     },
 
-    // Hành động Đăng xuất
-    logout: () => {
-        localStorage.clear(); // Hoặc xóa từng item cụ thể
+    fetchProfile: async () => {
+        const currentUser = get().user;
+        if (!currentUser || !currentUser.id) return null;
+        try {
+            const res = await axiosClient.get(`/admin/users/${currentUser.id}`);
+            const profileData = res.data;
+            set((state) => ({
+                user: {
+                    ...state.user,
+                    facilityId: profileData.facilityId
+                }
+            }));
+            return profileData.facilityId;
+        } catch (error) {
+            return null;
+        }
+    },
+
+    loginSuccess: async () => {
+        await get().initAuth();
+    },
+
+    logout: async () => {
+        try {
+            await axiosClient.post('/auth/logout');
+        } catch (e) {}
         set({ isAuthenticated: false, user: null });
         window.location.href = '/login';
     }

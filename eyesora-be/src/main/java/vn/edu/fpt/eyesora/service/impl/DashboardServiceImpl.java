@@ -1,21 +1,41 @@
 package vn.edu.fpt.eyesora.service.impl;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.fpt.eyesora.dto.response.*;
 import vn.edu.fpt.eyesora.entity.EyeExamRecord;
+import vn.edu.fpt.eyesora.exceptions.BusinessException;
 import vn.edu.fpt.eyesora.repository.EyeExamRecordRepository;
 import vn.edu.fpt.eyesora.service.IDashboardService;
+import vn.edu.fpt.eyesora.service.recommendation.ClinicalDefinitions;
+import vn.edu.fpt.eyesora.service.recommendation.GroupStats;
+import vn.edu.fpt.eyesora.service.recommendation.RecommendationEngine;
+import vn.edu.fpt.eyesora.service.security.FacilityScopeResolver;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.*;
+import jakarta.persistence.criteria.Predicate;
 import java.util.stream.Collectors;
+
+
 
 @Service
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements IDashboardService {
 
     private final EyeExamRecordRepository eyeExamRecordRepository;
+    private final vn.edu.fpt.eyesora.repository.PatientRepository patientRepository;
+    private final vn.edu.fpt.eyesora.repository.FacilityRepository facilityRepository;
+    private final RecommendationEngine recommendationEngine;
+    private final ClinicalDefinitions clinicalDefinitions;
+    private final FacilityScopeResolver facilityScopeResolver;
 
     private EyeExamRecordResponse mapToResponse(EyeExamRecord entity) {
         return EyeExamRecordResponse.builder()
@@ -29,31 +49,48 @@ public class DashboardServiceImpl implements IDashboardService {
                 .schoolYear(entity.getClassesField() != null ? entity.getClassesField().getSchoolYear() : "N/A")
                 .sphLeft(entity.getSphLeft())
                 .sphRight(entity.getSphRight())
+                .cylLeft(entity.getCylLeft())
+                .cylRight(entity.getCylRight())
                 .build();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public DashboardSummaryResponse getSummaryCounters() {
+    public DashboardSummaryResponse getSummaryCounters(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
         List<EyeExamRecord> entityList = eyeExamRecordRepository.findByIsDeletedFalse();
+        
+        // Filter
+        if (startDate != null) {
+            entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
+        }
+        if (endDate != null) {
+            entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
+        }
+        if (campaignId != null && !campaignId.trim().isEmpty()) {
+            entityList = entityList.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        }
 
-        long totalStudents = entityList.size();
-        long totalAlertCases = entityList.stream()
-                .filter(e -> (e.getSphLeft() != null && e.getSphLeft() <= -6.00) || (e.getSphRight() != null && e.getSphRight() <= -6.00))
-                .count();
+        // === STUDENTS INFO ===
+        long examined = entityList.size();
+        long target = patientRepository.count();
+        double completionRate = target > 0 ? Math.round((examined * 100.0 / target) * 10.0) / 10.0 : 0.0;
+        StudentsInfoResponse students = StudentsInfoResponse.builder()
+                .examined(examined)
+                .target(target)
+                .completionRate(completionRate)
+                .build();
 
+        // === MYOPIA INFO ===
         long totalMyopia = entityList.stream()
                 .filter(e -> (e.getSphLeft() != null && e.getSphLeft() < 0) || (e.getSphRight() != null && e.getSphRight() < 0))
                 .count();
-        double currentMyopiaRate = totalStudents > 0 ? Math.round((totalMyopia * 100.0 / totalStudents) * 10.0) / 10.0 : 0.0;
+        double currentMyopiaRate = examined > 0 ? Math.round((totalMyopia * 100.0 / examined) * 10.0) / 10.0 : 0.0;
 
-        long totalFacilities = entityList.stream()
-                .filter(e -> e.getClassesField() != null && e.getClassesField().getFacility() != null)
-                .map(e -> e.getClassesField().getFacility().getId())
-                .distinct()
-                .count();
+        // Calculate trend comparison
+        Double previousPeriodRate = 0.0;
+        String direction = "STABLE";
+        Double diff = 0.0;
 
-        Double myopiaRateTrend = null;
         Map<String, List<EyeExamRecord>> groupByYear = entityList.stream()
                 .filter(e -> e.getClassesField() != null && e.getClassesField().getSchoolYear() != null)
                 .collect(Collectors.groupingBy(e -> e.getClassesField().getSchoolYear()));
@@ -64,16 +101,77 @@ public class DashboardServiceImpl implements IDashboardService {
             String previousYear = sortedYears.get(sortedYears.size() - 2);
 
             double latestRate = calculateMyopiaRate(groupByYear.get(latestYear));
-            double previousRate = calculateMyopiaRate(groupByYear.get(previousYear));
-            myopiaRateTrend = Math.round((latestRate - previousRate) * 10.0) / 10.0;
+            previousPeriodRate = calculateMyopiaRate(groupByYear.get(previousYear));
+            diff = Math.round((latestRate - previousPeriodRate) * 10.0) / 10.0;
+
+            if (diff > 0.1) direction = "INCREASED";
+            else if (diff < -0.1) direction = "DECREASED";
+            else direction = "STABLE";
         }
 
+        TrendComparisonResponse trendComparison = TrendComparisonResponse.builder()
+                .previousPeriodRate(Math.round(previousPeriodRate * 10.0) / 10.0)
+                .diff(diff)
+                .direction(direction)
+                .build();
+
+        MyopiaInfoResponse myopia = MyopiaInfoResponse.builder()
+                .currentRate(currentMyopiaRate)
+                .trendComparison(trendComparison)
+                .build();
+
+        // === CRITICAL ALERTS ===
+        long severeMyopiaCount = entityList.stream()
+                .filter(e -> (e.getSphLeft() != null && e.getSphLeft() <= -6.00) || (e.getSphRight() != null && e.getSphRight() <= -6.00))
+                .count();
+
+        long highAstigmatismCount = entityList.stream()
+                .filter(e -> (e.getCylLeft() != null && Math.abs(e.getCylLeft()) >= 1.5) ||
+                             (e.getCylRight() != null && Math.abs(e.getCylRight()) >= 1.5))
+                .count();
+
+        // Pending action count: cases that have critical conditions but no follow-up
+        long pendingActionCount = entityList.stream()
+                .filter(e -> e.getFollowupDate() != null && e.getFollowupDate().isAfter(java.time.LocalDate.now()))
+                .count();
+
+        CriticalAlertsResponse criticalAlerts = CriticalAlertsResponse.builder()
+                .totalCases(severeMyopiaCount)
+                .severeMyopiaCount(severeMyopiaCount)
+                .highAstigmatismCount(highAstigmatismCount)
+                .pendingActionCount(pendingActionCount)
+                .build();
+
+        // === FACILITIES INFO ===
+        long participating = entityList.stream()
+                .filter(e -> e.getClassesField() != null && e.getClassesField().getFacility() != null)
+                .map(e -> e.getClassesField().getFacility().getId())
+                .distinct()
+                .count();
+
+        // In-progress facilities: campaigns with ACTIVE status
+        long inProgress = eyeExamRecordRepository.findByIsDeletedFalse().stream()
+                .filter(e -> e.getCampaign() != null && e.getCampaign().getStatus() != null &&
+                            e.getCampaign().getStatus().toString().equals("ACTIVE"))
+                .map(e -> e.getCampaign().getCampaignId())
+                .distinct()
+                .count();
+
+        long totalManaged = facilityRepository.countByFacilityType(vn.edu.fpt.eyesora.entity.Facility.FacilityType.SCHOOL);
+        double coverageRate = totalManaged > 0 ? Math.round((participating * 100.0 / totalManaged) * 10.0) / 10.0 : 0.0;
+
+        FacilitiesInfoResponse facilities = FacilitiesInfoResponse.builder()
+                .participating(participating)
+                .inProgress(inProgress)
+                .totalManaged(totalManaged)
+                .coverageRate(coverageRate)
+                .build();
+
         return DashboardSummaryResponse.builder()
-                .totalExaminedStudents(totalStudents)
-                .currentMyopiaRate(currentMyopiaRate)
-                .myopiaRateTrend(myopiaRateTrend)
-                .totalAlertCases(totalAlertCases)
-                .totalParticipatingFacilities(totalFacilities)
+                .students(students)
+                .myopia(myopia)
+                .criticalAlerts(criticalAlerts)
+                .facilities(facilities)
                 .build();
     }
 
@@ -87,61 +185,556 @@ public class DashboardServiceImpl implements IDashboardService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<GradeMyopiaResponse> getGradeStats() {
-        List<EyeExamRecordResponse> allRecords = eyeExamRecordRepository.findByIsDeletedFalse().stream()
-                .map(this::mapToResponse).toList();
-
-        Map<Integer, List<EyeExamRecordResponse>> groupByGrade = allRecords.stream()
-                .collect(Collectors.groupingBy(EyeExamRecordResponse::grade));
-
-        List<GradeMyopiaResponse> gradeStats = new ArrayList<>();
-        groupByGrade.forEach((grade, gradeRecords) -> {
-            if (grade != null && grade > 0) {
-                long totalInGrade = gradeRecords.size();
-                long myopiaInGrade = gradeRecords.stream()
-                        .filter(r -> (r.sphLeft() != null && r.sphLeft() < 0) || (r.sphRight() != null && r.sphRight() < 0))
-                        .count();
-                double rate = Math.round((myopiaInGrade * 100.0 / totalInGrade) * 10.0) / 10.0;
-                gradeStats.add(new GradeMyopiaResponse("Khối " + grade, rate));
-            }
-        });
-        gradeStats.sort(Comparator.comparing(GradeMyopiaResponse::gradeName));
-        return gradeStats;
+    public List<GradeMyopiaResponse> getGradeStats(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        return getGradeStats(startDate, endDate, campaignId, null);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<MyopiaTimelineResponse> getMyopiaTimeline() {
-        List<EyeExamRecordResponse> allRecords = eyeExamRecordRepository.findByIsDeletedFalse().stream()
-                .map(this::mapToResponse).toList();
+    public List<GradeMyopiaResponse> getGradeStats(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId, String facilityId) {
+        List<EyeExamRecord> allRecords = loadRecords(startDate, endDate, campaignId, facilityId);
 
-        Map<String, List<EyeExamRecordResponse>> groupByYear = allRecords.stream()
-                .filter(r -> r.schoolYear() != null && !r.schoolYear().equals("N/A"))
-                .collect(Collectors.groupingBy(EyeExamRecordResponse::schoolYear));
+        Map<Integer, List<EyeExamRecord>> groupByGrade = allRecords.stream()
+                .filter(r -> r.getClassesField() != null && r.getClassesField().getGrade() != null && r.getClassesField().getGrade() > 0)
+                .collect(Collectors.groupingBy(r -> r.getClassesField().getGrade()));
 
-        List<MyopiaTimelineResponse> timelineStats = new ArrayList<>();
-        groupByYear.forEach((schoolYear, yearRecords) -> {
-            long totalInYear = yearRecords.size();
-            long myopiaInYear = yearRecords.stream()
-                    .filter(r -> (r.sphLeft() != null && r.sphLeft() < 0) || (r.sphRight() != null && r.sphRight() < 0))
+        List<GradeMyopiaResponse> gradeStats = new ArrayList<>();
+        groupByGrade.forEach((grade, gradeRecords) -> {
+            long totalExamined = gradeRecords.size();
+
+            // Count myopia cases (at least one eye has myopia)
+            long myopiaCount = gradeRecords.stream()
+                    .filter(r -> (r.getSphLeft() != null && r.getSphLeft() < 0) || (r.getSphRight() != null && r.getSphRight() < 0))
                     .count();
-            double rate = Math.round((myopiaInYear * 100.0 / totalInYear) * 10.0) / 10.0;
-            timelineStats.add(new MyopiaTimelineResponse(schoolYear, rate, "ACTUAL"));
+
+            // Calculate myopia rate
+            double myopiaRate = totalExamined > 0
+                    ? Math.round((myopiaCount * 100.0 / totalExamined) * 10.0) / 10.0
+                    : 0.0;
+
+            // Calculate severity breakdown
+            long mildCount = 0;
+            long moderateCount = 0;
+            long severeCount = 0;
+            long alertCount = 0;
+
+            for (EyeExamRecord record : gradeRecords) {
+                // Get the worse refractive error (most negative)
+                Float worstSph = null;
+                if (record.getSphLeft() != null && record.getSphRight() != null) {
+                    worstSph = Math.min(record.getSphLeft(), record.getSphRight());
+                } else if (record.getSphLeft() != null) {
+                    worstSph = record.getSphLeft();
+                } else if (record.getSphRight() != null) {
+                    worstSph = record.getSphRight();
+                }
+
+                // Classify severity
+                if (worstSph != null && worstSph < 0) {
+                    if (worstSph < -6.0) {
+                        severeCount++;
+                    } else if (worstSph < -3.0) {
+                        moderateCount++;
+                    } else {
+                        mildCount++;
+                    }
+                }
+
+                // Count alerts (severe myopia)
+                if ((record.getSphLeft() != null && record.getSphLeft() <= -6.0) ||
+                    (record.getSphRight() != null && record.getSphRight() <= -6.0)) {
+                    alertCount++;
+                }
+            }
+
+            SeverityBreakdown severityBreakdown = SeverityBreakdown.builder()
+                    .mild(mildCount)
+                    .moderate(moderateCount)
+                    .severe(severeCount)
+                    .build();
+
+            String gradeId = "G" + String.format("%02d", grade);
+            String gradeName = "Khối " + grade;
+
+            gradeStats.add(GradeMyopiaResponse.builder()
+                    .gradeId(gradeId)
+                    .gradeName(gradeName)
+                    .totalExamined(totalExamined)
+                    .myopiaCount(myopiaCount)
+                    .myopiaRate(myopiaRate)
+                    .severityBreakdown(severityBreakdown)
+                    .alertCount(alertCount)
+                    .build());
         });
-        timelineStats.sort(Comparator.comparing(MyopiaTimelineResponse::schoolYear));
 
-        if (timelineStats.size() >= 2) {
-            MyopiaTimelineResponse latest = timelineStats.get(timelineStats.size() - 1);
-            MyopiaTimelineResponse previous = timelineStats.get(timelineStats.size() - 2);
-            double diff = Math.round((latest.rate() - previous.rate()) * 10.0) / 10.0;
+        gradeStats.sort(Comparator.comparing(GradeMyopiaResponse::gradeName));
+        return gradeStats;
+    }
 
-            try {
-                int startYear = Integer.parseInt(latest.schoolYear().substring(0, 4));
-                String nextSchoolYear = (startYear + 1) + "-" + (startYear + 2);
-                double predictedRate = Math.round((latest.rate() + diff) * 10.0) / 10.0;
-                timelineStats.add(new MyopiaTimelineResponse(nextSchoolYear, Math.max(0, predictedRate), "PREDICTED"));
-            } catch (Exception ignored) {}
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EyeExamRecordResponse> getCriticalAlerts(String statusFilter, java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId, Pageable pageable) {
+        Specification<EyeExamRecord> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("isDeleted"), false));
+
+            // Điều kiện 1: Cận nặng (SPH <= -6.0)
+            Predicate severeMyopiaL = cb.lessThanOrEqualTo(root.get("sphLeft"), -6.0f);
+            Predicate severeMyopiaR = cb.lessThanOrEqualTo(root.get("sphRight"), -6.0f);
+            Predicate isMyopia = cb.or(severeMyopiaL, severeMyopiaR);
+
+            // Điều kiện 2: Loạn thị cao (CYL >= 1.5 hoặc <= -1.5)
+            Predicate highAstigL = cb.or(
+                    cb.greaterThanOrEqualTo(root.get("cylLeft"), 1.5f),
+                    cb.lessThanOrEqualTo(root.get("cylLeft"), -1.5f)
+            );
+            Predicate highAstigR = cb.or(
+                    cb.greaterThanOrEqualTo(root.get("cylRight"), 1.5f),
+                    cb.lessThanOrEqualTo(root.get("cylRight"), -1.5f)
+            );
+            Predicate isAstigmatism = cb.or(highAstigL, highAstigR);
+
+            // Xử lý các loại Filter
+            if ("MYOPIA".equals(statusFilter)) {
+                predicates.add(isMyopia);
+                predicates.add(cb.not(isAstigmatism)); // Chỉ cận, không loạn
+            } else if ("ASTIGMATISM".equals(statusFilter)) {
+                predicates.add(isAstigmatism);
+                predicates.add(cb.not(isMyopia)); // Chỉ loạn, không cận
+            } else if ("BOTH".equals(statusFilter)) {
+                predicates.add(isMyopia);
+                predicates.add(isAstigmatism); // Bị cả 2
+            } else {
+                predicates.add(cb.or(isMyopia, isAstigmatism)); // ALL (Bị cận HOẶC loạn)
+            }
+
+                        if (startDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("examDate"), startDate));
+            }
+            if (endDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("examDate"), endDate));
+            }
+            if (campaignId != null && !campaignId.trim().isEmpty()) {
+                predicates.add(cb.equal(root.get("campaign").get("campaignId"), campaignId));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return eyeExamRecordRepository.findAll(spec, pageable).map(this::mapToResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FacilityMyopiaResponse> getFacilityStats(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        List<EyeExamRecord> entityList = eyeExamRecordRepository.findByIsDeletedFalse();
+        if (startDate != null) {
+            entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
         }
-        return timelineStats;
+        if (endDate != null) {
+            entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
+        }
+        if (campaignId != null && !campaignId.trim().isEmpty()) {
+            entityList = entityList.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        }
+
+        Map<String, List<EyeExamRecord>> groupByFacility = entityList.stream()
+                .filter(e -> e.getClassesField() != null && e.getClassesField().getFacility() != null && e.getClassesField().getFacility().getFacilityName() != null)
+                .collect(Collectors.groupingBy(e -> e.getClassesField().getFacility().getFacilityName()));
+
+        List<FacilityMyopiaResponse> facilityStats = new ArrayList<>();
+
+        groupByFacility.forEach((facilityName, facilityRecords) -> {
+            long totalInFacility = facilityRecords.size();
+            long myopiaInFacility = facilityRecords.stream()
+                    .filter(e -> (e.getSphLeft() != null && e.getSphLeft() < 0) || (e.getSphRight() != null && e.getSphRight() < 0))
+                    .count();
+
+            double rate = totalInFacility > 0 ? Math.round((myopiaInFacility * 100.0 / totalInFacility) * 10.0) / 10.0 : 0.0;
+            facilityStats.add(new FacilityMyopiaResponse(facilityName, rate));
+        });
+
+        facilityStats.sort((a, b) -> Double.compare(b.rate(), a.rate()));
+        return facilityStats;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream exportDashboardReport() {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            CellStyle greenHeaderStyle = createLightGreenHeaderStyle(workbook);
+            CellStyle dataStyle = createDataBorderStyle(workbook);
+
+            // --- SHEET 1: TỔNG QUAN---
+            DashboardSummaryResponse summary = getSummaryCounters(null, null, null);
+            Sheet sheetSummary = workbook.createSheet("Tổng Quan");
+            createStyledRow(sheetSummary, 0, new String[]{"Chỉ số", "Giá trị"}, greenHeaderStyle);
+            createRowWithBorder(sheetSummary, 1, "Tổng học sinh đã khám", summary.students().examined(), dataStyle);
+            createRowWithBorder(sheetSummary, 2, "Tỉ lệ cận thị (%)", summary.myopia().currentRate(), dataStyle);
+            createRowWithBorder(sheetSummary, 3, "Số ca cảnh báo", summary.criticalAlerts().severeMyopiaCount(), dataStyle);
+            sheetSummary.autoSizeColumn(0); sheetSummary.autoSizeColumn(1);
+
+            // --- SHEET 2 & 3: THỐNG KÊ KHỐI & CƠ SỞ ---
+            createStatSheet(workbook.createSheet("Thống Kê Theo Khối"), greenHeaderStyle, "Khối Lớp", "Tỉ lệ cận thị (%)", getGradeStats(null, null, null));
+            createStatSheet(workbook.createSheet("Thống Kê Cơ Sở"), greenHeaderStyle, "Tên Cơ Sở", "Tỉ lệ cận thị (%)", getFacilityStats(null, null, null));
+
+            // --- SHEET 4: DANH SÁCH CA BỆNH CẦN CẢNH BÁO GẤP ---
+            Sheet sheetHeavy = workbook.createSheet("Danh sách ca bệnh cần cảnh báo gấp");
+            createDetailHeader(sheetHeavy, greenHeaderStyle);
+
+            List<EyeExamRecord> alertRecords = eyeExamRecordRepository.findByIsDeletedFalse().stream()
+                    .filter(e -> (e.getSphLeft() != null && e.getSphLeft() <= -6.00) ||
+                            (e.getSphRight() != null && e.getSphRight() <= -6.00))
+                    .collect(Collectors.toList());
+
+            int rowIdx = 2;
+            for (EyeExamRecord r : alertRecords) {
+                writeDetailRow(sheetHeavy.createRow(rowIdx++), r, dataStyle);
+            }
+            for(int i = 0; i < 20; i++) sheetHeavy.autoSizeColumn(i);
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        } catch (Exception e) {
+            throw new BusinessException("Lỗi xuất báo cáo: " + e.getMessage());
+        }
+    }
+
+    // --- CÁC HÀM HỖ TRỢ EXCEL ---
+    // Ghi hàng tiêu đề với style màu xanh lá
+    private void createStyledRow(Sheet sheet, int rowNum, String[] headers, CellStyle style) {
+        Row row = sheet.createRow(rowNum);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = row.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(style);
+        }
+    }
+
+    // Ghi hàng dữ liệu có viền bao quanh
+    private void createRowWithBorder(Sheet sheet, int rowNum, String label, Object value, CellStyle borderStyle) {
+        Row row = sheet.createRow(rowNum);
+        createCell(row, 0, label, borderStyle);
+        createCell(row, 1, value, borderStyle);
+    }
+
+    // Ghi bảng thống kê (Khối/Cơ sở)
+    private void createStatSheet(Sheet sheet, CellStyle headerStyle, String col1, String label, List<?> data) {
+        createStyledRow(sheet, 0, new String[]{col1, label}, headerStyle);
+        CellStyle dataStyle = createDataBorderStyle(sheet.getWorkbook());
+        int rowIdx = 1;
+        for (Object obj : data) {
+            Row row = sheet.createRow(rowIdx++);
+            if (obj instanceof GradeMyopiaResponse s) {
+                createCell(row, 0, s.gradeName(), dataStyle); createCell(row, 1, s.myopiaRate(), dataStyle);
+            } else if (obj instanceof FacilityMyopiaResponse s) {
+                createCell(row, 0, s.facilityName(), dataStyle); createCell(row, 1, s.rate(), dataStyle);
+            }
+        }
+        sheet.autoSizeColumn(0); sheet.autoSizeColumn(1);
+    }
+
+    private void writeDetailRow(Row row, EyeExamRecord r, CellStyle style) {
+        createCell(row, 0, row.getRowNum() - 1, style); // STT
+        createCell(row, 1, r.getPatient() != null ? r.getPatient().getPatientName() : "", style);
+        createCell(row, 2, r.getClassesField() != null ? r.getClassesField().getClassName() : "", style);
+        createCell(row, 3, r.getClassesField() != null ? r.getClassesField().getFacility().getFacilityName() : "", style);
+        createCell(row, 4, r.getExamDate() != null ? r.getExamDate().toString() : "", style);
+        createCell(row, 5, (r.getCampaign() != null) ? r.getCampaign().getCampaignTitle() : "", style);
+        createCell(row, 6, (r.getExaminer() != null) ? r.getExaminer().getFull_name() : "", style);
+
+        // Mắt Trái
+        createCell(row, 7, r.getVaLeftWithoutGlasses(), style); createCell(row, 8, r.getVaLeftOldGlasses(), style);
+        createCell(row, 9, r.getVaLeftPinhole(), style); createCell(row, 10, r.getVaLeftWithGlasses(), style);
+        createCell(row, 11, r.getSphLeft(), style); createCell(row, 12, r.getCylLeft(), style);
+        createCell(row, 13, r.getAxisLeft(), style); createCell(row, 14, r.getPdLeft(), style);
+
+        // Mắt Phải
+        createCell(row, 15, r.getVaRightWithoutGlasses(), style); createCell(row, 16, r.getVaRightOldGlasses(), style);
+        createCell(row, 17, r.getVaRightPinhole(), style); createCell(row, 18, r.getVaRightWithGlasses(), style);
+        createCell(row, 19, r.getSphRight(), style); createCell(row, 20, r.getCylRight(), style);
+        createCell(row, 21, r.getAxisRight(), style); createCell(row, 22, r.getPdRight(), style);
+    }
+
+    private void createDetailHeader(Sheet sheet, CellStyle style) {
+        Row row0 = sheet.createRow(0);
+        Row row1 = sheet.createRow(1);
+
+        String[] main = {
+                "STT", "HỌ TÊN", "LỚP", "CƠ SỞ", "NGÀY KHÁM", "CHIẾN DỊCH", "NGƯỜI KHÁM",
+                "THỊ LỰC KK", "", "CÓ KÍNH", "", "KÍNH LỖ", "", "TLCK", "",
+                "ĐỘ CẦU", "", "ĐỘ TRỤ", "", "TRỤC", "", "KCĐT", ""
+        };
+
+        String[] sub = {
+                "", "", "", "", "", "", "",
+                "MP", "MT", "MP", "MT", "MP", "MT", "MP", "MT", "MP", "MT", "MP", "MT", "MP", "MT", "MP", "MT"
+        };
+
+        for (int i = 0; i < main.length; i++) {
+            // 1. Merge theo chiều ngang cho các cặp MP/MT (bắt đầu từ index 7)
+            if (i >= 7 && i % 2 != 0) {
+                sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0, 0, i, i + 1));
+            }
+            // 2. Merge theo chiều dọc cho các cột thông tin đơn (STT đến Người khám)
+            else if (i < 7) {
+                sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0, 1, i, i));
+            }
+
+            createCell(row0, i, main[i], style);
+            createCell(row1, i, sub[i], style);
+        }
+    }
+
+    // Helper tạo Cell (Xử lý đa kiểu dữ liệu)
+    private void createCell(Row row, int colIdx, Object value, CellStyle style) {
+        Cell cell = row.createCell(colIdx);
+        if (style != null) cell.setCellStyle(style);
+        if (value instanceof Number n) cell.setCellValue(n.doubleValue());
+        else cell.setCellValue(value != null ? value.toString() : "");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MyopiaTimelineResponse> getMyopiaTimeline(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        List<EyeExamRecord> records = eyeExamRecordRepository.findByIsDeletedFalse();
+        if (startDate != null) {
+            records = records.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
+        }
+        if (endDate != null) {
+            records = records.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
+        }
+        if (campaignId != null && !campaignId.trim().isEmpty()) {
+            records = records.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        }
+
+        Map<java.time.LocalDate, List<EyeExamRecord>> byDate = records.stream()
+                .filter(e -> e.getExamDate() != null)
+                .collect(Collectors.groupingBy(EyeExamRecord::getExamDate));
+
+        List<MyopiaTimelineResponse> result = new ArrayList<>();
+        for (Map.Entry<java.time.LocalDate, List<EyeExamRecord>> entry : byDate.entrySet()) {
+            long mild = 0, moderate = 0, severe = 0;
+            for (EyeExamRecord r : entry.getValue()) {
+                float sphL = r.getSphLeft() != null ? r.getSphLeft() : 0;
+                float sphR = r.getSphRight() != null ? r.getSphRight() : 0;
+                float minSph = Math.min(sphL, sphR);
+                if (minSph <= -6.0) severe++;
+                else if (minSph <= -3.0) moderate++;
+                else if (minSph < -0.5) mild++;
+            }
+            result.add(MyopiaTimelineResponse.builder()
+                    .date(entry.getKey())
+                    .mildCount(mild)
+                    .moderateCount(moderate)
+                    .severeCount(severe)
+                    .build());
+        }
+        result.sort(Comparator.comparing(MyopiaTimelineResponse::date));
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Object getDrillDown(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        List<EyeExamRecord> records = eyeExamRecordRepository.findByIsDeletedFalse();
+        if (startDate != null) {
+            records = records.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
+        }
+        if (endDate != null) {
+            records = records.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
+        }
+        if (campaignId != null && !campaignId.trim().isEmpty()) {
+            records = records.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        }
+        
+        List<Map<String, Object>> schools = new ArrayList<>();
+        Map<String, List<EyeExamRecord>> bySchool = records.stream()
+                .filter(e -> e.getClassesField() != null && e.getClassesField().getFacility() != null)
+                .collect(Collectors.groupingBy(e -> e.getClassesField().getFacility().getFacilityName()));
+
+        for (Map.Entry<String, List<EyeExamRecord>> schoolEntry : bySchool.entrySet()) {
+            Map<String, Object> schoolMap = new HashMap<>();
+            schoolMap.put("schoolName", schoolEntry.getKey());
+
+            List<Map<String, Object>> classes = new ArrayList<>();
+            Map<String, List<EyeExamRecord>> byClass = schoolEntry.getValue().stream()
+                    .collect(Collectors.groupingBy(e -> e.getClassesField().getClassName()));
+
+            for (Map.Entry<String, List<EyeExamRecord>> classEntry : byClass.entrySet()) {
+                Map<String, Object> classMap = new HashMap<>();
+                classMap.put("className", classEntry.getKey());
+
+                List<Map<String, Object>> students = new ArrayList<>();
+                
+                // Group by student to get latest exam status
+                Map<String, EyeExamRecord> latestByStudent = new HashMap<>();
+                for (EyeExamRecord record : classEntry.getValue()) {
+                    if (record.getPatient() != null) {
+                        String studentId = record.getPatient().getPatientId();
+                        if (!latestByStudent.containsKey(studentId) || 
+                            record.getExamDate().isAfter(latestByStudent.get(studentId).getExamDate())) {
+                            latestByStudent.put(studentId, record);
+                        }
+                    }
+                }
+
+                for (EyeExamRecord latestRec : latestByStudent.values()) {
+                    Map<String, Object> studentMap = new HashMap<>();
+                    studentMap.put("studentName", latestRec.getPatient().getPatientName());
+                    
+                    String severity = "NORMAL";
+                    float sphL = latestRec.getSphLeft() != null ? latestRec.getSphLeft() : 0;
+                    float sphR = latestRec.getSphRight() != null ? latestRec.getSphRight() : 0;
+                    float minSph = Math.min(sphL, sphR);
+                    if (minSph <= -6.0) severity = "SEVERE";
+                    else if (minSph <= -3.0) severity = "MODERATE";
+                    else if (minSph < -0.5) severity = "MILD";
+                    
+                    studentMap.put("severity", severity);
+                    students.add(studentMap);
+                }
+                
+                classMap.put("students", students);
+                classes.add(classMap);
+            }
+            
+            schoolMap.put("classes", classes);
+            schools.add(schoolMap);
+        }
+        
+        return schools;
+    }
+
+    private CellStyle createLightGreenHeaderStyle(Workbook wb) {
+        CellStyle s = wb.createCellStyle();
+        s.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+        s.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        s.setAlignment(HorizontalAlignment.CENTER);
+        s.setBorderBottom(BorderStyle.THIN); s.setBorderTop(BorderStyle.THIN);
+        s.setBorderLeft(BorderStyle.THIN); s.setBorderRight(BorderStyle.THIN);
+        Font f = wb.createFont(); f.setBold(true); f.setColor(IndexedColors.BLACK.getIndex());
+        s.setFont(f); return s;
+    }
+
+    private CellStyle createDataBorderStyle(Workbook wb) {
+        CellStyle s = wb.createCellStyle();
+        s.setBorderBottom(BorderStyle.THIN); s.setBorderLeft(BorderStyle.THIN);
+        s.setBorderRight(BorderStyle.THIN); s.setBorderTop(BorderStyle.THIN);
+        return s;
+    }
+
+    private List<EyeExamRecord> loadRecords(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        return loadRecords(startDate, endDate, campaignId, null);
+    }
+
+    private List<EyeExamRecord> loadRecords(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId, String facilityId) {
+        List<EyeExamRecord> entityList = eyeExamRecordRepository.findByIsDeletedFalse();
+        if (startDate != null) {
+            entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
+        }
+        if (endDate != null) {
+            entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
+        }
+        if (campaignId != null && !campaignId.trim().isEmpty()) {
+            entityList = entityList.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        }
+        if (facilityId != null && !facilityId.trim().isEmpty()) {
+            entityList = entityList.stream().filter(e -> e.getClassesField() != null
+                    && e.getClassesField().getFacility() != null
+                    && facilityId.equals(e.getClassesField().getFacility().getId())).collect(Collectors.toList());
+        }
+        return entityList;
+    }
+
+    @Override
+    public FacilityAnalysisResponse getFacilityAnalysis(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        List<FacilityMyopiaResponse> stats = getFacilityStats(startDate, endDate, campaignId);
+
+        List<vn.edu.fpt.eyesora.dto.response.FacilityRankDto> rankings = new ArrayList<>();
+        List<String> legacyInsights = new ArrayList<>();
+
+        if (stats.isEmpty()) {
+            return new FacilityAnalysisResponse(rankings, 0.0, legacyInsights, List.of());
+        }
+
+        for (FacilityMyopiaResponse stat : stats) {
+            rankings.add(new vn.edu.fpt.eyesora.dto.response.FacilityRankDto(stat.facilityName(), stat.rate()));
+        }
+
+        double avgRate = stats.stream().mapToDouble(FacilityMyopiaResponse::rate).average().orElse(0.0);
+        avgRate = Math.round(avgRate * 10.0) / 10.0;
+
+        // Legacy auto insights backward compatibility
+        FacilityMyopiaResponse highest = stats.get(0);
+        if (highest.rate() >= 70.0) {
+            legacyInsights.add(highest.facilityName() + " ghi nhận tỷ lệ cận thị ở mức báo động đỏ (" + highest.rate() + "%). Cần khẩn cấp triển khai kế hoạch can thiệp y tế học đường.");
+        } else if (highest.rate() >= 50.0) {
+            legacyInsights.add(highest.facilityName() + " có tỷ lệ cận thị mức cao (" + highest.rate() + "%).");
+        } else {
+            legacyInsights.add("Tỷ lệ cận thị cao nhất thuộc về " + highest.facilityName() + " (" + highest.rate() + "%).");
+        }
+
+        java.time.LocalDate today = java.time.LocalDate.now();
+        List<EyeExamRecord> records = loadRecords(startDate, endDate, campaignId);
+
+        Map<String, List<EyeExamRecord>> groupByFacility = records.stream()
+                .filter(e -> e.getClassesField() != null && e.getClassesField().getFacility() != null && e.getClassesField().getFacility().getFacilityName() != null)
+                .collect(Collectors.groupingBy(e -> e.getClassesField().getFacility().getFacilityName()));
+
+        List<GroupStats> facilityGroups = groupByFacility.entrySet().stream()
+                .map(e -> GroupStats.of(e.getKey(), e.getValue(), clinicalDefinitions, today))
+                .collect(Collectors.toList());
+
+        List<Recommendation> recommendations = recommendationEngine.evaluate(facilityGroups, "facilityName");
+
+        return new FacilityAnalysisResponse(rankings, avgRate, legacyInsights, recommendations);
+    }
+
+    @Override
+    public GradeAnalysisResponse getGradeAnalysis(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        return getGradeAnalysis(startDate, endDate, campaignId, null);
+    }
+
+    @Override
+    public GradeAnalysisResponse getGradeAnalysis(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId, String requestedFacilityId) {
+        String facilityId = facilityScopeResolver.resolve(requestedFacilityId);
+        List<GradeMyopiaResponse> stats = getGradeStats(startDate, endDate, campaignId, facilityId);
+        List<String> legacyInsights = new ArrayList<>();
+
+        if (stats.isEmpty()) {
+            return new GradeAnalysisResponse(null, 0.0, null, 0.0, legacyInsights, List.of());
+        }
+
+        List<GradeMyopiaResponse> sortedByRate = new ArrayList<>(stats);
+        sortedByRate.sort((a, b) -> Double.compare(b.myopiaRate(), a.myopiaRate()));
+
+        GradeMyopiaResponse highest = sortedByRate.get(0);
+        GradeMyopiaResponse lowest = sortedByRate.get(sortedByRate.size() - 1);
+
+        // Legacy insights backward compatibility
+        if (highest.myopiaRate() >= 70.0) {
+            legacyInsights.add(highest.gradeName() + " ghi nhận tỷ lệ cận thị ở mức báo động đỏ (" + highest.myopiaRate() + "%). Cần ưu tiên bố trí khám sàng lọc chuyên khoa và can thiệp khẩn cấp.");
+        } else if (highest.myopiaRate() >= 50.0) {
+            legacyInsights.add(highest.gradeName() + " đang có tỷ lệ cận thị ở mức cao (" + highest.myopiaRate() + "%).");
+        } else {
+            legacyInsights.add(highest.gradeName() + " có tỷ lệ cận thị cao nhất (" + highest.myopiaRate() + "%).");
+        }
+
+        java.time.LocalDate today = java.time.LocalDate.now();
+        List<EyeExamRecord> records = loadRecords(startDate, endDate, campaignId, facilityId);
+
+        Map<String, List<EyeExamRecord>> groupByGrade = records.stream()
+                .filter(r -> r.getClassesField() != null && r.getClassesField().getGrade() != null && r.getClassesField().getGrade() > 0)
+                .collect(Collectors.groupingBy(r -> "Khối " + r.getClassesField().getGrade()));
+
+        List<GroupStats> gradeGroups = groupByGrade.entrySet().stream()
+                .map(e -> GroupStats.of(e.getKey(), e.getValue(), clinicalDefinitions, today))
+                .collect(Collectors.toList());
+
+        List<Recommendation> recommendations = recommendationEngine.evaluate(gradeGroups, "gradeName");
+
+        return new GradeAnalysisResponse(highest.gradeName(), highest.myopiaRate(), lowest.gradeName(), lowest.myopiaRate(), legacyInsights, recommendations);
     }
 }

@@ -1,11 +1,9 @@
 const ClassModal = ({ onClose, selectedClass, formData, setFormData, onSave, facilities, errors = {} }) => {
-    // Đặt console.log ở đây để debug giá trị
-    console.log("DEBUG - formData.facilityId hiện tại:", formData.facilityId);
+    // console.log("DEBUG - formData.facilityId hiện tại:", formData.facilityId);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl">
-                {/* Header với nút Close */}
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-black text-gray-950">
                         {selectedClass ? "Edit Class" : "Create New Class"}
@@ -42,7 +40,6 @@ const ClassModal = ({ onClose, selectedClass, formData, setFormData, onSave, fac
                             className={`w-full p-3 border-2 rounded-xl font-bold text-gray-900 bg-white ${errors.facilityId ? 'border-red-500' : ''}`}
                             value={formData.facilityId ? String(formData.facilityId) : ""}
                             onChange={(e) => {
-                                // Log để xem có chọn được không
                                 console.log("Giá trị select vừa chọn:", e.target.value);
                                 setFormData({...formData, facilityId: e.target.value});
                             }}

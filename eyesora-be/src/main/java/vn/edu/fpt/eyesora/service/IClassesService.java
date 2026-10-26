@@ -12,4 +12,6 @@ public interface IClassesService {
     ClassesResponse updateClass(String id, ClassesRequest req);
     ClassDetailResponse getClassDetail(String classId, Pageable pageable);
     ClassesResponse getClassById(String id);
+
+    void deleteClass(String id);
 }

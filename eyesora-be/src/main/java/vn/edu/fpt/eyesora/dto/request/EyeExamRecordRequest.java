@@ -4,46 +4,71 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import java.time.LocalDate;
 
-@Getter
-@Setter
-public class EyeExamRecordRequest {
+public record EyeExamRecordRequest(
 
-    @NotBlank(message = "Mã chiến dịch không được để trống")
-    private String campaignId;
+        @NotBlank(message = "Mã chiến dịch không được để trống")
+        String campaignId,
 
-    @NotBlank(message = "Mã bệnh nhân không được để trống")
-    private String patientId;
+        String patientId,
 
-    @NotBlank(message = "Mã lớp không được để trống")
-    private String classId;
+        String newPatientName,
+        LocalDate newPatientDob,
+        String newPatientGender,
+        String newPatientParentPhone,
+        String newPatientWardId,
 
-    @NotBlank(message = "Mã người khám không được để trống")
-    private String examinerId;
+        @NotBlank(message = "Mã lớp không được để trống")
+        String classId,
 
-    @NotNull(message = "Thị lực mắt trái chưa đeo kính không được để trống")
-    @Min(value = 0, message = "Thị lực không được nhỏ hơn 0")
-    private Float vaLeftWithoutGlasses;
+        @NotBlank(message = "Mã người khám không được để trống")
+        String examinerId,
 
-    private Float vaLeftWithGlasses;
-    private Float sphLeft;
-    private Float cylLeft;
+        // ===== CÁC THÔNG SỐ KHÁM MẮT =====
+        @NotNull(message = "Thị lực mắt trái chưa kính không được để trống")
+        @Min(value = 0, message = "Thị lực không được nhỏ hơn 0")
+        Float vaLeftWithoutGlasses,
 
-    @Min(value = 0, message = "Trục mắt trái phải lớn hơn hoặc bằng 0")
-    @Max(value = 180, message = "Trục mắt trái phải nhỏ hơn hoặc bằng 180")
-    private Integer axisLeft;
+        @NotNull(message = "Thị lực mắt phải chưa kính không được để trống")
+        @Min(value = 0, message = "Thị lực không được nhỏ hơn 0")
+        Float vaRightWithoutGlasses,
 
-    @NotNull(message = "Thị lực mắt phải chưa đeo kính không được để trống")
-    @Min(value = 0, message = "Thị lực không được nhỏ hơn 0")
-    private Float vaRightWithoutGlasses;
+        @Min(value = 0, message = "Thị lực không được nhỏ hơn 0")
+        Float vaLeftOldGlasses,
 
-    private Float vaRightWithGlasses;
-    private Float sphRight;
-    private Float cylRight;
+        @Min(value = 0, message = "Thị lực không được nhỏ hơn 0")
+        Float vaRightOldGlasses,
 
-    @Min(value = 0, message = "Trục mắt phải phải lớn hơn hoặc bằng 0")
-    @Max(value = 180, message = "Trục mắt phải phải nhỏ hơn hoặc bằng 180")
-    private Integer axisRight;
+        @Min(value = 0, message = "Thị lực không được nhỏ hơn 0")
+        Float vaLeftPinhole,
+
+        @Min(value = 0, message = "Thị lực không được nhỏ hơn 0")
+        Float vaRightPinhole,
+
+        Float sphLeft,
+        Float sphRight,
+
+        Float cylLeft,
+        Float cylRight,
+
+        @Min(value = 0, message = "Trục mắt trái phải >= 0")
+        @Max(value = 180, message = "Trục mắt trái phải <= 180")
+        Integer axisLeft,
+
+        @Min(value = 0, message = "Trục mắt phải phải >= 0")
+        @Max(value = 180, message = "Trục mắt phải phải <= 180")
+        Integer axisRight,
+
+        @Min(value = 0, message = "Thị lực không được nhỏ hơn 0")
+        Float vaLeftWithGlasses,
+
+        @Min(value = 0, message = "Thị lực không được nhỏ hơn 0")
+        Float vaRightWithGlasses,
+
+        String pdLeft,
+        String pdRight,
+        
+        LocalDate followupDate
+) {
 }

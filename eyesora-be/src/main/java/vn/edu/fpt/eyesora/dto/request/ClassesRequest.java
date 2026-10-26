@@ -1,6 +1,7 @@
 package vn.edu.fpt.eyesora.dto.request;
 
 import jakarta.validation.constraints.*;
+import org.hibernate.validator.constraints.Range;
 
 public record ClassesRequest(
         @NotBlank(message = "Mã cơ sở là bắt buộc")
@@ -11,8 +12,7 @@ public record ClassesRequest(
         String className,
 
         @NotNull(message = "Khối lớp là bắt buộc")
-        @Min(value = 1, message = "Khối lớp phải lớn hơn hoặc bằng 1")
-        @Max(value = 12, message = "Khối lớp phải nhỏ hơn hoặc bằng 12")
+        @Range(min = 1, max = 12, message = "Khối lớp phải từ 1 đến 12")
         Integer grade,
 
         @NotBlank(message = "Năm học là bắt buộc")

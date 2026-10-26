@@ -1,12 +1,19 @@
 package vn.edu.fpt.eyesora.service.impl;
 
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.fpt.eyesora.dto.request.PatientRequest;
+import vn.edu.fpt.eyesora.dto.response.OverduePatientResponse;
 import vn.edu.fpt.eyesora.dto.response.PatientResponse;
 import vn.edu.fpt.eyesora.entity.*;
 import vn.edu.fpt.eyesora.exceptions.BusinessException;
@@ -15,36 +22,106 @@ import vn.edu.fpt.eyesora.repository.*;
 import vn.edu.fpt.eyesora.service.IPatientService;
 
 import jakarta.persistence.criteria.Predicate;
+import vn.edu.fpt.eyesora.util.SecurityUtil;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class PatientServiceImpl implements IPatientService {
 
+    private void checkPatientOwnership(Patient patient) {
+        vn.edu.fpt.eyesora.entity.User currentUser = vn.edu.fpt.eyesora.util.SecurityUtil.getCurrentUser();
+        boolean isFacilityAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("FACILITY_ADMIN"));
+        if (isFacilityAdmin) {
+            if (currentUser.getFacility() == null || 
+                patient.getFacility() == null ||
+                !currentUser.getFacility().getId().equals(patient.getFacility().getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Không có quyền truy cập bệnh nhân này");
+            }
+        }
+    }
+
+
     private final PatientRepository patientRepository;
     private final CampaignRepository campaignRepository;
     private final FacilityRepository facilityRepository;
     private final ClassesRepository classesRepository;
     private final WardRepository wardRepository;
+    private final EyeExamRecordRepository eyeExamRecordRepository;
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PatientResponse> getPatients(String wardId, String name, Integer birthYear, Pageable pageable) {
+    public Page<PatientResponse> getPatients(String wardId, String name, Integer birthYear, String classId, String facilityId, Pageable pageable) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        if (currentUser == null) {
+            throw new AccessDeniedException("User must be authenticated");
+        }
+
+        // 1. Kiểm tra role của user hiện tại
+        Set<String> roles = currentUser.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+
+        String finalFacilityId = facilityId;
+        boolean hasAccess = false;
+
+        // 2. Quyết định giá trị finalFacilityId dựa trên Role
+        if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_EXAMINER")) {
+            hasAccess = true;
+        } else if (roles.contains("ROLE_FACILITY_ADMIN")) {
+            finalFacilityId = currentUser.getFacility().getId();
+            hasAccess = true;
+        }
+
+        // Sort an toàn trên các field trực thuộc Patient và Facility
+        Sort hardcodedSort = Sort.by(Sort.Direction.ASC, "facility.facilityName")
+                .and(Sort.by(Sort.Direction.ASC, "patientName"));
+
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), hardcodedSort);
+
+        final String targetFacilityId = finalFacilityId;
+        final boolean canViewData = hasAccess;
+
         Specification<Patient> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            if (wardId != null && !wardId.isEmpty()) {
-                predicates.add(cb.equal(root.get("ward").get("id"), wardId));
+            if (!canViewData) {
+                return cb.disjunction();
             }
 
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+
+            // Fetch join facility và ward để tránh N+1 khi map DTO
+            if (Long.class != query.getResultType()) {
+                root.fetch("facility", JoinType.LEFT);
+                root.fetch("ward", JoinType.LEFT);
+                query.distinct(true); // Tránh duplicate bản ghi khi JOIN
+            }
+
+            // Luôn lọc các bản ghi chưa xóa mềm
             predicates.add(cb.equal(root.get("isDeleted"), false));
 
-            if (name != null && !name.isEmpty())
-                predicates.add(cb.like(root.get("patientName"), "%" + name + "%"));
+            // Lọc theo Facility
+            if (targetFacilityId != null && !targetFacilityId.isBlank()) {
+                predicates.add(cb.equal(root.get("facility").get("id"), targetFacilityId.trim()));
+            }
 
+            // Lọc theo Ward
+            if (wardId != null && !wardId.isBlank()) {
+                predicates.add(cb.equal(root.get("ward").get("id"), wardId.trim()));
+            }
+
+            // Lọc theo Tên học sinh
+            if (name != null && !name.isBlank()) {
+                predicates.add(cb.like(cb.lower(root.get("patientName")), "%" + name.trim().toLowerCase() + "%"));
+            }
+
+            // Lọc theo Năm sinh
             if (birthYear != null) {
                 predicates.add(cb.between(
                         root.get("dob"),
@@ -53,13 +130,19 @@ public class PatientServiceImpl implements IPatientService {
                 ));
             }
 
-            return cb.and(predicates.toArray(new Predicate[0]));
+            // Lọc theo Class (JOIN qua bảng trung gian class_enrollments)
+            if (classId != null && !classId.isBlank()) {
+                Join<Patient, ClassEnrollment> enrollmentJoin = root.join("enrollments", JoinType.INNER);
+                predicates.add(cb.equal(enrollmentJoin.get("classes").get("id"), classId.trim()));
+                predicates.add(cb.equal(enrollmentJoin.get("status"), ClassEnrollment.EnrollmentStatus.ACTIVE));
+            }
+
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
 
-        return patientRepository.findAll(spec, pageable)
+        return patientRepository.findAll(spec, sortedPageable)
                 .map(this::convertToDto);
     }
-
     @Override
     @Transactional(readOnly = true)
     public PatientResponse getPatientById(String id) {
@@ -83,8 +166,15 @@ public class PatientServiceImpl implements IPatientService {
         Classes patientClass = classesRepository.findById(req.classId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lớp: " + req.classId()));
 
-        Ward patientWard = wardRepository.findById(req.wardId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phường/xã: " + req.wardId()));
+        Ward patientWard = null;
+        if (req.wardId() != null && !req.wardId().isBlank()) {
+            patientWard = wardRepository.findById(req.wardId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phường/xã: " + req.wardId()));
+        }
+
+        if (!patientClass.getFacility().getId().equals(req.facilityId())) {
+            throw new BusinessException("Lớp học bạn chọn không thuộc cơ sở này. Vui lòng kiểm tra lại!");
+        }
 
         Patient patient = new Patient();
 
@@ -93,75 +183,19 @@ public class PatientServiceImpl implements IPatientService {
         patient.setGender(Patient.Gender.valueOf(req.gender().toUpperCase()));
         patient.setParentPhone(req.parentPhone());
 
-        patient.setExamCampaign(campaign);
+//        patient.setExamCampaign(campaign);
         patient.setFacility(facility);
         patient.setWard(patientWard);
-        patient.setClasses(patientClass);
+//        patient.setClasses(patientClass);
 
         patient.setIsDeleted(false);
 
         patientRepository.save(patient);
     }
 
-//    @Override
-//    public void updatePatient(String id, PatientRequest req) {
-//        Patient existing = patientRepository.findByPatientId(id)
-//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bệnh nhân với ID: " + id));
-//
-//        if (existing.getExamCampaign() != null &&
-//                existing.getExamCampaign().getStatus() == ExamCampaign.CampaignStatus.LOCKED) {
-//            throw new BusinessException("Không thể chỉnh sửa bệnh nhân! Chiến dịch này đã bị khóa.");
-//        }
-//
-//        existing.setPatientName(req.patientName());
-//        existing.setDob(req.dob());
-//        existing.setGender(Patient.Gender.valueOf(req.gender().toUpperCase()));
-//        existing.setParentPhone(req.parentPhone());
-//
-//        if (existing.getExamCampaign() == null || !existing.getExamCampaign().getCampaignId().equals(req.campaignId())) {
-//            existing.setExamCampaign(campaignRepository.findById(req.campaignId())
-//                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chiến dịch")));
-//        }
-//
-//        if (existing.getFacility() == null || !existing.getFacility().getId().equals(req.facilityId())) {
-//            Facility facility = facilityRepository.findById(req.facilityId())
-//                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy cơ sở"));
-//            existing.setFacility(facility);
-//        }
-//
-//        if (existing.getClasses() == null || !existing.getClasses().getId().equals(req.classId())) {
-//            existing.setClasses(classesRepository.findById(req.classId())
-//                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lớp")));
-//        }
-//
-//        patientRepository.save(existing);
-//    }
-
-    private PatientResponse convertToDto(Patient p) {
-
-        String wardId = p.getWard() != null ? p.getWard().getId() : null;
-        String wardName = p.getWard() != null ? p.getWard().getWardName() : "Chưa cập nhật";
-
-        return new PatientResponse(
-                p.getPatientId(),
-                p.getPatientName(),
-                p.getClasses() != null ? p.getClasses().getId() : null,
-                p.getClasses() != null ? p.getClasses().getClassName() : null,
-                p.getFacility() != null ? p.getFacility().getId() : null,
-                p.getFacility() != null ? p.getFacility().getFacilityName() : null,
-                p.getExamCampaign() != null ? p.getExamCampaign().getCampaignId() : null,
-                p.getExamCampaign() != null ? p.getExamCampaign().getCampaignTitle() : null,
-                p.getDob(),
-                p.getGender() != null ? p.getGender().name() : null,
-                p.getParentPhone(),
-                wardId,
-                wardName
-        );
-    }
-
     @Override
     public Integer countPatientsByCampaign(String campaignId) {
-        return patientRepository.countByExamCampaign_CampaignIdAndIsDeletedFalse(campaignId);
+        return eyeExamRecordRepository.countPatientsByCampaignId(campaignId);
     }
 
     @Override
@@ -188,23 +222,126 @@ public class PatientServiceImpl implements IPatientService {
         Classes patientClass = classesRepository.findById(req.classId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lớp với ID: " + req.classId()));
 
-        Ward patientWard = wardRepository.findById(req.wardId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phường/xã"));
+        Ward patientWard = null;
+        if (req.wardId() != null && !req.wardId().isBlank()) {
+            patientWard = wardRepository.findById(req.wardId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phường/xã: " + req.wardId()));
+        }
+
+        if (!patientClass.getFacility().getId().equals(req.facilityId())) {
+            throw new BusinessException("Lớp học bạn chọn không thuộc cơ sở này. Vui lòng kiểm tra lại!");
+        }
 
         patient.setPatientName(req.patientName());
         patient.setDob(req.dob());
         patient.setGender(Patient.Gender.valueOf(req.gender().toUpperCase()));
         patient.setParentPhone(req.parentPhone());
-
-        patient.setExamCampaign(campaign);
+//        patient.setExamCampaign(campaign);
         patient.setFacility(facility);
-        patient.setClasses(patientClass);
+//        patient.setClasses(patientClass);
         patient.setWard(patientWard);
-
         System.out.println("Đã cập nhật thông tin mới của bệnh nhân: " + patient);
-
         Patient updatedPatient = patientRepository.save(patient);
 
         return convertToDto(updatedPatient);
+    }
+
+    @Override
+    @Transactional
+    public void deletePatient(String id) {
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bệnh nhân với ID: " + id));
+
+//        if (patient.getExamCampaign() != null &&
+//                patient.getExamCampaign().getStatus() == ExamCampaign.CampaignStatus.LOCKED) {
+//            throw new BusinessException("Không thể xóa! Chiến dịch đã bị khóa.");
+//        }
+
+        patient.setIsDeleted(true);
+        patientRepository.save(patient);
+    }
+
+    private PatientResponse convertToDto(Patient p) {
+
+        String wardId = p.getWard() != null ? p.getWard().getId() : null;
+        String wardName = p.getWard() != null ? p.getWard().getWardName() : "Chưa cập nhật";
+        
+        String className = null;
+        String classId = null;
+        if (p.getEnrollments() != null && !p.getEnrollments().isEmpty()) {
+            ClassEnrollment enrollment = p.getEnrollments().stream()
+                    .filter(e -> e.getStatus() == ClassEnrollment.EnrollmentStatus.ACTIVE)
+                    .findFirst()
+                    .orElseGet(() -> p.getEnrollments().get(0));
+            className = enrollment.getClasses().getClassName();
+            classId = enrollment.getClasses().getId();
+        }
+
+        return new PatientResponse(
+                p.getPatientId(),
+                p.getPatientName(),
+                classId,
+                className,
+                p.getFacility() != null ? p.getFacility().getId() : null,
+                p.getFacility() != null ? p.getFacility().getFacilityName() : null,
+                p.getDob(),
+                p.getGender() != null ? p.getGender().name() : null,
+                p.getParentPhone(),
+                wardId,
+                wardName
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OverduePatientResponse> getOverdueReExamPatients(
+            String keyword,
+            String facilityId,
+            Integer overdueMonths,
+            Pageable pageable) {
+
+        int months = (overdueMonths != null && overdueMonths > 0) ? overdueMonths : 6;
+        LocalDate thresholdDate = LocalDate.now().minusMonths(months);
+
+        String searchKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        String filterFacilityId = (facilityId != null && !facilityId.isBlank()) ? facilityId.trim() : null;
+
+        Page<EyeExamRecord> records = eyeExamRecordRepository.findOverdueReExamRecords(
+                thresholdDate, filterFacilityId, searchKeyword, pageable
+        );
+
+        LocalDate today = LocalDate.now();
+
+        return records.map(record -> {
+            Patient p = record.getPatient();
+            long monthsDiff = java.time.temporal.ChronoUnit.MONTHS.between(record.getExamDate(), today);
+
+            String facilityName = null;
+            String facId = null;
+            if (record.getClassesField() != null && record.getClassesField().getFacility() != null) {
+                facId = record.getClassesField().getFacility().getId();
+                facilityName = record.getClassesField().getFacility().getFacilityName();
+            } else if (p.getFacility() != null) {
+                facId = p.getFacility().getId();
+                facilityName = p.getFacility().getFacilityName();
+            }
+
+            String className = record.getClassesField() != null ? record.getClassesField().getClassName() : "---";
+
+            return OverduePatientResponse.builder()
+                    .patientId(p.getPatientId())
+                    .patientName(p.getPatientName())
+                    .dob(p.getDob())
+                    .gender(p.getGender() != null ? p.getGender().name() : null)
+                    .parentPhone(p.getParentPhone())
+                    .className(className)
+                    .facilityId(facId)
+                    .facilityName(facilityName != null ? facilityName : "---")
+                    .lastExamDate(record.getExamDate())
+                    .monthsSinceLastExam(monthsDiff)
+                    .lastSphLeft(record.getSphLeft())
+                    .lastSphRight(record.getSphRight())
+                    .build();
+        });
     }
 }

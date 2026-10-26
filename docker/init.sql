@@ -1,425 +1,425 @@
--- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
+-- -- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
+-- --
+-- -- Host: localhost    Database: eyesora_db
+-- -- ------------------------------------------------------
+-- -- Server version	8.0.45
 --
--- Host: localhost    Database: eyesora_db
--- ------------------------------------------------------
--- Server version	8.0.45
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
+-- /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+-- /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+-- /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+-- /*!50503 SET NAMES utf8 */;
+-- /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+-- /*!40103 SET TIME_ZONE='+00:00' */;
+-- /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+-- /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+-- /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+-- /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 --
--- Table structure for table `classes`
+-- --
+-- -- Table structure for table `classes`
+-- --
 --
-
-DROP TABLE IF EXISTS `classes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `classes` (
-  `grade` int NOT NULL,
-  `school_year` varchar(20) NOT NULL,
-  `class_id` varchar(36) NOT NULL,
-  `facility_id` varchar(36) NOT NULL,
-  `class_name` varchar(50) NOT NULL,
-  PRIMARY KEY (`class_id`),
-  KEY `FKboioa14y56swc6krcvd6yhdg2` (`facility_id`),
-  CONSTRAINT `FKboioa14y56swc6krcvd6yhdg2` FOREIGN KEY (`facility_id`) REFERENCES `facilities` (`facility_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `classes`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `classes` (
+--   `grade` int NOT NULL,
+--   `school_year` varchar(20) NOT NULL,
+--   `class_id` varchar(36) NOT NULL,
+--   `facility_id` varchar(36) NOT NULL,
+--   `class_name` varchar(50) NOT NULL,
+--   PRIMARY KEY (`class_id`),
+--   KEY `FKboioa14y56swc6krcvd6yhdg2` (`facility_id`),
+--   CONSTRAINT `FKboioa14y56swc6krcvd6yhdg2` FOREIGN KEY (`facility_id`) REFERENCES `facilities` (`facility_id`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `classes`
+-- --
+-- -- Dumping data for table `classes`
+-- --
 --
-
-LOCK TABLES `classes` WRITE;
-/*!40000 ALTER TABLE `classes` DISABLE KEYS */;
-INSERT INTO `classes` VALUES (6,'2025-2026','CLASS_6A','SCH_001','6A'),(7,'2025-2026','CLASS_7B','SCH_001','7B');
-/*!40000 ALTER TABLE `classes` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `classes` WRITE;
+-- /*!40000 ALTER TABLE `classes` DISABLE KEYS */;
+-- INSERT INTO `classes` VALUES (6,'2025-2026','CLASS_6A','SCH_001','6A'),(7,'2025-2026','CLASS_7B','SCH_001','7B');
+-- /*!40000 ALTER TABLE `classes` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `districts`
+-- --
+-- -- Table structure for table `districts`
+-- --
 --
-
-DROP TABLE IF EXISTS `districts`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `districts` (
-  `district_id` varchar(36) NOT NULL,
-  `district_name` varchar(100) NOT NULL,
-  PRIMARY KEY (`district_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `districts`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `districts` (
+--   `district_id` varchar(36) NOT NULL,
+--   `district_name` varchar(100) NOT NULL,
+--   PRIMARY KEY (`district_id`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `districts`
+-- --
+-- -- Dumping data for table `districts`
+-- --
 --
-
-LOCK TABLES `districts` WRITE;
-/*!40000 ALTER TABLE `districts` DISABLE KEYS */;
-INSERT INTO `districts` VALUES ('D_CD','Huyện Cờ Đỏ'),('D_CLD','Huyện Cù Lao Dung'),('D_CR','Quận Cái Răng'),('D_CT','Huyện Châu Thành'),('D_KS','Huyện Kế Sách'),('D_LM','Huyện Long Mỹ'),('D_LP','Huyện Long Phú'),('D_MT','Huyện Mỹ Tú'),('D_MX','Huyện Mỹ Xuyên'),('D_NB','Thành phố Ngã Bảy'),('D_NK','Quận Ninh Kiều'),('D_NN','Thị xã Ngã Năm'),('D_OM','Quận Ô Môn'),('D_PD','Huyện Phong Điền'),('D_PH','Huyện Phụng Hiệp'),('D_ST','Thành phố Sóc Trăng'),('D_TL','Huyện Thới Lai'),('D_TN','Quận Thốt Nốt'),('D_TT','Huyện Thạnh Trị'),('D_VC','Thị xã Vĩnh Châu'),('D_VT','Thành phố Vị Thanh'),('D_VT_CT','Huyện Vĩnh Thạnh'),('D_VT_HG','Huyện Vị Thủy');
-/*!40000 ALTER TABLE `districts` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `districts` WRITE;
+-- /*!40000 ALTER TABLE `districts` DISABLE KEYS */;
+-- INSERT INTO `districts` VALUES ('D_CD','Huyện Cờ Đỏ'),('D_CLD','Huyện Cù Lao Dung'),('D_CR','Quận Cái Răng'),('D_CT','Huyện Châu Thành'),('D_KS','Huyện Kế Sách'),('D_LM','Huyện Long Mỹ'),('D_LP','Huyện Long Phú'),('D_MT','Huyện Mỹ Tú'),('D_MX','Huyện Mỹ Xuyên'),('D_NB','Thành phố Ngã Bảy'),('D_NK','Quận Ninh Kiều'),('D_NN','Thị xã Ngã Năm'),('D_OM','Quận Ô Môn'),('D_PD','Huyện Phong Điền'),('D_PH','Huyện Phụng Hiệp'),('D_ST','Thành phố Sóc Trăng'),('D_TL','Huyện Thới Lai'),('D_TN','Quận Thốt Nốt'),('D_TT','Huyện Thạnh Trị'),('D_VC','Thị xã Vĩnh Châu'),('D_VT','Thành phố Vị Thanh'),('D_VT_CT','Huyện Vĩnh Thạnh'),('D_VT_HG','Huyện Vị Thủy');
+-- /*!40000 ALTER TABLE `districts` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `exam_campaigns`
+-- --
+-- -- Table structure for table `exam_campaigns`
+-- --
 --
-
-DROP TABLE IF EXISTS `exam_campaigns`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `exam_campaigns` (
-  `start_date` date NOT NULL,
-  `end_date` date DEFAULT NULL,
-  `campaign_id` varchar(36) NOT NULL,
-  `organization_id` varchar(36) NOT NULL,
-  `campaign_title` varchar(255) NOT NULL,
-  `facility_year` varchar(20) NOT NULL,
-  `target_facility_id` varchar(36) NOT NULL,
-  `manager_name` varchar(255) DEFAULT NULL,
-  `status` varchar(20) DEFAULT 'ACTIVE',
-  PRIMARY KEY (`campaign_id`),
-  KEY `FK85594rfdnf2yqq82dr2args75` (`organization_id`),
-  KEY `FK84rnpj5la0vpem0oitr8dme2c` (`target_facility_id`),
-  CONSTRAINT `FK84rnpj5la0vpem0oitr8dme2c` FOREIGN KEY (`target_facility_id`) REFERENCES `facilities` (`facility_id`),
-  CONSTRAINT `FK85594rfdnf2yqq82dr2args75` FOREIGN KEY (`organization_id`) REFERENCES `facilities` (`facility_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `exam_campaigns`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `exam_campaigns` (
+--   `start_date` date NOT NULL,
+--   `end_date` date DEFAULT NULL,
+--   `campaign_id` varchar(36) NOT NULL,
+--   `organization_id` varchar(36) NOT NULL,
+--   `campaign_title` varchar(255) NOT NULL,
+--   `facility_year` varchar(20) NOT NULL,
+--   `target_facility_id` varchar(36) NOT NULL,
+--   `manager_name` varchar(255) DEFAULT NULL,
+--   `status` varchar(20) DEFAULT 'ACTIVE',
+--   PRIMARY KEY (`campaign_id`),
+--   KEY `FK85594rfdnf2yqq82dr2args75` (`organization_id`),
+--   KEY `FK84rnpj5la0vpem0oitr8dme2c` (`target_facility_id`),
+--   CONSTRAINT `FK84rnpj5la0vpem0oitr8dme2c` FOREIGN KEY (`target_facility_id`) REFERENCES `facilities` (`facility_id`),
+--   CONSTRAINT `FK85594rfdnf2yqq82dr2args75` FOREIGN KEY (`organization_id`) REFERENCES `facilities` (`facility_id`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `exam_campaigns`
+-- --
+-- -- Dumping data for table `exam_campaigns`
+-- --
 --
-
-LOCK TABLES `exam_campaigns` WRITE;
-/*!40000 ALTER TABLE `exam_campaigns` DISABLE KEYS */;
-INSERT INTO `exam_campaigns` VALUES ('2026-06-20','c510041f-82c2-4cbc-b855-817959bd2224','FAC_001','Khám mắt học đường đợt 2 năm 2026','2025-2026','SCH_001','Ngô Nhất','ACTIVE'),('2026-06-15','CAMP_2026_001','FAC_001','Khám mắt học đường đợt 1 năm 2026','2025-2026','SCH_001',NULL,'LOCKED'),('2026-06-20','f17e3eb8-065a-47cc-8e81-0a385bf67327','FAC_001','Khám mắt học đường đợt 2 năm 2026','2025-2026','SCH_001','Ngô Nhất Quý','ACTIVE');
-/*!40000 ALTER TABLE `exam_campaigns` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `exam_campaigns` WRITE;
+-- /*!40000 ALTER TABLE `exam_campaigns` DISABLE KEYS */;
+-- INSERT INTO `exam_campaigns` VALUES ('2026-06-20','c510041f-82c2-4cbc-b855-817959bd2224','FAC_001','Khám mắt học đường đợt 2 năm 2026','2025-2026','SCH_001','Ngô Nhất','ACTIVE'),('2026-06-15','CAMP_2026_001','FAC_001','Khám mắt học đường đợt 1 năm 2026','2025-2026','SCH_001',NULL,'LOCKED'),('2026-06-20','f17e3eb8-065a-47cc-8e81-0a385bf67327','FAC_001','Khám mắt học đường đợt 2 năm 2026','2025-2026','SCH_001','Ngô Nhất Quý','ACTIVE');
+-- /*!40000 ALTER TABLE `exam_campaigns` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `eye_exam_records`
+-- --
+-- -- Table structure for table `eye_exam_records`
+-- --
 --
-
-DROP TABLE IF EXISTS `eye_exam_records`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `eye_exam_records` (
-  `axis_left` int DEFAULT NULL,
-  `axis_right` int DEFAULT NULL,
-  `cyl_left` float DEFAULT '0',
-  `cyl_right` float DEFAULT '0',
-  `is_deleted` bit(1) DEFAULT b'0',
-  `sph_left` float DEFAULT '0',
-  `sph_right` float DEFAULT '0',
-  `va_left_with_glasses` float DEFAULT NULL,
-  `va_left_without_glasses` float NOT NULL,
-  `va_right_with_glasses` float DEFAULT NULL,
-  `va_right_without_glasses` float NOT NULL,
-  `exam_date` datetime(6) DEFAULT NULL,
-  `campaign_id` varchar(36) DEFAULT NULL,
-  `class_id` varchar(36) NOT NULL,
-  `exam_id` varchar(36) NOT NULL,
-  `examiner_id` varchar(36) DEFAULT NULL,
-  `patient_id` varchar(36) NOT NULL,
-  PRIMARY KEY (`exam_id`),
-  KEY `FK6j77w1jiudobc8p45hkw13vjl` (`campaign_id`),
-  KEY `FKdmsvxaae11dvrd5yf9jfkfeo3` (`class_id`),
-  KEY `FK7mi42elr8jj18no3b640wfgr7` (`examiner_id`),
-  KEY `FK2nmab4iwd810geo2nhh0rylrb` (`patient_id`),
-  CONSTRAINT `FK2nmab4iwd810geo2nhh0rylrb` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`),
-  CONSTRAINT `FK6j77w1jiudobc8p45hkw13vjl` FOREIGN KEY (`campaign_id`) REFERENCES `exam_campaigns` (`campaign_id`),
-  CONSTRAINT `FK7mi42elr8jj18no3b640wfgr7` FOREIGN KEY (`examiner_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `FKdmsvxaae11dvrd5yf9jfkfeo3` FOREIGN KEY (`class_id`) REFERENCES `classes` (`class_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `eye_exam_records`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `eye_exam_records` (
+--   `axis_left` int DEFAULT NULL,
+--   `axis_right` int DEFAULT NULL,
+--   `cyl_left` float DEFAULT '0',
+--   `cyl_right` float DEFAULT '0',
+--   `is_deleted` bit(1) DEFAULT b'0',
+--   `sph_left` float DEFAULT '0',
+--   `sph_right` float DEFAULT '0',
+--   `va_left_with_glasses` float DEFAULT NULL,
+--   `va_left_without_glasses` float NOT NULL,
+--   `va_right_with_glasses` float DEFAULT NULL,
+--   `va_right_without_glasses` float NOT NULL,
+--   `exam_date` datetime(6) DEFAULT NULL,
+--   `campaign_id` varchar(36) DEFAULT NULL,
+--   `class_id` varchar(36) NOT NULL,
+--   `exam_id` varchar(36) NOT NULL,
+--   `examiner_id` varchar(36) DEFAULT NULL,
+--   `patient_id` varchar(36) NOT NULL,
+--   PRIMARY KEY (`exam_id`),
+--   KEY `FK6j77w1jiudobc8p45hkw13vjl` (`campaign_id`),
+--   KEY `FKdmsvxaae11dvrd5yf9jfkfeo3` (`class_id`),
+--   KEY `FK7mi42elr8jj18no3b640wfgr7` (`examiner_id`),
+--   KEY `FK2nmab4iwd810geo2nhh0rylrb` (`patient_id`),
+--   CONSTRAINT `FK2nmab4iwd810geo2nhh0rylrb` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`),
+--   CONSTRAINT `FK6j77w1jiudobc8p45hkw13vjl` FOREIGN KEY (`campaign_id`) REFERENCES `exam_campaigns` (`campaign_id`),
+--   CONSTRAINT `FK7mi42elr8jj18no3b640wfgr7` FOREIGN KEY (`examiner_id`) REFERENCES `users` (`id`),
+--   CONSTRAINT `FKdmsvxaae11dvrd5yf9jfkfeo3` FOREIGN KEY (`class_id`) REFERENCES `classes` (`class_id`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `eye_exam_records`
+-- --
+-- -- Dumping data for table `eye_exam_records`
+-- --
 --
-
-LOCK TABLES `eye_exam_records` WRITE;
-/*!40000 ALTER TABLE `eye_exam_records` DISABLE KEYS */;
-INSERT INTO `eye_exam_records` VALUES (90,85,-0.5,-0.25,_binary '\0',-1.25,-1,NULL,0.8,NULL,0.9,'2026-06-15 19:04:06.000000','CAMP_2026_001','CLASS_6A','4f4d1249-68b2-11f1-b21b-40c2bacf59ee','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb','P001'),(180,175,-0.75,-0.5,_binary '\0',-2.5,-2.25,NULL,0.5,NULL,0.6,'2026-06-15 19:04:06.000000','CAMP_2026_001','CLASS_6A','4f4d1941-68b2-11f1-b21b-40c2bacf59ee','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb','P002'),(NULL,NULL,0,0,_binary '\0',0,0,NULL,1,NULL,1,'2026-06-15 19:04:06.000000','CAMP_2026_001','CLASS_6A','4f4d1af0-68b2-11f1-b21b-40c2bacf59ee','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb','P003');
-/*!40000 ALTER TABLE `eye_exam_records` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `eye_exam_records` WRITE;
+-- /*!40000 ALTER TABLE `eye_exam_records` DISABLE KEYS */;
+-- INSERT INTO `eye_exam_records` VALUES (90,85,-0.5,-0.25,_binary '\0',-1.25,-1,NULL,0.8,NULL,0.9,'2026-06-15 19:04:06.000000','CAMP_2026_001','CLASS_6A','4f4d1249-68b2-11f1-b21b-40c2bacf59ee','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb','P001'),(180,175,-0.75,-0.5,_binary '\0',-2.5,-2.25,NULL,0.5,NULL,0.6,'2026-06-15 19:04:06.000000','CAMP_2026_001','CLASS_6A','4f4d1941-68b2-11f1-b21b-40c2bacf59ee','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb','P002'),(NULL,NULL,0,0,_binary '\0',0,0,NULL,1,NULL,1,'2026-06-15 19:04:06.000000','CAMP_2026_001','CLASS_6A','4f4d1af0-68b2-11f1-b21b-40c2bacf59ee','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb','P003');
+-- /*!40000 ALTER TABLE `eye_exam_records` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `facilities`
+-- --
+-- -- Table structure for table `facilities`
+-- --
 --
-
-DROP TABLE IF EXISTS `facilities`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `facilities` (
-  `phone` varchar(15) DEFAULT NULL,
-  `facility_id` varchar(36) NOT NULL,
-  `ward_id` varchar(36) NOT NULL,
-  `address` varchar(255) DEFAULT NULL,
-  `facility_name` varchar(255) NOT NULL,
-  `facility_type` enum('CLINIC','HOSPITAL','SCHOOL') NOT NULL,
-  PRIMARY KEY (`facility_id`),
-  KEY `FKqrl4hrotg1v3r9m6go6xeh65c` (`ward_id`),
-  CONSTRAINT `FKqrl4hrotg1v3r9m6go6xeh65c` FOREIGN KEY (`ward_id`) REFERENCES `wards` (`ward_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `facilities`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `facilities` (
+--   `phone` varchar(15) DEFAULT NULL,
+--   `facility_id` varchar(36) NOT NULL,
+--   `ward_id` varchar(36) NOT NULL,
+--   `address` varchar(255) DEFAULT NULL,
+--   `facility_name` varchar(255) NOT NULL,
+--   `facility_type` enum('CLINIC','HOSPITAL','SCHOOL') NOT NULL,
+--   PRIMARY KEY (`facility_id`),
+--   KEY `FKqrl4hrotg1v3r9m6go6xeh65c` (`ward_id`),
+--   CONSTRAINT `FKqrl4hrotg1v3r9m6go6xeh65c` FOREIGN KEY (`ward_id`) REFERENCES `wards` (`ward_id`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `facilities`
+-- --
+-- -- Dumping data for table `facilities`
+-- --
 --
-
-LOCK TABLES `facilities` WRITE;
-/*!40000 ALTER TABLE `facilities` DISABLE KEYS */;
-INSERT INTO `facilities` VALUES ('02923111111','FAC_001','W001','123 Đường Nguyễn Trãi','Trạm Y tế Phường Ninh Kiều','CLINIC'),('02923222222','SCH_001','W001','456 Đường Lý Tự Trọng','Trường THCS Đoàn Thị Điểm','SCHOOL');
-/*!40000 ALTER TABLE `facilities` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `facilities` WRITE;
+-- /*!40000 ALTER TABLE `facilities` DISABLE KEYS */;
+-- INSERT INTO `facilities` VALUES ('02923111111','FAC_001','W001','123 Đường Nguyễn Trãi','Trạm Y tế Phường Ninh Kiều','CLINIC'),('02923222222','SCH_001','W001','456 Đường Lý Tự Trọng','Trường THCS Đoàn Thị Điểm','SCHOOL');
+-- /*!40000 ALTER TABLE `facilities` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `password_reset_tokens`
+-- --
+-- -- Table structure for table `password_reset_tokens`
+-- --
 --
-
-DROP TABLE IF EXISTS `password_reset_tokens`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `password_reset_tokens` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `expiryDate` datetime(6) NOT NULL,
-  `token` varchar(255) NOT NULL,
-  `user_id` varchar(36) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UK71lqwbwtklmljk3qlsugr1mig` (`token`),
-  KEY `FKk3ndxg5xp6v7wd4gjyusp15gq` (`user_id`),
-  CONSTRAINT `FKk3ndxg5xp6v7wd4gjyusp15gq` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `password_reset_tokens`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `password_reset_tokens` (
+--   `id` bigint NOT NULL AUTO_INCREMENT,
+--   `expiryDate` datetime(6) NOT NULL,
+--   `token` varchar(255) NOT NULL,
+--   `user_id` varchar(36) NOT NULL,
+--   PRIMARY KEY (`id`),
+--   UNIQUE KEY `UK71lqwbwtklmljk3qlsugr1mig` (`token`),
+--   KEY `FKk3ndxg5xp6v7wd4gjyusp15gq` (`user_id`),
+--   CONSTRAINT `FKk3ndxg5xp6v7wd4gjyusp15gq` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+-- ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `password_reset_tokens`
+-- --
+-- -- Dumping data for table `password_reset_tokens`
+-- --
 --
-
-LOCK TABLES `password_reset_tokens` WRITE;
-/*!40000 ALTER TABLE `password_reset_tokens` DISABLE KEYS */;
-/*!40000 ALTER TABLE `password_reset_tokens` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `password_reset_tokens` WRITE;
+-- /*!40000 ALTER TABLE `password_reset_tokens` DISABLE KEYS */;
+-- /*!40000 ALTER TABLE `password_reset_tokens` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `patients`
+-- --
+-- -- Table structure for table `patients`
+-- --
 --
-
-DROP TABLE IF EXISTS `patients`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `patients` (
-  `dob` date NOT NULL,
-  `is_deleted` bit(1) DEFAULT b'0',
-  `created_at` datetime(6) DEFAULT NULL,
-  `parent_phone` varchar(15) DEFAULT NULL,
-  `patient_id` varchar(36) NOT NULL,
-  `ward_id` varchar(36) DEFAULT NULL,
-  `patient_name` varchar(150) NOT NULL,
-  `gender` enum('FEMALE','MALE','OTHER') NOT NULL,
-  `campaign_id` varchar(36) DEFAULT NULL,
-  `facility_id` varchar(36) DEFAULT NULL,
-  PRIMARY KEY (`patient_id`),
-  KEY `FK4uep0g7kcu02sl8k9x2j5kesx` (`ward_id`),
-  KEY `fk_patient_campaign` (`campaign_id`),
-  KEY `fk_patient_facility` (`facility_id`),
-  CONSTRAINT `FK4uep0g7kcu02sl8k9x2j5kesx` FOREIGN KEY (`ward_id`) REFERENCES `wards` (`ward_id`),
-  CONSTRAINT `FK6my2c0jso4r5aom8ptfmt0qut` FOREIGN KEY (`facility_id`) REFERENCES `facilities` (`facility_id`),
-  CONSTRAINT `fk_patient_campaign` FOREIGN KEY (`campaign_id`) REFERENCES `exam_campaigns` (`campaign_id`),
-  CONSTRAINT `fk_patient_facility` FOREIGN KEY (`facility_id`) REFERENCES `facilities` (`facility_id`),
-  CONSTRAINT `FKohpy8uwivloukkl6671ele3kv` FOREIGN KEY (`campaign_id`) REFERENCES `exam_campaigns` (`campaign_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `patients`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `patients` (
+--   `dob` date NOT NULL,
+--   `is_deleted` bit(1) DEFAULT b'0',
+--   `created_at` datetime(6) DEFAULT NULL,
+--   `parent_phone` varchar(15) DEFAULT NULL,
+--   `patient_id` varchar(36) NOT NULL,
+--   `ward_id` varchar(36) DEFAULT NULL,
+--   `patient_name` varchar(150) NOT NULL,
+--   `gender` enum('FEMALE','MALE','OTHER') NOT NULL,
+--   `campaign_id` varchar(36) DEFAULT NULL,
+--   `facility_id` varchar(36) DEFAULT NULL,
+--   PRIMARY KEY (`patient_id`),
+--   KEY `FK4uep0g7kcu02sl8k9x2j5kesx` (`ward_id`),
+--   KEY `fk_patient_campaign` (`campaign_id`),
+--   KEY `fk_patient_facility` (`facility_id`),
+--   CONSTRAINT `FK4uep0g7kcu02sl8k9x2j5kesx` FOREIGN KEY (`ward_id`) REFERENCES `wards` (`ward_id`),
+--   CONSTRAINT `FK6my2c0jso4r5aom8ptfmt0qut` FOREIGN KEY (`facility_id`) REFERENCES `facilities` (`facility_id`),
+--   CONSTRAINT `fk_patient_campaign` FOREIGN KEY (`campaign_id`) REFERENCES `exam_campaigns` (`campaign_id`),
+--   CONSTRAINT `fk_patient_facility` FOREIGN KEY (`facility_id`) REFERENCES `facilities` (`facility_id`),
+--   CONSTRAINT `FKohpy8uwivloukkl6671ele3kv` FOREIGN KEY (`campaign_id`) REFERENCES `exam_campaigns` (`campaign_id`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `patients`
+-- --
+-- -- Dumping data for table `patients`
+-- --
 --
-
-LOCK TABLES `patients` WRITE;
-/*!40000 ALTER TABLE `patients` DISABLE KEYS */;
-INSERT INTO `patients` VALUES ('2015-05-15',_binary '\0','2026-06-16 14:13:51.515894','0912345678','76dcaa53-fe4f-4029-bb2b-28f590a06fa1','W001','Nguyễn Văn AAAAAA','MALE','f17e3eb8-065a-47cc-8e81-0a385bf67327','FAC_001'),('2015-05-15',_binary '\0','2026-06-16 13:58:59.395907','0912345678','cde81271-6705-4f99-aaab-5b459e477e3f','W001','Nguyễn Văn AA','MALE',NULL,NULL),('2014-05-10',_binary '\0','2026-06-15 18:48:18.000000','0901234567','P001','W001','Nguyễn Văn A','MALE',NULL,NULL),('2015-08-20',_binary '\0','2026-06-15 18:48:18.000000','0901234568','P002','W002','Trần Thị B','FEMALE',NULL,NULL),('2014-11-15',_binary '\0','2026-06-15 18:57:10.000000','0901234569','P003','W001','Lê Văn C','MALE',NULL,NULL),('2015-02-28',_binary '\0','2026-06-15 18:57:10.000000','0901234570','P004','W001','Phạm Minh D','MALE',NULL,NULL),('2014-07-07',_binary '\0','2026-06-15 18:57:10.000000','0901234571','P005','W002','Hoàng Thị E','FEMALE',NULL,NULL);
-/*!40000 ALTER TABLE `patients` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `patients` WRITE;
+-- /*!40000 ALTER TABLE `patients` DISABLE KEYS */;
+-- INSERT INTO `patients` VALUES ('2015-05-15',_binary '\0','2026-06-16 14:13:51.515894','0912345678','76dcaa53-fe4f-4029-bb2b-28f590a06fa1','W001','Nguyễn Văn AAAAAA','MALE','f17e3eb8-065a-47cc-8e81-0a385bf67327','FAC_001'),('2015-05-15',_binary '\0','2026-06-16 13:58:59.395907','0912345678','cde81271-6705-4f99-aaab-5b459e477e3f','W001','Nguyễn Văn AA','MALE',NULL,NULL),('2014-05-10',_binary '\0','2026-06-15 18:48:18.000000','0901234567','P001','W001','Nguyễn Văn A','MALE',NULL,NULL),('2015-08-20',_binary '\0','2026-06-15 18:48:18.000000','0901234568','P002','W002','Trần Thị B','FEMALE',NULL,NULL),('2014-11-15',_binary '\0','2026-06-15 18:57:10.000000','0901234569','P003','W001','Lê Văn C','MALE',NULL,NULL),('2015-02-28',_binary '\0','2026-06-15 18:57:10.000000','0901234570','P004','W001','Phạm Minh D','MALE',NULL,NULL),('2014-07-07',_binary '\0','2026-06-15 18:57:10.000000','0901234571','P005','W002','Hoàng Thị E','FEMALE',NULL,NULL);
+-- /*!40000 ALTER TABLE `patients` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `refresh_tokens`
+-- --
+-- -- Table structure for table `refresh_tokens`
+-- --
 --
-
-DROP TABLE IF EXISTS `refresh_tokens`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `refresh_tokens` (
-  `revoked` bit(1) NOT NULL,
-  `expiry_date` datetime(6) NOT NULL,
-  `id` varchar(36) NOT NULL,
-  `source` varchar(255) NOT NULL,
-  `token` varchar(255) NOT NULL,
-  `username` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UKghpmfn23vmxfu3spu3lfg4r2d` (`token`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `refresh_tokens`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `refresh_tokens` (
+--   `revoked` bit(1) NOT NULL,
+--   `expiry_date` datetime(6) NOT NULL,
+--   `id` varchar(36) NOT NULL,
+--   `source` varchar(255) NOT NULL,
+--   `token` varchar(255) NOT NULL,
+--   `username` varchar(255) NOT NULL,
+--   PRIMARY KEY (`id`),
+--   UNIQUE KEY `UKghpmfn23vmxfu3spu3lfg4r2d` (`token`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `refresh_tokens`
+-- --
+-- -- Dumping data for table `refresh_tokens`
+-- --
 --
-
-LOCK TABLES `refresh_tokens` WRITE;
-/*!40000 ALTER TABLE `refresh_tokens` DISABLE KEYS */;
-/*!40000 ALTER TABLE `refresh_tokens` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `refresh_tokens` WRITE;
+-- /*!40000 ALTER TABLE `refresh_tokens` DISABLE KEYS */;
+-- /*!40000 ALTER TABLE `refresh_tokens` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `roles`
+-- --
+-- -- Table structure for table `roles`
+-- --
 --
-
-DROP TABLE IF EXISTS `roles`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `roles` (
-  `roleid` varchar(36) NOT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`roleid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `roles`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `roles` (
+--   `roleid` varchar(36) NOT NULL,
+--   `name` varchar(255) DEFAULT NULL,
+--   PRIMARY KEY (`roleid`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `roles`
+-- --
+-- -- Dumping data for table `roles`
+-- --
 --
-
-LOCK TABLES `roles` WRITE;
-/*!40000 ALTER TABLE `roles` DISABLE KEYS */;
-INSERT INTO `roles` VALUES ('9168b437-57b2-4f8a-bd91-f8cd891cf5ed','OWNER'),('a1d150d0-51d8-4771-9d53-148bea51adfd','ADMIN'),('e9249bb7-efb0-443e-a6f3-ad81660bc12c','USER');
-/*!40000 ALTER TABLE `roles` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `roles` WRITE;
+-- /*!40000 ALTER TABLE `roles` DISABLE KEYS */;
+-- INSERT INTO `roles` VALUES ('9168b437-57b2-4f8a-bd91-f8cd891cf5ed','OWNER'),('a1d150d0-51d8-4771-9d53-148bea51adfd','ADMIN'),('e9249bb7-efb0-443e-a6f3-ad81660bc12c','USER');
+-- /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `user_role`
+-- --
+-- -- Table structure for table `user_role`
+-- --
 --
-
-DROP TABLE IF EXISTS `user_role`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `user_role` (
-  `role_id` varchar(36) NOT NULL,
-  `user_id` varchar(36) NOT NULL,
-  PRIMARY KEY (`role_id`,`user_id`),
-  KEY `FKj345gk1bovqvfame88rcx7yyx` (`user_id`),
-  CONSTRAINT `FKj345gk1bovqvfame88rcx7yyx` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `FKt7e7djp752sqn6w22i6ocqy6q` FOREIGN KEY (`role_id`) REFERENCES `roles` (`roleid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `user_role`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `user_role` (
+--   `role_id` varchar(36) NOT NULL,
+--   `user_id` varchar(36) NOT NULL,
+--   PRIMARY KEY (`role_id`,`user_id`),
+--   KEY `FKj345gk1bovqvfame88rcx7yyx` (`user_id`),
+--   CONSTRAINT `FKj345gk1bovqvfame88rcx7yyx` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+--   CONSTRAINT `FKt7e7djp752sqn6w22i6ocqy6q` FOREIGN KEY (`role_id`) REFERENCES `roles` (`roleid`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `user_role`
+-- --
+-- -- Dumping data for table `user_role`
+-- --
 --
-
-LOCK TABLES `user_role` WRITE;
-/*!40000 ALTER TABLE `user_role` DISABLE KEYS */;
-INSERT INTO `user_role` VALUES ('9168b437-57b2-4f8a-bd91-f8cd891cf5ed','3861b613-50d7-488b-a4c2-a0984dd5408e'),('e9249bb7-efb0-443e-a6f3-ad81660bc12c','3861b613-50d7-488b-a4c2-a0984dd5408e'),('9168b437-57b2-4f8a-bd91-f8cd891cf5ed','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb'),('a1d150d0-51d8-4771-9d53-148bea51adfd','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb'),('e9249bb7-efb0-443e-a6f3-ad81660bc12c','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb'),('e9249bb7-efb0-443e-a6f3-ad81660bc12c','db30e18c-8aac-4736-a1c7-96e1b491d061');
-/*!40000 ALTER TABLE `user_role` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `user_role` WRITE;
+-- /*!40000 ALTER TABLE `user_role` DISABLE KEYS */;
+-- INSERT INTO `user_role` VALUES ('9168b437-57b2-4f8a-bd91-f8cd891cf5ed','3861b613-50d7-488b-a4c2-a0984dd5408e'),('e9249bb7-efb0-443e-a6f3-ad81660bc12c','3861b613-50d7-488b-a4c2-a0984dd5408e'),('9168b437-57b2-4f8a-bd91-f8cd891cf5ed','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb'),('a1d150d0-51d8-4771-9d53-148bea51adfd','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb'),('e9249bb7-efb0-443e-a6f3-ad81660bc12c','b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb'),('e9249bb7-efb0-443e-a6f3-ad81660bc12c','db30e18c-8aac-4736-a1c7-96e1b491d061');
+-- /*!40000 ALTER TABLE `user_role` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `users`
+-- --
+-- -- Table structure for table `users`
+-- --
 --
-
-DROP TABLE IF EXISTS `users`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `users` (
-  `facility_id` varchar(36) DEFAULT NULL,
-  `id` varchar(36) NOT NULL,
-  `username` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `full_name` varchar(100) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `status` enum('ACTIVE','LOCKED','UNVERIFIED') NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UKr43af9ap4edm43mmtq01oddj6` (`username`),
-  UNIQUE KEY `UK6dotkott2kjsp8vw4d0m25fb7` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `users`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `users` (
+--   `facility_id` varchar(36) DEFAULT NULL,
+--   `id` varchar(36) NOT NULL,
+--   `username` varchar(50) NOT NULL,
+--   `email` varchar(100) NOT NULL,
+--   `full_name` varchar(100) NOT NULL,
+--   `password_hash` varchar(255) NOT NULL,
+--   `status` enum('ACTIVE','LOCKED','UNVERIFIED') NOT NULL,
+--   PRIMARY KEY (`id`),
+--   UNIQUE KEY `UKr43af9ap4edm43mmtq01oddj6` (`username`),
+--   UNIQUE KEY `UK6dotkott2kjsp8vw4d0m25fb7` (`email`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `users`
+-- --
+-- -- Dumping data for table `users`
+-- --
 --
-
-LOCK TABLES `users` WRITE;
-/*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (NULL,'3861b613-50d7-488b-a4c2-a0984dd5408e','owner1','owner1@gmail.com','Facility Admin 1','$2a$10$41ax7bdjbppv/BUF57pG3eTNLFv8S5h1u9NzOIfPhvogsO5QP4fVm','ACTIVE'),(NULL,'b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb','admin','admin12345@gmail.com','System Super Admin','$2a$10$hE8QKyJaQUte0DAj3gwYxOo4TseUYlffoMrEVZ7CcTssg6AEZ15Xe','ACTIVE'),('FAC_001','db30e18c-8aac-4736-a1c7-96e1b491d061','student_quy','ngnhquy2005@gmail.com','Ngô Nhất Quý','$2a$10$OKFqAozXxer5rUxtsbeZrOPIoM90SM0MR/hHNOEnNfWLJoZa.brMa','ACTIVE');
-/*!40000 ALTER TABLE `users` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `users` WRITE;
+-- /*!40000 ALTER TABLE `users` DISABLE KEYS */;
+-- INSERT INTO `users` VALUES (NULL,'3861b613-50d7-488b-a4c2-a0984dd5408e','owner1','owner1@gmail.com','Facility Admin 1','$2a$10$41ax7bdjbppv/BUF57pG3eTNLFv8S5h1u9NzOIfPhvogsO5QP4fVm','ACTIVE'),(NULL,'b3e82f45-8f77-46ae-8ac9-c46c9e24b1fb','admin','admin12345@gmail.com','System Super Admin','$2a$10$hE8QKyJaQUte0DAj3gwYxOo4TseUYlffoMrEVZ7CcTssg6AEZ15Xe','ACTIVE'),('FAC_001','db30e18c-8aac-4736-a1c7-96e1b491d061','student_quy','ngnhquy2005@gmail.com','Ngô Nhất Quý','$2a$10$OKFqAozXxer5rUxtsbeZrOPIoM90SM0MR/hHNOEnNfWLJoZa.brMa','ACTIVE');
+-- /*!40000 ALTER TABLE `users` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `verification_tokens`
+-- --
+-- -- Table structure for table `verification_tokens`
+-- --
 --
-
-DROP TABLE IF EXISTS `verification_tokens`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `verification_tokens` (
-  `expiryDate` datetime(6) NOT NULL,
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` varchar(36) NOT NULL,
-  `token` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UK6q9nsb665s9f8qajm3j07kd1e` (`token`),
-  KEY `FK54y8mqsnq1rtyf581sfmrbp4f` (`user_id`),
-  CONSTRAINT `FK54y8mqsnq1rtyf581sfmrbp4f` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `verification_tokens`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `verification_tokens` (
+--   `expiryDate` datetime(6) NOT NULL,
+--   `id` bigint NOT NULL AUTO_INCREMENT,
+--   `user_id` varchar(36) NOT NULL,
+--   `token` varchar(255) NOT NULL,
+--   PRIMARY KEY (`id`),
+--   UNIQUE KEY `UK6q9nsb665s9f8qajm3j07kd1e` (`token`),
+--   KEY `FK54y8mqsnq1rtyf581sfmrbp4f` (`user_id`),
+--   CONSTRAINT `FK54y8mqsnq1rtyf581sfmrbp4f` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+-- ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `verification_tokens`
+-- --
+-- -- Dumping data for table `verification_tokens`
+-- --
 --
-
-LOCK TABLES `verification_tokens` WRITE;
-/*!40000 ALTER TABLE `verification_tokens` DISABLE KEYS */;
-/*!40000 ALTER TABLE `verification_tokens` ENABLE KEYS */;
-UNLOCK TABLES;
-
+-- LOCK TABLES `verification_tokens` WRITE;
+-- /*!40000 ALTER TABLE `verification_tokens` DISABLE KEYS */;
+-- /*!40000 ALTER TABLE `verification_tokens` ENABLE KEYS */;
+-- UNLOCK TABLES;
 --
--- Table structure for table `wards`
+-- --
+-- -- Table structure for table `wards`
+-- --
 --
-
-DROP TABLE IF EXISTS `wards`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `wards` (
-  `district_id` varchar(36) NOT NULL,
-  `ward_id` varchar(36) NOT NULL,
-  `ward_name` varchar(100) NOT NULL,
-  PRIMARY KEY (`ward_id`),
-  KEY `FKfjqt744bo800mb5uax74lav8k` (`district_id`),
-  CONSTRAINT `FKfjqt744bo800mb5uax74lav8k` FOREIGN KEY (`district_id`) REFERENCES `districts` (`district_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
+-- DROP TABLE IF EXISTS `wards`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `wards` (
+--   `district_id` varchar(36) NOT NULL,
+--   `ward_id` varchar(36) NOT NULL,
+--   `ward_name` varchar(100) NOT NULL,
+--   PRIMARY KEY (`ward_id`),
+--   KEY `FKfjqt744bo800mb5uax74lav8k` (`district_id`),
+--   CONSTRAINT `FKfjqt744bo800mb5uax74lav8k` FOREIGN KEY (`district_id`) REFERENCES `districts` (`district_id`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 --
--- Dumping data for table `wards`
+-- --
+-- -- Dumping data for table `wards`
+-- --
 --
-
-LOCK TABLES `wards` WRITE;
-/*!40000 ALTER TABLE `wards` DISABLE KEYS */;
-INSERT INTO `wards` VALUES ('D_NK','W001','Phường Ninh Kiều'),('D_NK','W002','Phường Cái Khế'),('D_NK','W003','Phường Tân An'),('D_NK','W004','Phường An Bình'),('D_OM','W005','Phường Thới An Đông'),('D_OM','W006','Phường Bình Thủy'),('D_OM','W007','Phường Long Tuyền'),('D_CR','W008','Phường Cái Răng'),('D_CR','W009','Phường Hưng Phú'),('D_OM','W010','Phường Ô Môn'),('D_OM','W011','Phường Phước Thới'),('D_OM','W012','Phường Thới Long'),('D_OM','W013','Phường Trung Nhứt'),('D_TN','W014','Phường Thuận Hưng'),('D_TN','W015','Phường Thốt Nốt'),('D_VT','W016','Phường Vị Thanh'),('D_VT','W017','Phường Vị Tân'),('D_VT','W018','Phường Long Bình'),('D_LM','W019','Phường Long Mỹ'),('D_LM','W020','Phường Long Phú 1'),('D_VT','W021','Phường Đại Thành'),('D_NB','W022','Phường Ngã Bảy'),('D_ST','W023','Phường Phú Lợi'),('D_ST','W024','Phường Sóc Trăng'),('D_MX','W025','Phường Mỹ Xuyên'),('D_MX','W026','Phường Vĩnh Phước'),('D_VC','W027','Phường Vĩnh Châu'),('D_VC','W028','Phường Khánh Hòa'),('D_NN','W029','Phường Ngã Năm'),('D_NN','W030','Phường Mỹ Quới'),('D_PD','W031','Xã Phong Điền'),('D_PD','W032','Xã Nhơn Ái'),('D_TL','W033','Xã Thới Lai'),('D_TL','W034','Xã Đông Thuận'),('D_TL','W035','Xã Trường Xuân'),('D_CD','W036','Xã Trường Thành'),('D_CD','W037','Xã Cờ Đỏ'),('D_CD','W038','Xã Đông Hiệp'),('D_CD','W039','Xã Trung Hưng'),('D_VT_CT','W040','Xã Vĩnh Thạnh'),('D_VT_CT','W041','Xã Vĩnh Trinh'),('D_VT_CT','W042','Xã Thạnh An'),('D_VT_CT','W043','Xã Thạnh Quới'),('D_VT_HG','W044','Xã Hỏa Lựu'),('D_VT_HG','W045','Xã Vị Thủy'),('D_VT_HG','W046','Xã Vĩnh Thuận Đông'),('D_VT_HG','W047','Xã Vị Thanh 1'),('D_VT_HG','W048','Xã Vĩnh Tường'),('D_LM','W049','Xã Vĩnh Viễn'),('D_LM','W050','Xã Xà Phiên'),('D_LM','W051','Xã Lương Tâm'),('D_CT','W052','Xã Thạnh Xuân'),('D_CT','W053','Xã Tân Hòa'),('D_CT','W054','Xã Trường Long Tây'),('D_CT','W055','Xã Châu Thành'),('D_CT','W056','Xã Đông Phước'),('D_CT','W057','Xã Phú Hữu'),('D_CT','W058','Xã Tân Bình'),('D_PH','W059','Xã Hòa An'),('D_PH','W060','Xã Phương Bình'),('D_PH','W061','Xã Tân Phước Hưng'),('D_PH','W062','Xã Hiệp Hưng'),('D_PH','W063','Xã Phụng Hiệp'),('D_PH','W064','Xã Thạnh Hòa'),('D_MX','W065','Xã Hòa Tú'),('D_MX','W066','Xã Gia Hòa'),('D_MX','W067','Xã Nhu Gia'),('D_MX','W068','Xã Ngọc Tố'),('D_LP','W069','Xã Trường Khánh'),('D_LP','W070','Xã Đại Ngãi'),('D_LP','W071','Xã Tân Thạnh'),('D_LP','W072','Xã Long Phú'),('D_LP','W073','Xã Nhơn Mỹ'),('D_KS','W074','Xã An Lạc Thôn'),('D_KS','W075','Xã Kế Sách'),('D_KS','W076','Xã Thới An Hội'),('D_KS','W077','Xã Đại Hải'),('D_TT','W078','Xã Phú Tâm'),('D_TT','W079','Xã An Ninh'),('D_TT','W080','Xã Thuận Hòa'),('D_TT','W081','Xã Hồ Đắc Kiện'),('D_MT','W082','Xã Mỹ Tú'),('D_MT','W083','Xã Long Hưng'),('D_MT','W084','Xã Mỹ Hương'),('D_MT','W085','Xã Tân Long'),('D_TT','W086','Xã Phú Lộc'),('D_MT','W087','Xã Vĩnh Lợi'),('D_TT','W088','Xã Lâm Tân'),('D_TT','W089','Xã Thạnh Thới An'),('D_MX','W090','Xã Tài Văn'),('D_MX','W091','Xã Liêu Tú'),('D_TT','W092','Xã Lịch Hội Thượng'),('D_CLD','W093','Xã Trần Đề'),('D_CLD','W094','Xã An Thạnh'),('D_CLD','W095','Xã Cù Lao Dung'),('D_TN','W096','Phường Tân Lộc'),('D_PD','W097','Xã Trường Long'),('D_VT_CT','W098','Xã Thạnh Phú'),('D_VT_CT','W099','Xã Thới Hưng'),('D_LP','W100','Xã Phong Nẫm'),('D_MX','W101','Xã Mỹ Phước'),('D_VC','W102','Xã Lai Hòa'),('D_VC','W103','Xã Vĩnh Hải');
-/*!40000 ALTER TABLE `wards` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2026-06-17 13:06:47
+-- LOCK TABLES `wards` WRITE;
+-- /*!40000 ALTER TABLE `wards` DISABLE KEYS */;
+-- INSERT INTO `wards` VALUES ('D_NK','W001','Phường Ninh Kiều'),('D_NK','W002','Phường Cái Khế'),('D_NK','W003','Phường Tân An'),('D_NK','W004','Phường An Bình'),('D_OM','W005','Phường Thới An Đông'),('D_OM','W006','Phường Bình Thủy'),('D_OM','W007','Phường Long Tuyền'),('D_CR','W008','Phường Cái Răng'),('D_CR','W009','Phường Hưng Phú'),('D_OM','W010','Phường Ô Môn'),('D_OM','W011','Phường Phước Thới'),('D_OM','W012','Phường Thới Long'),('D_OM','W013','Phường Trung Nhứt'),('D_TN','W014','Phường Thuận Hưng'),('D_TN','W015','Phường Thốt Nốt'),('D_VT','W016','Phường Vị Thanh'),('D_VT','W017','Phường Vị Tân'),('D_VT','W018','Phường Long Bình'),('D_LM','W019','Phường Long Mỹ'),('D_LM','W020','Phường Long Phú 1'),('D_VT','W021','Phường Đại Thành'),('D_NB','W022','Phường Ngã Bảy'),('D_ST','W023','Phường Phú Lợi'),('D_ST','W024','Phường Sóc Trăng'),('D_MX','W025','Phường Mỹ Xuyên'),('D_MX','W026','Phường Vĩnh Phước'),('D_VC','W027','Phường Vĩnh Châu'),('D_VC','W028','Phường Khánh Hòa'),('D_NN','W029','Phường Ngã Năm'),('D_NN','W030','Phường Mỹ Quới'),('D_PD','W031','Xã Phong Điền'),('D_PD','W032','Xã Nhơn Ái'),('D_TL','W033','Xã Thới Lai'),('D_TL','W034','Xã Đông Thuận'),('D_TL','W035','Xã Trường Xuân'),('D_CD','W036','Xã Trường Thành'),('D_CD','W037','Xã Cờ Đỏ'),('D_CD','W038','Xã Đông Hiệp'),('D_CD','W039','Xã Trung Hưng'),('D_VT_CT','W040','Xã Vĩnh Thạnh'),('D_VT_CT','W041','Xã Vĩnh Trinh'),('D_VT_CT','W042','Xã Thạnh An'),('D_VT_CT','W043','Xã Thạnh Quới'),('D_VT_HG','W044','Xã Hỏa Lựu'),('D_VT_HG','W045','Xã Vị Thủy'),('D_VT_HG','W046','Xã Vĩnh Thuận Đông'),('D_VT_HG','W047','Xã Vị Thanh 1'),('D_VT_HG','W048','Xã Vĩnh Tường'),('D_LM','W049','Xã Vĩnh Viễn'),('D_LM','W050','Xã Xà Phiên'),('D_LM','W051','Xã Lương Tâm'),('D_CT','W052','Xã Thạnh Xuân'),('D_CT','W053','Xã Tân Hòa'),('D_CT','W054','Xã Trường Long Tây'),('D_CT','W055','Xã Châu Thành'),('D_CT','W056','Xã Đông Phước'),('D_CT','W057','Xã Phú Hữu'),('D_CT','W058','Xã Tân Bình'),('D_PH','W059','Xã Hòa An'),('D_PH','W060','Xã Phương Bình'),('D_PH','W061','Xã Tân Phước Hưng'),('D_PH','W062','Xã Hiệp Hưng'),('D_PH','W063','Xã Phụng Hiệp'),('D_PH','W064','Xã Thạnh Hòa'),('D_MX','W065','Xã Hòa Tú'),('D_MX','W066','Xã Gia Hòa'),('D_MX','W067','Xã Nhu Gia'),('D_MX','W068','Xã Ngọc Tố'),('D_LP','W069','Xã Trường Khánh'),('D_LP','W070','Xã Đại Ngãi'),('D_LP','W071','Xã Tân Thạnh'),('D_LP','W072','Xã Long Phú'),('D_LP','W073','Xã Nhơn Mỹ'),('D_KS','W074','Xã An Lạc Thôn'),('D_KS','W075','Xã Kế Sách'),('D_KS','W076','Xã Thới An Hội'),('D_KS','W077','Xã Đại Hải'),('D_TT','W078','Xã Phú Tâm'),('D_TT','W079','Xã An Ninh'),('D_TT','W080','Xã Thuận Hòa'),('D_TT','W081','Xã Hồ Đắc Kiện'),('D_MT','W082','Xã Mỹ Tú'),('D_MT','W083','Xã Long Hưng'),('D_MT','W084','Xã Mỹ Hương'),('D_MT','W085','Xã Tân Long'),('D_TT','W086','Xã Phú Lộc'),('D_MT','W087','Xã Vĩnh Lợi'),('D_TT','W088','Xã Lâm Tân'),('D_TT','W089','Xã Thạnh Thới An'),('D_MX','W090','Xã Tài Văn'),('D_MX','W091','Xã Liêu Tú'),('D_TT','W092','Xã Lịch Hội Thượng'),('D_CLD','W093','Xã Trần Đề'),('D_CLD','W094','Xã An Thạnh'),('D_CLD','W095','Xã Cù Lao Dung'),('D_TN','W096','Phường Tân Lộc'),('D_PD','W097','Xã Trường Long'),('D_VT_CT','W098','Xã Thạnh Phú'),('D_VT_CT','W099','Xã Thới Hưng'),('D_LP','W100','Xã Phong Nẫm'),('D_MX','W101','Xã Mỹ Phước'),('D_VC','W102','Xã Lai Hòa'),('D_VC','W103','Xã Vĩnh Hải');
+-- /*!40000 ALTER TABLE `wards` ENABLE KEYS */;
+-- UNLOCK TABLES;
+-- /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+--
+-- /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+-- /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+-- /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+-- /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+-- /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+-- /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+-- /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+--
+-- -- Dump completed on 2026-06-17 13:06:47

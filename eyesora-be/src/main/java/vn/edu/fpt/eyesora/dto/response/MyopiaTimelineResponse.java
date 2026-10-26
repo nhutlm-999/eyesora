@@ -1,7 +1,11 @@
 package vn.edu.fpt.eyesora.dto.response;
 
+import lombok.Builder;
+
+@Builder
 public record MyopiaTimelineResponse(
-        String schoolYear,
-        double rate,
-        String type
+        java.time.LocalDate date,
+        long mildCount,
+        long moderateCount,
+        long severeCount
 ){}

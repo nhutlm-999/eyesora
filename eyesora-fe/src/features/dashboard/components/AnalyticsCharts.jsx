@@ -1,99 +1,118 @@
 import React from 'react';
+import GradeChart from './GradeChart.jsx';
 
-const AnalyticsCharts = ({ gradeStats, timelineStats, animateBars, path, circles }) => {
+const Y_AXIS_STEPS = [100, 75, 50, 25, 0];
+
+const AnalyticsCharts = ({ gradeStats = [], facilityStats = [], animateBars = true, onOpenAnalysis }) => {
+    const isSingleFacility = facilityStats && facilityStats.length === 1;
+
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col">
-                <div className="mb-4">
-                    <h3 className="text-base font-bold text-gray-900">Tỷ lệ cận thị theo khối lớp</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full font-sans">
+            {/* Tỷ lệ cận thị theo khối lớp dùng chung GradeChart */}
+            <GradeChart
+                gradeStats={gradeStats}
+                animateBars={animateBars}
+                onOpenAnalysis={onOpenAnalysis}
+            />
+
+            {/* Tỷ lệ cận thị giữa các trường học */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                <div className="mb-4 flex justify-between items-center">
+                    <h3 className="text-base font-bold text-gray-900">
+                        {isSingleFacility
+                            ? 'Tỷ lệ cận thị trường học'
+                            : 'Tỷ lệ cận thị giữa các trường học'}
+                    </h3>
+
+                    <span className="text-xs text-gray-800 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
+                        Đơn vị: %
+                    </span>
+                    <button onClick={() => onOpenAnalysis && onOpenAnalysis('facility')} className="ml-3 text-xs bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-1 rounded-full hover:bg-indigo-100 font-semibold flex items-center gap-1 transition-colors">✨ Xem phân tích</button>
                 </div>
-                <div className="flex flex-col w-full h-72">
-                    {gradeStats && gradeStats.length > 0 ? (
-                        <>
-                            <div className="relative flex-1 border-t border-r border-l border-b border-gray-300 flex items-end justify-around">
-                                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                                    <div className="w-full border-b border-dashed border-gray-300/70 h-0"></div>
-                                    <div className="w-full border-b border-dashed border-gray-300/70 h-0"></div>
-                                    <div className="w-full border-b border-dashed border-gray-300/70 h-0"></div>
-                                    <div className="w-full border-b border-dashed border-gray-300/70 h-0"></div>
-                                    <div className="w-full border-b border-dashed border-gray-300/70 h-0"></div>
-                                    <div className="w-full h-0"></div>
+
+                <div className="w-full h-80 flex items-center pt-6">
+                    {facilityStats && facilityStats.length > 0 ? (
+                        isSingleFacility ? (
+                            <div className="flex flex-col items-center justify-center w-full h-full bg-sky-50/40 rounded-xl p-6 border border-sky-100">
+                                <span className="text-xs font-semibold text-sky-800 uppercase tracking-wider mb-2">
+                                    {facilityStats[0].facilityName}
+                                </span>
+
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-5xl font-extrabold text-sky-600 tracking-tight">
+                                        {facilityStats[0].rate}
+                                    </span>
+
+                                    <span className="text-2xl font-bold text-sky-500">
+                                        %
+                                    </span>
                                 </div>
 
-                                {gradeStats.map((item, index) => (
-                                    <div key={index} className="relative flex flex-col items-center w-full h-full justify-end border-r border-dashed border-gray-300 last:border-r-0">
-                                        <span className="absolute text-xs font-semibold text-gray-800 pb-1.5 transition-all duration-1000 select-none"
-                                              style={{ bottom: animateBars ? `${item.rate}%` : '0%' }}>
-                                              {item.rate}%
-                                        </span>
+                                <div className="w-48 bg-gray-200 rounded-full h-2.5 mt-4 overflow-hidden">
+                                    <div
+                                        className="bg-gradient-to-l from-sky-300/80 to-sky-600 h-2.5 rounded-full transition-all duration-1000 ease-out"
+                                        style={{
+                                            width: animateBars
+                                                ? `${facilityStats[0].rate}%`
+                                                : '0%'
+                                        }}
+                                    />
+                                </div>
+
+                                <p className="text-xs text-gray-500 mt-2 font-medium">
+                                    Tỷ lệ học sinh mắc tật khúc xạ
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col justify-center gap-3 w-full h-full overflow-y-auto pr-1">
+                                {facilityStats.map((item, index) => {
+                                    const rate = item.rate || 0;
+
+                                    // Đổi màu theo tỷ lệ
+                                    let progressColor = "bg-sky-400";
+
+                                    if (rate >= 80) {
+                                        progressColor = "bg-red-500";
+                                    } else if (rate >= 50) {
+                                        progressColor = "bg-sky-500";
+                                    }
+
+                                    return (
                                         <div
-                                            className="w-10 bg-[#4472c4] transition-all duration-1000 ease-out shadow-sm"
-                                            style={{ height: animateBars ? `${item.rate}%` : '0%' }}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
+                                            key={index}
+                                            className="flex flex-col gap-1"
+                                        >
+                                            <div className="flex justify-between text-xs font-semibold text-gray-700">
+                                                <span
+                                                    className="truncate max-w-[70%]"
+                                                    title={item.facilityName}
+                                                >
+                                                    {item.facilityName}
+                                                </span>
 
-                            <div className="bg-[#f2f2f2] border-b border-l border-r border-gray-300 h-8 flex justify-around items-center">
-                                {gradeStats.map((item, index) => (
-                                    <div key={index} className="w-full text-center border-r border-gray-300/60 last:border-r-0">
-                                        <p className="text-xs font-bold text-gray-700 select-none">
-                                            {item.gradeName}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        </>
-                    ) : (
-                        <div className="flex-1 flex items-center justify-center border border-dashed border-gray-200 rounded-xl text-xs text-gray-400 italic">
-                            Không có dữ liệu phân tích theo khối lớp
-                        </div>
-                    )}
-                </div>
-            </div>
+                                                <span className="text-sky-600 font-bold">
+                                                    {rate}%
+                                                </span>
+                                            </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm overflow-hidden relative">
-                <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-base font-bold text-gray-900">Xu hướng cận thị qua các năm</h3>
-                    <div className="flex gap-4">
-                        <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold text-gray-500">
-                            <span className="w-2 h-2 rounded-full bg-[#004194]"></span> Thực tế
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold text-gray-500">
-                            <span className="w-2 h-2 rounded-full bg-gray-400 border border-dashed border-[#004194]"></span> Dự báo
-                        </span>
-                    </div>
-                </div>
-                <div className="relative h-64 w-full pt-4">
-                    {timelineStats && timelineStats.length > 0 ? (
-                        <>
-                            <svg className="w-full h-4/5 overflow-visible" preserveAspectRatio="none" viewBox="0 0 400 200">
-                                {path && <path d={path} fill="none" stroke="#004194" strokeLinecap="round" strokeWidth="3"></path>}
-                                {circles.map((dot, idx) => (
-                                    <circle
-                                        key={idx}
-                                        cx={dot.x}
-                                        cy={dot.y}
-                                        fill={dot.type === 'PREDICTED' ? '#9ca3af' : '#004194'}
-                                        stroke={dot.type === 'PREDICTED' ? '#004194' : 'none'}
-                                        strokeDasharray={dot.type === 'PREDICTED' ? '2,2' : 'none'}
-                                        r="4"
-                                    >
-                                        <title>{`${dot.schoolYear}: ${dot.rate}%`}</title>
-                                    </circle>
-                                ))}
-                            </svg>
-                            <div className="absolute bottom-2 w-full flex justify-between px-2">
-                                {timelineStats.map((item, idx) => (
-                                    <span key={idx} className="text-xs font-medium text-gray-400">
-                                        {item.schoolYear} {item.type === 'PREDICTED' ? '(DB)' : ''}
-                                    </span>
-                                ))}
+                                            <div className="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`${progressColor} h-full rounded-full transition-all duration-1000 ease-out`}
+                                                    style={{
+                                                        width: animateBars
+                                                            ? `${rate}%`
+                                                            : '0%'
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                        </>
+                        )
                     ) : (
-                        <div className="h-full flex items-center justify-center border border-dashed border-gray-200 rounded-xl text-xs text-gray-400 italic">
-                            Không có dữ liệu dòng thời gian xu hướng
+                        <div className="w-full h-full flex items-center justify-center border border-dashed border-gray-200 rounded-xl text-xs text-gray-400 italic">
+                            Không có dữ liệu phân tích theo trường học
                         </div>
                     )}
                 </div>

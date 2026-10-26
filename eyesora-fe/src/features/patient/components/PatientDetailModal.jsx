@@ -57,7 +57,7 @@ const PatientDetailModal = ({ patient, onClose, formatDate }) => {
 const InfoRow = ({ label, value }) => (
     <div className="flex justify-between border-b border-gray-100 pb-2 last:border-b-0 last:pb-0">
         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</span>
-        <span className="text-sm font-black text-blue-900">{value || "-"}</span>
+        <span className="text-sm font-black text-blue-900">{value || "---"}</span>
     </div>
 );
 
