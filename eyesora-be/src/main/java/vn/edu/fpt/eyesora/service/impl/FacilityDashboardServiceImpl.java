@@ -11,6 +11,7 @@ import vn.edu.fpt.eyesora.entity.EyeExamRecord;
 import vn.edu.fpt.eyesora.entity.Patient;
 import vn.edu.fpt.eyesora.repository.EyeExamRecordRepository;
 import vn.edu.fpt.eyesora.service.IFacilityDashboardService;
+import vn.edu.fpt.eyesora.service.security.FacilityScopeResolver;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,19 +20,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FacilityDashboardServiceImpl implements IFacilityDashboardService {
 
-    private void checkFacilityOwnership(String facilityId) {
-        vn.edu.fpt.eyesora.entity.User currentUser = vn.edu.fpt.eyesora.util.SecurityUtil.getCurrentUser();
-        boolean isFacilityAdmin = currentUser.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("FACILITY_ADMIN"));
-        if (isFacilityAdmin) {
-            if (currentUser.getFacility() == null || !currentUser.getFacility().getId().equals(facilityId)) {
-                throw new org.springframework.security.access.AccessDeniedException("Không có quyền truy cập dữ liệu của cơ sở này");
-            }
-        }
-    }
-
-
+    private final FacilityScopeResolver facilityScopeResolver;
     private final EyeExamRecordRepository eyeExamRecordRepository;
+
+    private void checkFacilityOwnership(String facilityId) {
+        facilityScopeResolver.resolve(facilityId);
+    }
 
     @Override
     @Transactional(readOnly = true)

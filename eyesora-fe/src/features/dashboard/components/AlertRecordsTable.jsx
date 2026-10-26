@@ -24,7 +24,7 @@ const getInitials = (name) => {
     return words.map(w => w[0] ? w[0].toUpperCase() : '').join('');
 };
 
-const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilterChange, openDetail, formatDiopter}) => {
+const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilterChange, openDetail, formatDiopter, canExport = true}) => {
     const totalPages = pageData.totalPages || 1;
 
     return (
@@ -80,10 +80,12 @@ const AlertRecordsTable = ({records, pageData, fetchData, statusFilter, onFilter
                             className="absolute right-3 pointer-events-none border-4 border-transparent border-t-gray-500 mt-1"></div>
                     </div>
 
-                    <button onClick={handleExport}
-                            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#004194] text-white text-xs font-semibold hover:bg-blue-900 transition-all cursor-pointer shadow-sm">
-                        <Download className="w-4 h-4"/> Xuất báo cáo
-                    </button>
+                    {canExport && (
+                        <button onClick={handleExport}
+                                className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#004194] text-white text-xs font-semibold hover:bg-blue-900 transition-all cursor-pointer shadow-sm">
+                            <Download className="w-4 h-4"/> Xuất báo cáo
+                        </button>
+                    )}
                 </div>
             </div>
 

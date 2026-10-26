@@ -5,7 +5,7 @@ import RecommendationGroup from "./RecommendationGroup.jsx";
 
 const TOP_N = 5;
 
-const AnalyticsDrawer = ({ isOpen, onClose, type, campaignId, startDate, endDate, onViewList }) => {
+const AnalyticsDrawer = ({ isOpen, onClose, type, campaignId, startDate, endDate, facilityId, onViewList }) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -24,7 +24,8 @@ const AnalyticsDrawer = ({ isOpen, onClose, type, campaignId, startDate, endDate
                 const params = {
                     campaignId: campaignId || '',
                     startDate: startDate || '',
-                    endDate: endDate || ''
+                    endDate: endDate || '',
+                    ...(facilityId ? { facilityId } : {})
                 };
                 const res = await axiosClient.get(endpoint, { params });
                 if (!cancelled) {
@@ -47,7 +48,7 @@ const AnalyticsDrawer = ({ isOpen, onClose, type, campaignId, startDate, endDate
         return () => {
             cancelled = true;
         };
-    }, [isOpen, type, campaignId, startDate, endDate]);
+    }, [isOpen, type, campaignId, startDate, endDate, facilityId]);
 
     if (!isOpen) return null;
 

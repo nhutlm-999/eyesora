@@ -11,10 +11,12 @@ import java.time.LocalDate;
 public interface IDashboardService {
     DashboardSummaryResponse getSummaryCounters(LocalDate startDate, LocalDate endDate, String campaignId);
     List<GradeMyopiaResponse> getGradeStats(LocalDate startDate, LocalDate endDate, String campaignId);
+    List<GradeMyopiaResponse> getGradeStats(LocalDate startDate, LocalDate endDate, String campaignId, String facilityId);
     List<MyopiaTimelineResponse> getMyopiaTimeline(LocalDate startDate, LocalDate endDate, String campaignId);
     List<FacilityMyopiaResponse> getFacilityStats(LocalDate startDate, LocalDate endDate, String campaignId);
     FacilityAnalysisResponse getFacilityAnalysis(LocalDate startDate, LocalDate endDate, String campaignId);
     GradeAnalysisResponse getGradeAnalysis(LocalDate startDate, LocalDate endDate, String campaignId);
+    GradeAnalysisResponse getGradeAnalysis(LocalDate startDate, LocalDate endDate, String campaignId, String facilityId);
     
     Object getDrillDown(LocalDate startDate, LocalDate endDate, String campaignId);
 

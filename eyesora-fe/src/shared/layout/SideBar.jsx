@@ -4,8 +4,7 @@ import { useAuthStore } from '../../features/auth/store/authStore';
 import { CalendarClock } from "lucide-react";
 
 const MENU_ITEMS = [
-    { icon: <LayoutDashboard className="w-5 h-5" />, label: 'Bảng điều khiển', path: '/', roles: ['ROLE_ADMIN'] },
-    { icon: <LayoutDashboard className="w-5 h-5" />, label: 'Thống kê cơ sở', path: '/facility-dashboard', roles: ['ROLE_FACILITY_ADMIN'] },
+    { icon: <LayoutDashboard className="w-5 h-5" />, label: 'Bảng điều khiển', path: '/', roles: ['ROLE_ADMIN', 'ROLE_FACILITY_ADMIN'] },
     { icon: <ClipboardList className="w-5 h-5" />, label: 'Hồ sơ khám mắt', path: '/eye-exam-records', roles: ['ROLE_ADMIN', 'ROLE_FACILITY_ADMIN', 'ROLE_EXAMINER'] },
     { icon: <UsersRound className="w-5 h-5" />, label: 'Danh sách học sinh', path: '/patients', roles: ['ROLE_ADMIN', 'ROLE_FACILITY_ADMIN', 'ROLE_EXAMINER'] },
     { icon: <CalendarDays className="w-5 h-5" />, label: 'Chiến dịch khám', path: '/campaigns', roles: ['ROLE_ADMIN'] },

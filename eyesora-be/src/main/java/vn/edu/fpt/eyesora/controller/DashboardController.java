@@ -99,12 +99,14 @@ public class DashboardController {
         return ResponseEntity.ok(dashboardService.getFacilityAnalysis(startDate, endDate, campaignId));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN')")
     @GetMapping("/analysis/grade")
     public ResponseEntity<GradeAnalysisResponse> getGradeAnalysis(
             @RequestParam(required = false) java.time.LocalDate startDate,
             @RequestParam(required = false) java.time.LocalDate endDate,
-            @RequestParam(required = false) String campaignId) {
-        return ResponseEntity.ok(dashboardService.getGradeAnalysis(startDate, endDate, campaignId));
+            @RequestParam(required = false) String campaignId,
+            @RequestParam(required = false) String facilityId) {
+        return ResponseEntity.ok(dashboardService.getGradeAnalysis(startDate, endDate, campaignId, facilityId));
     }
 
 }

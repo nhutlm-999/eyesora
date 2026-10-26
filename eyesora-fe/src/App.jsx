@@ -1,7 +1,6 @@
-import {Route, Routes, BrowserRouter} from 'react-router-dom'
+import {Route, Routes, BrowserRouter, Navigate} from 'react-router-dom'
 import AppLayout from "./shared/layout/AppLayout";
-import AdminDashboard from "./features/dashboard/pages/Dashboard.jsx";
-import FacilityDashboard from "./features/facility-dashboard/pages/FacilityDashboard.jsx";
+import Dashboard from "./features/dashboard/pages/Dashboard.jsx";
 import LoginPage from "./features/auth/page/LoginPage.jsx";
 import PatientPage from "./features/patient/pages/PatientPage.jsx";
 import FacilitiesPage from "./features/facility/pages/FacilitiesPage.jsx";
@@ -53,9 +52,17 @@ function App() {
                 {/* TẤT CẢ các trang dưới đây đều dùng chung cấu trúc AppLayout (Có Header, SideBar) */}
                 <Route element={<AppLayout />}>
 
-                    {/* 1. Nhóm Route CHỈ DÀNH RIÊNG CHO ADMIN */}
+                    {/* 1. Nhóm Route DÙNG CHUNG CHO ADMIN & FACILITY_ADMIN (Bao gồm Dashboard chính) */}
+                    <Route element={<ProtectedRoute allowedRoles={['ROLE_ADMIN', 'ROLE_FACILITY_ADMIN']} />}>
+                        <Route index element={<Dashboard />} />
+                        <Route path="/classes" element={<ClassesPage/>}/>
+                        <Route path="/classes/create" element={<ClassFormPage/>}/>
+                        <Route path="/classes/edit/:id" element={<ClassFormPage/>}/>
+                        <Route path="/facility-dashboard" element={<Navigate to="/" replace />} />
+                    </Route>
+
+                    {/* 2. Nhóm Route CHỈ DÀNH RIÊNG CHO ADMIN */}
                     <Route element={<ProtectedRoute allowedRoles={['ROLE_ADMIN']} />}>
-                        <Route index element={<AdminDashboard/>}/> {/* path="/" */}
                         <Route path="/facilities" element={<FacilitiesPage/>}/>
                         <Route path="/facilities/create" element={<FacilityFormPage/>}/>
                         <Route path="/facilities/edit/:id" element={<FacilityFormPage/>}/>
@@ -72,18 +79,6 @@ function App() {
                         <Route path="/wards/create" element={<WardsFormPage/>}/>
                         <Route path="/wards/edit/:id" element={<WardsFormPage/>}/>
                         <Route path="/overdue-re-examinations" element={<OverdueReExamPage />} />
-                    </Route>
-
-                    {/* 2. Nhóm Route CHỈ DÀNH RIÊNG CHO FACILITY_ADMIN */}
-                    <Route element={<ProtectedRoute allowedRoles={['ROLE_FACILITY_ADMIN']} />}>
-                        <Route path="/facility-dashboard" element={<FacilityDashboard />} />
-                    </Route>
-
-                    {/* 3. Nhóm Route CHO ADMIN & FACILITY_ADMIN */}
-                    <Route element={<ProtectedRoute allowedRoles={['ROLE_ADMIN', 'ROLE_FACILITY_ADMIN']} />}>
-                        <Route path="/classes" element={<ClassesPage/>}/>
-                        <Route path="/classes/create" element={<ClassFormPage/>}/>
-                        <Route path="/classes/edit/:id" element={<ClassFormPage/>}/>
                     </Route>
 
                     {/* 4. Nhóm Route DÙNG CHUNG CHO CẢ 3 ROLES */}

@@ -10,8 +10,7 @@ const ProtectedRoute = ({ allowedRoles }) => {
     }
 
     if (allowedRoles && !roles.some(role => allowedRoles.includes(role))) {
-        if (roles.includes('ROLE_ADMIN')) return <Navigate to="/" replace />;
-        if (roles.includes('ROLE_FACILITY_ADMIN')) return <Navigate to="/facility-dashboard" replace />;
+        if (roles.includes('ROLE_ADMIN') || roles.includes('ROLE_FACILITY_ADMIN')) return <Navigate to="/" replace />;
         if (roles.includes('ROLE_EXAMINER')) return <Navigate to="/patients" replace />;
 
         return <Navigate to="/login" replace />;

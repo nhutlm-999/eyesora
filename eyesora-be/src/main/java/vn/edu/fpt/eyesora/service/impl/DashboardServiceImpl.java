@@ -16,6 +16,7 @@ import vn.edu.fpt.eyesora.service.IDashboardService;
 import vn.edu.fpt.eyesora.service.recommendation.ClinicalDefinitions;
 import vn.edu.fpt.eyesora.service.recommendation.GroupStats;
 import vn.edu.fpt.eyesora.service.recommendation.RecommendationEngine;
+import vn.edu.fpt.eyesora.service.security.FacilityScopeResolver;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,6 +35,7 @@ public class DashboardServiceImpl implements IDashboardService {
     private final vn.edu.fpt.eyesora.repository.FacilityRepository facilityRepository;
     private final RecommendationEngine recommendationEngine;
     private final ClinicalDefinitions clinicalDefinitions;
+    private final FacilityScopeResolver facilityScopeResolver;
 
     private EyeExamRecordResponse mapToResponse(EyeExamRecord entity) {
         return EyeExamRecordResponse.builder()
@@ -184,16 +186,13 @@ public class DashboardServiceImpl implements IDashboardService {
     @Override
     @Transactional(readOnly = true)
     public List<GradeMyopiaResponse> getGradeStats(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
-        List<EyeExamRecord> allRecords = eyeExamRecordRepository.findByIsDeletedFalse();
-        if (startDate != null) {
-            allRecords = allRecords.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
-        }
-        if (endDate != null) {
-            allRecords = allRecords.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isAfter(endDate)).collect(Collectors.toList());
-        }
-        if (campaignId != null && !campaignId.trim().isEmpty()) {
-            allRecords = allRecords.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
-        }
+        return getGradeStats(startDate, endDate, campaignId, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<GradeMyopiaResponse> getGradeStats(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId, String facilityId) {
+        List<EyeExamRecord> allRecords = loadRecords(startDate, endDate, campaignId, facilityId);
 
         Map<Integer, List<EyeExamRecord>> groupByGrade = allRecords.stream()
                 .filter(r -> r.getClassesField() != null && r.getClassesField().getGrade() != null && r.getClassesField().getGrade() > 0)
@@ -627,6 +626,10 @@ public class DashboardServiceImpl implements IDashboardService {
     }
 
     private List<EyeExamRecord> loadRecords(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
+        return loadRecords(startDate, endDate, campaignId, null);
+    }
+
+    private List<EyeExamRecord> loadRecords(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId, String facilityId) {
         List<EyeExamRecord> entityList = eyeExamRecordRepository.findByIsDeletedFalse();
         if (startDate != null) {
             entityList = entityList.stream().filter(e -> e.getExamDate() != null && !e.getExamDate().isBefore(startDate)).collect(Collectors.toList());
@@ -636,6 +639,11 @@ public class DashboardServiceImpl implements IDashboardService {
         }
         if (campaignId != null && !campaignId.trim().isEmpty()) {
             entityList = entityList.stream().filter(e -> e.getCampaign() != null && campaignId.equals(e.getCampaign().getCampaignId())).collect(Collectors.toList());
+        }
+        if (facilityId != null && !facilityId.trim().isEmpty()) {
+            entityList = entityList.stream().filter(e -> e.getClassesField() != null
+                    && e.getClassesField().getFacility() != null
+                    && facilityId.equals(e.getClassesField().getFacility().getId())).collect(Collectors.toList());
         }
         return entityList;
     }
@@ -686,7 +694,13 @@ public class DashboardServiceImpl implements IDashboardService {
 
     @Override
     public GradeAnalysisResponse getGradeAnalysis(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId) {
-        List<GradeMyopiaResponse> stats = getGradeStats(startDate, endDate, campaignId);
+        return getGradeAnalysis(startDate, endDate, campaignId, null);
+    }
+
+    @Override
+    public GradeAnalysisResponse getGradeAnalysis(java.time.LocalDate startDate, java.time.LocalDate endDate, String campaignId, String requestedFacilityId) {
+        String facilityId = facilityScopeResolver.resolve(requestedFacilityId);
+        List<GradeMyopiaResponse> stats = getGradeStats(startDate, endDate, campaignId, facilityId);
         List<String> legacyInsights = new ArrayList<>();
 
         if (stats.isEmpty()) {
@@ -709,7 +723,7 @@ public class DashboardServiceImpl implements IDashboardService {
         }
 
         java.time.LocalDate today = java.time.LocalDate.now();
-        List<EyeExamRecord> records = loadRecords(startDate, endDate, campaignId);
+        List<EyeExamRecord> records = loadRecords(startDate, endDate, campaignId, facilityId);
 
         Map<String, List<EyeExamRecord>> groupByGrade = records.stream()
                 .filter(r -> r.getClassesField() != null && r.getClassesField().getGrade() != null && r.getClassesField().getGrade() > 0)
