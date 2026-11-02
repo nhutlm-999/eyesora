@@ -27,7 +27,7 @@ export const useAuthStore = create((set, get) => ({
         const currentUser = get().user;
         if (!currentUser || !currentUser.id) return null;
         try {
-            const res = await axiosClient.get(`/admin/users/${currentUser.id}`);
+            const res = await axiosClient.get('/admin/users/me');
             const profileData = res.data;
             set((state) => ({
                 user: {

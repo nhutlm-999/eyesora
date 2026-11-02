@@ -30,13 +30,13 @@ const ExamRecordImportPage = () => {
         try {
             const [fRes, eRes, cRes] = await Promise.all([
                 axiosClient.get('/master-data/facilities?size=999').catch(() => ({ data: [] })),
-                axiosClient.get('/admin/users?role=examiner&size=999').catch(() => ({ data: [] })),
+                axiosClient.get('/master-data/examiners?size=999').catch(() => ({ data: [] })),
                 axiosClient.get('/campaigns?status=active&size=999').catch(() => ({ data: [] }))
             ]);
             setOptions({
-                facilities: fRes.data.content || fRes.data || [],
-                examiners: eRes.data.content || eRes.data || [],
-                campaigns: cRes.data.content || cRes.data || []
+                facilities: Array.isArray(fRes.data?.content) ? fRes.data.content : (Array.isArray(fRes.data) ? fRes.data : []),
+                examiners: Array.isArray(eRes.data?.content) ? eRes.data.content : (Array.isArray(eRes.data) ? eRes.data : []),
+                campaigns: Array.isArray(cRes.data?.content) ? cRes.data.content : (Array.isArray(cRes.data) ? cRes.data : [])
             });
         } catch (err) {
             console.error("Lỗi tải danh mục:", err);

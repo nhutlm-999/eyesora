@@ -35,6 +35,7 @@ public class UserServiceImpl implements IUserService {
     private final RoleRepository roleRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public Page<UserResponse> getAllUsers(Pageable pageable, String role) {
         if (role != null && !role.trim().isEmpty()) {
             return userRepository.findByRoleName(role, pageable).map(this::mapToUserResponse);

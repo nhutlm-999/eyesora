@@ -24,6 +24,16 @@ public class MasterDataController {
     private final IAddressService addressService;
     private final IFacilityService facilityService;
     private final IClassesService classesService;
+    private final vn.edu.fpt.eyesora.service.IUserService userService;
+
+    // --- Examiners (dropdown cho form khám/import, không cần quyền ADMIN) ---
+    @GetMapping("/examiners")
+    public ResponseEntity<PageResponse<UserResponse>> getExaminers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        return ResponseEntity.ok(PageResponse.from(
+                userService.getAllUsers(PageRequest.of(page, size, Sort.by("username")), "EXAMINER")));
+    }
 
     // --- Districts ---
     @GetMapping("/districts")

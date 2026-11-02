@@ -57,11 +57,11 @@ const ExamRecordPage = () => {
             try {
                 const [facilityRes, campaignRes] = await Promise.all([
                     axiosClient.get('/master-data/facilities', { params: { size: 1000 } }).catch(() => ({ data: {} })),
-                    axiosClient.get('/campaigns', { params: { size: 1000 } }).catch(() => ({ data: {} }))
+                    axiosClient.get('/campaigns', { params: { size: 1000 } }).catch(() => ({ data: [] }))
                 ]);
 
-                setFacilities(facilityRes.data?.content || facilityRes.data || []);
-                setCampaigns(campaignRes.data?.content || campaignRes.data || []);
+                setFacilities(Array.isArray(facilityRes.data?.content) ? facilityRes.data.content : (Array.isArray(facilityRes.data) ? facilityRes.data : []));
+                setCampaigns(Array.isArray(campaignRes.data?.content) ? campaignRes.data.content : (Array.isArray(campaignRes.data) ? campaignRes.data : []));
             } catch (error) {
                 console.error("Lỗi khi tải danh sách bộ lọc:", error);
             }

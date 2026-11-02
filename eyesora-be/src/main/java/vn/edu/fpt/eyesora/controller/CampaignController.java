@@ -16,7 +16,6 @@ import vn.edu.fpt.eyesora.service.IPatientService;
 import java.util.List;
 import java.util.Map;
 
-@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/api/campaigns")
 @RequiredArgsConstructor
@@ -24,11 +23,7 @@ public class CampaignController {
     private final ICampaignService campaignService;
     private final IPatientService patientService;
 
-//    @GetMapping
-//    public ResponseEntity<?> getAll() {
-//        return ResponseEntity.ok(campaignService.getAllCampaigns());
-//    }
-
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'EXAMINER')")
     @GetMapping
     public ResponseEntity<Page<CampaignResponse>> getAllCampaigns(
             @PageableDefault(size = 10, sort = "startDate") Pageable pageable,
@@ -37,16 +32,19 @@ public class CampaignController {
         return ResponseEntity.ok(campaignService.getAllCampaigns(status, pageable));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'EXAMINER')")
     @GetMapping("/{campaignId}/patient-count")
     public ResponseEntity<?> getPatientCountForCampaign(@PathVariable String campaignId) {
         return ResponseEntity.ok(Map.of("count", patientService.countPatientsByCampaign(campaignId)));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'EXAMINER')")
     @GetMapping("/{id}")
     public ResponseEntity<CampaignResponse> getCampaignDetail(@PathVariable String id) {
         return ResponseEntity.ok(campaignService.getCampaignDetail(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody CampaignRequest req) {
         try {
@@ -56,6 +54,8 @@ public class CampaignController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/status/{status}")
     public ResponseEntity<?> updateStatus(
             @PathVariable String id,
@@ -64,6 +64,7 @@ public class CampaignController {
         return ResponseEntity.ok("Trạng thái đã được cập nhật thành: " + status);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCampaign(@PathVariable String id, @Valid @RequestBody CampaignRequest req) {
         if (req.startDate() != null && req.endDate() != null && req.startDate().isAfter(req.endDate())) {
@@ -74,12 +75,7 @@ public class CampaignController {
         return ResponseEntity.ok(campaignService.updateCampaign(id, req));
     }
 
-//    @GetMapping("/deleted")
-//    public ResponseEntity<Page<CampaignResponse>> getDeletedCampaigns(
-//            @PageableDefault(size = 10, sort = "startDate") Pageable pageable) {
-//        return ResponseEntity.ok(campaignService.getDeletedCampaigns(pageable));
-//    }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCampaign(@PathVariable String id) {
         campaignService.deleteCampaign(id);

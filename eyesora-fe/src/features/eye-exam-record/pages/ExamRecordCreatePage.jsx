@@ -62,16 +62,16 @@ const ExamRecordCreatePage = () => {
                         .catch(() => ({ data: {} })),
                     axiosClient.get('/master-data/wards', { params: { size: 1000 } })
                         .catch(() => ({ data: [] })),
-                    axiosClient.get('/admin/users', { params: { size: 1000 } })
+                    axiosClient.get('/master-data/examiners', { params: { size: 1000 } })
                         .catch(() => ({ data: {} }))
                 ]);
 
-                setCampaigns(campaignRes.data?.content || campaignRes.data || []);
-                setFacilities(facilityRes.data?.content || facilityRes.data || []);
-                setWards(wardRes.data?.content || wardRes.data || []);
+                setCampaigns(Array.isArray(campaignRes.data?.content) ? campaignRes.data.content : (Array.isArray(campaignRes.data) ? campaignRes.data : []));
+                setFacilities(Array.isArray(facilityRes.data?.content) ? facilityRes.data.content : (Array.isArray(facilityRes.data) ? facilityRes.data : []));
+                setWards(Array.isArray(wardRes.data?.content) ? wardRes.data.content : (Array.isArray(wardRes.data) ? wardRes.data : []));
 
                 const userRaw = examinerRes.data;
-                const listExaminers = userRaw?.content || (Array.isArray(userRaw) ? userRaw : []);
+                const listExaminers = Array.isArray(userRaw?.content) ? userRaw.content : (Array.isArray(userRaw) ? userRaw : []);
                 setExaminers(listExaminers);
 
             } catch (error) {
