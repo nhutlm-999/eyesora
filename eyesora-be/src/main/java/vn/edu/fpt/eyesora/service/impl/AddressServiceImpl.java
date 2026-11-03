@@ -5,14 +5,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.edu.fpt.eyesora.dto.request.DistrictRequest;
+import vn.edu.fpt.eyesora.dto.request.ProvinceRequest;
 import vn.edu.fpt.eyesora.dto.request.WardRequest;
-import vn.edu.fpt.eyesora.dto.response.DistrictResponse;
+import vn.edu.fpt.eyesora.dto.response.ProvinceResponse;
 import vn.edu.fpt.eyesora.dto.response.WardResponse;
-import vn.edu.fpt.eyesora.entity.District;
+import vn.edu.fpt.eyesora.entity.Province;
 import vn.edu.fpt.eyesora.entity.Ward;
 import vn.edu.fpt.eyesora.exceptions.ResourceNotFoundException;
-import vn.edu.fpt.eyesora.repository.DistrictRepository;
+import vn.edu.fpt.eyesora.repository.ProvinceRepository;
 import vn.edu.fpt.eyesora.repository.WardRepository;
 import vn.edu.fpt.eyesora.service.IAddressService;
 
@@ -21,75 +21,75 @@ import vn.edu.fpt.eyesora.service.IAddressService;
 @Transactional
 public class AddressServiceImpl implements IAddressService {
 
-    private final DistrictRepository districtRepository;
+    private final ProvinceRepository provinceRepository;
     private final WardRepository wardRepository;
 
     @Override
-    public DistrictResponse createDistrict(DistrictRequest req) {
-        District district = new District();
-        district.setDistrictName(req.districtName());
+    public ProvinceResponse createProvince(ProvinceRequest req) {
+        Province province = new Province();
+        province.setProvinceName(req.provinceName());
 
-        district = districtRepository.save(district);
+        province = provinceRepository.save(province);
 
-        return new DistrictResponse(
-                district.getId(),
-                district.getDistrictName()
+        return new ProvinceResponse(
+                province.getId(),
+                province.getProvinceName()
         );
     }
 
     @Override
-    public DistrictResponse updateDistrict(String id, DistrictRequest req) {
-        District district = districtRepository.findById(id)
+    public ProvinceResponse updateProvince(String id, ProvinceRequest req) {
+        Province province = provinceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy quận/huyện với ID: " + id
+                        "Không tìm thấy tỉnh/thành phố với ID: " + id
                 ));
 
-        district.setDistrictName(req.districtName());
+        province.setProvinceName(req.provinceName());
 
-        district = districtRepository.save(district);
+        province = provinceRepository.save(province);
 
-        return new DistrictResponse(
-                district.getId(),
-                district.getDistrictName()
+        return new ProvinceResponse(
+                province.getId(),
+                province.getProvinceName()
         );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public DistrictResponse getDistrictById(String id) {
-        return districtRepository.findById(id)
-                .map(district -> new DistrictResponse(
-                        district.getId(),
-                        district.getDistrictName()
+    public ProvinceResponse getProvinceById(String id) {
+        return provinceRepository.findById(id)
+                .map(province -> new ProvinceResponse(
+                        province.getId(),
+                        province.getProvinceName()
                 ))
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy quận/huyện với ID: " + id
+                        "Không tìm thấy tỉnh/thành phố với ID: " + id
                 ));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<DistrictResponse> getAllDistricts(Pageable pageable) {
-        return districtRepository.findAll(pageable)
-                .map(district -> new DistrictResponse(
-                        district.getId(),
-                        district.getDistrictName()
+    public Page<ProvinceResponse> getAllProvinces(Pageable pageable) {
+        return provinceRepository.findAll(pageable)
+                .map(province -> new ProvinceResponse(
+                        province.getId(),
+                        province.getProvinceName()
                 ));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<WardResponse> getAllWards(String districtId, Pageable pageable) {
+    public Page<WardResponse> getAllWards(String provinceId, Pageable pageable) {
 
-        Page<Ward> wardPage = (districtId != null)
-                ? wardRepository.findByDistrictId(districtId, pageable)
+        Page<Ward> wardPage = (provinceId != null && !provinceId.isBlank())
+                ? wardRepository.findByProvinceId(provinceId, pageable)
                 : wardRepository.findAll(pageable);
 
         return wardPage.map(ward -> new WardResponse(
                 ward.getId(),
                 ward.getWardName(),
-                ward.getDistrict().getId(),
-                ward.getDistrict().getDistrictName()
+                ward.getProvince() != null ? ward.getProvince().getId() : null,
+                ward.getProvince() != null ? ward.getProvince().getProvinceName() : null
         ));
     }
 
@@ -100,8 +100,8 @@ public class AddressServiceImpl implements IAddressService {
                 .map(ward -> new WardResponse(
                         ward.getId(),
                         ward.getWardName(),
-                        ward.getDistrict().getId(),
-                        ward.getDistrict().getDistrictName()
+                        ward.getProvince() != null ? ward.getProvince().getId() : null,
+                        ward.getProvince() != null ? ward.getProvince().getProvinceName() : null
                 ))
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy phường/xã với ID: " + id
@@ -111,22 +111,22 @@ public class AddressServiceImpl implements IAddressService {
     @Override
     public WardResponse createWard(WardRequest req) {
 
-        District district = districtRepository.findById(req.districtId())
+        Province province = provinceRepository.findById(req.provinceId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Không tìm thấy quận/huyện với ID: " + req.districtId()
+                        "Không tìm thấy tỉnh/thành phố với ID: " + req.provinceId()
                 ));
 
         Ward ward = new Ward();
         ward.setWardName(req.wardName());
-        ward.setDistrict(district);
+        ward.setProvince(province);
 
         ward = wardRepository.save(ward);
 
         return new WardResponse(
                 ward.getId(),
                 ward.getWardName(),
-                district.getId(),
-                district.getDistrictName()
+                province.getId(),
+                province.getProvinceName()
         );
     }
 
@@ -140,13 +140,13 @@ public class AddressServiceImpl implements IAddressService {
 
         ward.setWardName(req.wardName());
 
-        if (req.districtId() != null) {
-            District district = districtRepository.findById(req.districtId())
+        if (req.provinceId() != null && !req.provinceId().isBlank()) {
+            Province province = provinceRepository.findById(req.provinceId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Không tìm thấy quận/huyện với ID: " + req.districtId()
+                            "Không tìm thấy tỉnh/thành phố với ID: " + req.provinceId()
                     ));
 
-            ward.setDistrict(district);
+            ward.setProvince(province);
         }
 
         ward = wardRepository.save(ward);
@@ -154,8 +154,8 @@ public class AddressServiceImpl implements IAddressService {
         return new WardResponse(
                 ward.getId(),
                 ward.getWardName(),
-                ward.getDistrict().getId(),
-                ward.getDistrict().getDistrictName()
+                ward.getProvince() != null ? ward.getProvince().getId() : null,
+                ward.getProvince() != null ? ward.getProvince().getProvinceName() : null
         );
     }
 }

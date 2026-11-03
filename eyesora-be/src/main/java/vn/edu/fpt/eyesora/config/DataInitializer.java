@@ -10,8 +10,8 @@ import vn.edu.fpt.eyesora.repository.*;
 import vn.edu.fpt.eyesora.entity.User.AccountStatus;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
-
 
 @Configuration
 @RequiredArgsConstructor
@@ -22,7 +22,9 @@ public class DataInitializer {
     private final FacilityRepository facilityRepository;
 
     @Bean
-    CommandLineRunner initData(CampaignRepository campaignRepository, WardRepository wardRepository, DistrictRepository districtRepository) {
+    CommandLineRunner initData(CampaignRepository campaignRepository,
+                              WardRepository wardRepository,
+                              ProvinceRepository provinceRepository) {
 
         return args -> {
 
@@ -94,21 +96,22 @@ public class DataInitializer {
                 userRepo.save(examiner);
             }
 
-            if(districtRepository.count() == 0) {
-                District district1 = new District();
-                district1.setDistrictName("District 1");
-                districtRepository.save(district1);
+            // Seed Data cho Cấu trúc Đơn vị Hành chính 2 Cấp (Tỉnh/Thành phố -> Phường/Xã)
+            Province canTho = provinceRepository.findByProvinceName("Thành phố Cần Thơ")
+                    .orElseGet(() -> {
+                        Province p = new Province();
+                        p.setProvinceName("Thành phố Cần Thơ");
+                        return provinceRepository.save(p);
+                    });
 
-                District district2 = new District();
-                district2.setDistrictName("District 2");
-                districtRepository.save(district2);
-            }
-
-            if (wardRepository.count() == 0) {
-                Ward ward1 = new Ward();
-                ward1.setWardName("Ward 1");
-                ward1.setDistrict(districtRepository.findAll().get(0));
-                wardRepository.save(ward1);
+            List<String> wardNames = List.of("Phú Lợi", "Sóc Trăng", "Mỹ Xuyên");
+            for (String wName : wardNames) {
+                if (!wardRepository.existsByWardNameAndProvinceId(wName, canTho.getId())) {
+                    Ward ward = new Ward();
+                    ward.setWardName(wName);
+                    ward.setProvince(canTho);
+                    wardRepository.save(ward);
+                }
             }
 
         };

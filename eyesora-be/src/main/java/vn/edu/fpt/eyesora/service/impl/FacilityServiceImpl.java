@@ -101,9 +101,9 @@ public class FacilityServiceImpl implements IFacilityService {
         String wardName = (f.getWard() != null) ? f.getWard().getWardName() : null;
         String wardId = (f.getWard() != null) ? f.getWard().getId() : null;
 
-        // Kiểm tra District: chỉ lấy ID nếu Ward và District tồn tại
-        String districtId = (f.getWard() != null && f.getWard().getDistrict() != null)
-                ? f.getWard().getDistrict().getId() : null;
+        // Kiểm tra Province: chỉ lấy ID nếu Ward và Province tồn tại
+        String provinceId = (f.getWard() != null && f.getWard().getProvince() != null)
+                ? f.getWard().getProvince().getId() : null;
 
         return new FacilityResponse(
                 f.getId(),
@@ -113,7 +113,7 @@ public class FacilityServiceImpl implements IFacilityService {
                 f.getPhone(),
                 wardName,
                 wardId,
-                districtId,
+                provinceId,
                 f.getGoogleMapsUrl(),
                 f.getPrincipalName(),
                 f.getPrincipalPhone()

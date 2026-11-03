@@ -47,7 +47,7 @@ const WardsPage = () => {
                         <tr className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                             <th className="px-4.5 py-4 text-center w-12">STT</th>
                             <th className="px-6 py-4">Tên Phường/Xã</th>
-                            <th className="px-6 py-4">Quận/Huyện</th>
+                            <th className="px-6 py-4">Tỉnh/Thành phố</th>
                             <th className="px-6 py-4 text-center">Thao tác</th>
                         </tr>
                         </thead>
@@ -56,7 +56,7 @@ const WardsPage = () => {
                             <tr key={w.id} className="hover:bg-blue-50/30 transition-colors duration-150">
                                 <td className="px-4.5 py-4 text-center text-xs font-semibold text-gray-500">{(Number(pageData.page || 0) * 10) + index + 1}</td>
                                 <td className="px-6 py-4 font-bold text-gray-900 text-sm">{w.wardName}</td>
-                                <td className="px-6 py-4 text-gray-700 font-medium text-sm">{w.districtName}</td>
+                                <td className="px-6 py-4 text-gray-700 font-medium text-sm">{w.provinceName || w.districtName}</td>
                                 <td className="px-6 py-4 text-center align-middle">
                                     <button
                                         type="button"

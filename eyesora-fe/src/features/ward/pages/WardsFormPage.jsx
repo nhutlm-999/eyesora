@@ -8,8 +8,8 @@ const WardsFormPage = () => {
     const { id } = useParams();
     const isEditMode = !!id;
 
-    const [formData, setFormData] = useState({ wardName: '', districtId: '' });
-    const [districts, setDistricts] = useState([]);
+    const [formData, setFormData] = useState({ wardName: '', provinceId: '' });
+    const [provinces, setProvinces] = useState([]);
     const [error, setError] = useState(null);
 
     const inputStyle = `w-full border border-gray-300 bg-white px-4 py-2.5 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-[#004194] transition-all text-sm shadow-xs placeholder:text-gray-400 placeholder:font-normal`;
@@ -18,13 +18,13 @@ const WardsFormPage = () => {
     useEffect(() => {
         const loadData = async () => {
             try {
-                const dRes = await axiosClient.get("/master-data/districts?size=1000");
-                setDistricts(dRes.data.content || []);
+                const pRes = await axiosClient.get("/master-data/provinces?size=1000");
+                setProvinces(pRes.data.content || []);
                 if (isEditMode) {
                     const wRes = await axiosClient.get(`/master-data/wards/${id}`);
                     setFormData({
                         wardName: wRes.data.wardName || '',
-                        districtId: String(wRes.data.districtId || '')
+                        provinceId: String(wRes.data.provinceId || wRes.data.districtId || '')
                     });
                 }
             } catch (err) { setError("Không thể tải dữ liệu"); }
@@ -34,7 +34,7 @@ const WardsFormPage = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        if (!formData.wardName.trim() || !formData.districtId) {
+        if (!formData.wardName.trim() || !formData.provinceId) {
             setError("Vui lòng nhập đầy đủ thông tin bắt buộc (*)");
             return;
         }
@@ -76,10 +76,10 @@ const WardsFormPage = () => {
                         <input className={inputStyle} value={formData.wardName} onChange={e => setFormData({...formData, wardName: e.target.value})} placeholder="Ví dụ: Phường An Phú" />
                     </div>
                     <div>
-                        <label className={labelStyle}>Quận/Huyện (*)</label>
-                        <select className={inputStyle} value={formData.districtId} onChange={e => setFormData({...formData, districtId: e.target.value})}>
-                            <option value="">Chọn quận/huyện...</option>
-                            {districts.map(d => <option key={d.id} value={String(d.id)}>{d.districtName}</option>)}
+                        <label className={labelStyle}>Tỉnh/Thành phố (*)</label>
+                        <select className={inputStyle} value={formData.provinceId} onChange={e => setFormData({...formData, provinceId: e.target.value})}>
+                            <option value="">Chọn tỉnh/thành phố...</option>
+                            {provinces.map(p => <option key={p.id} value={String(p.id)}>{p.provinceName}</option>)}
                         </select>
                     </div>
                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-8 w-full">

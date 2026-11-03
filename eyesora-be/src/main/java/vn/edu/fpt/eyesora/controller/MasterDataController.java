@@ -35,36 +35,38 @@ public class MasterDataController {
                 userService.getAllUsers(PageRequest.of(page, size, Sort.by("username")), "EXAMINER")));
     }
 
-    // --- Districts ---
-    @GetMapping("/districts")
-    public ResponseEntity<PageResponse<DistrictResponse>> getAllDistricts(
+    // --- Provinces ---
+    @GetMapping({"/provinces", "/districts"})
+    public ResponseEntity<PageResponse<ProvinceResponse>> getAllProvinces(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(PageResponse.from(addressService.getAllDistricts(PageRequest.of(page, size))));
+        return ResponseEntity.ok(PageResponse.from(addressService.getAllProvinces(PageRequest.of(page, size))));
     }
 
-    @GetMapping("/districts/{id}")
-    public ResponseEntity<DistrictResponse> getDistrictById(@PathVariable String id) {
-        return ResponseEntity.ok(addressService.getDistrictById(id));
+    @GetMapping({"/provinces/{id}", "/districts/{id}"})
+    public ResponseEntity<ProvinceResponse> getProvinceById(@PathVariable String id) {
+        return ResponseEntity.ok(addressService.getProvinceById(id));
     }
 
-    @PostMapping("/districts")
-    public ResponseEntity<DistrictResponse> createDistrict(@Valid @RequestBody DistrictRequest req) {
-        return ResponseEntity.ok(addressService.createDistrict(req));
+    @PostMapping({"/provinces", "/districts"})
+    public ResponseEntity<ProvinceResponse> createProvince(@Valid @RequestBody ProvinceRequest req) {
+        return ResponseEntity.ok(addressService.createProvince(req));
     }
 
-    @PutMapping("/districts/{id}")
-    public ResponseEntity<DistrictResponse> updateDistrict(@PathVariable String id, @Valid @RequestBody DistrictRequest req) {
-        return ResponseEntity.ok(addressService.updateDistrict(id, req));
+    @PutMapping({"/provinces/{id}", "/districts/{id}"})
+    public ResponseEntity<ProvinceResponse> updateProvince(@PathVariable String id, @Valid @RequestBody ProvinceRequest req) {
+        return ResponseEntity.ok(addressService.updateProvince(id, req));
     }
 
     // --- Wards ---
     @GetMapping("/wards")
     public ResponseEntity<PageResponse<WardResponse>> getAllWards(
+            @RequestParam(required = false) String provinceId,
             @RequestParam(required = false) String districtId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(PageResponse.from(addressService.getAllWards(districtId, PageRequest.of(page, size))));
+        String effectiveProvinceId = (provinceId != null && !provinceId.isBlank()) ? provinceId : districtId;
+        return ResponseEntity.ok(PageResponse.from(addressService.getAllWards(effectiveProvinceId, PageRequest.of(page, size))));
     }
 
     @GetMapping("/wards/{id}")
