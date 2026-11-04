@@ -290,7 +290,7 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
 
     @Override
     @Transactional
-    public ExcelImportResponse importExamRecordsFromExcel(MultipartFile file, String campaignId, String examinerId, String facilityId) {
+    public ExcelImportResponse importExamRecordsFromExcel(MultipartFile file, String campaignId, String examinerId, String facilityId, LocalDate examDate) {
         vn.edu.fpt.eyesora.entity.User currentUser = vn.edu.fpt.eyesora.util.SecurityUtil.getCurrentUser();
         boolean isFacilityAdmin = currentUser.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("FACILITY_ADMIN"));
         if (isFacilityAdmin && currentUser.getFacility() != null) { facilityId = currentUser.getFacility().getId(); }
@@ -353,7 +353,7 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
 
                 List<String> localErrors = new ArrayList<>();
 
-                EyeExamRecord record = parseRowToEntitySafe(row, campaign, examiner, facility, classCache, patientCache, localErrors);
+                EyeExamRecord record = parseRowToEntitySafe(row, campaign, examiner, facility, examDate, classCache, patientCache, localErrors);
 
                 if (!localErrors.isEmpty()) {
                     errorList.add(new RowError(i + 1, String.join(", ", localErrors)));
@@ -383,6 +383,7 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
 
 
     private EyeExamRecord parseRowToEntitySafe(Row row, ExamCampaign campaign, User examiner, Facility facility,
+                                               LocalDate examDate,
                                                Map<String, Classes> classCache,
                                                Map<String, Patient> patientCache,
                                                List<String> localErrors) {
@@ -466,13 +467,15 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
             record.setCampaign(campaign);
             record.setPatient(patient);
             record.setClassesField(clazz);
+            record.setExaminer(examiner);
             record.setIsDeleted(false);
         } else {
             // Nếu đã tồn tại và bạn muốn cho phép ghi đè/cập nhật,
             record.setClassesField(clazz);
+            record.setExaminer(examiner);
         }
 
-        record.setExamDate(LocalDate.now());
+        record.setExamDate(examDate != null ? examDate : LocalDate.now());
 
 
         // 4. ĐỌC THÔNG SỐ THỊ LỰC & KHÚC XẠ

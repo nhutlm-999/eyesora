@@ -16,7 +16,7 @@ import vn.edu.fpt.eyesora.service.IAddressService;
 import vn.edu.fpt.eyesora.service.IClassesService;
 import vn.edu.fpt.eyesora.service.IFacilityService;
 
-@PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'EXAMINER')")
+//@PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'EXAMINER')")
 @RestController
 @RequestMapping("/api/master-data")
 @RequiredArgsConstructor

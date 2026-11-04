@@ -10,7 +10,7 @@ const CampaignFormPage = () => {
     const [orgs, setOrgs] = useState([]);
     const [errors, setErrors] = useState({});
     const [formData, setFormData] = useState({
-        title: '', year: '', startDate: '', endDate: '', managerName: '', orgId: '', targetId: ''
+        title: '', startDate: '', endDate: '', managerName: '', orgId: '', targetId: ''
     });
 
     useEffect(() => {
@@ -41,7 +41,6 @@ const CampaignFormPage = () => {
             const data = res.data;
             setFormData({
                 title: data.campaignTitle || '',
-                year: data.facilityYear || '',
                 startDate: data.startDate || '',
                 endDate: data.endDate || '',
                 managerName: data.managerName || '',
@@ -105,18 +104,11 @@ const CampaignFormPage = () => {
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm w-full p-6 md:p-8 max-w-4xl">
                 {errors.server && <div className="mb-6 p-4 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-bold flex items-center gap-2"><AlertCircle size={16}/>{errors.server}</div>}
 
-                <form onSubmit={handleSave} className="space-y-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label className={labelStyle}>Tên chiến dịch (*)</label>
-                            <input className={inputStyle} value={formData.title} onChange={e => handleChange('title', e.target.value)} placeholder="Nhập tên chiến dịch" />
-                            {renderError('title')}
-                        </div>
-                        <div>
-                            <label className={labelStyle}>Năm (*)</label>
-                            <input className={inputStyle} value={formData.year} onChange={e => handleChange('year', e.target.value)} placeholder="Ví dụ: 2026" />
-                            {renderError('year')}
-                        </div>
+                <form onSubmit={handleSave} className="space-y-6">
+                    <div>
+                        <label className={labelStyle}>Tên chiến dịch (*)</label>
+                        <input className={inputStyle} value={formData.title} onChange={e => handleChange('title', e.target.value)} placeholder="Nhập tên chiến dịch (Ví dụ: Khám mắt học đường đợt 1)" />
+                        {renderError('title')}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -134,27 +126,27 @@ const CampaignFormPage = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label className={labelStyle}>Người quản lý (*)</label>
-                            <input className={inputStyle} value={formData.managerName} onChange={e => handleChange('managerName', e.target.value)} placeholder="Họ và tên người quản lý" />
-                            {renderError('managerName')}
-                        </div>
-                        <div>
                             <label className={labelStyle}>Đơn vị tổ chức (*)</label>
                             <select className={inputStyle} value={formData.orgId} onChange={e => handleChange('orgId', e.target.value)}>
-                                <option value="">-- Chọn đơn vị --</option>
+                                <option value="">-- Chọn cơ sở y tế / đơn vị tổ chức --</option>
                                 {orgs.map(o => <option key={o.id} value={o.id}>{o.facilityName}</option>)}
                             </select>
                             {renderError('orgId')}
                         </div>
+                        <div>
+                            <label className={labelStyle}>Trường học mục tiêu (*)</label>
+                            <select className={inputStyle} value={formData.targetId} onChange={e => handleChange('targetId', e.target.value)}>
+                                <option value="">-- Chọn trường học mục tiêu --</option>
+                                {facilities.map(f => <option key={f.id} value={f.id}>{f.facilityName}</option>)}
+                            </select>
+                            {renderError('targetId')}
+                        </div>
                     </div>
 
                     <div>
-                        <label className={labelStyle}>Trường học mục tiêu (*)</label>
-                        <select className={inputStyle} value={formData.targetId} onChange={e => handleChange('targetId', e.target.value)}>
-                            <option value="">-- Chọn trường học --</option>
-                            {facilities.map(f => <option key={f.id} value={f.id}>{f.facilityName}</option>)}
-                        </select>
-                        {renderError('targetId')}
+                        <label className={labelStyle}>Người quản lý phụ trách (*)</label>
+                        <input className={inputStyle} value={formData.managerName} onChange={e => handleChange('managerName', e.target.value)} placeholder="Họ và tên người quản lý / điều phối" />
+                        {renderError('managerName')}
                     </div>
 
                     <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-8">

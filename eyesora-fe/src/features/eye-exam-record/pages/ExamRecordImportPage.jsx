@@ -16,7 +16,7 @@ const ExamRecordImportPage = () => {
     const [selectedCampaign, setSelectedCampaign] = useState('');
     const [selectedFacility, setSelectedFacility] = useState('');
     const [selectedExaminer, setSelectedExaminer] = useState('');
-    const [examDate, setExamDate] = useState('2026-07-09T15:00');
+    const [examDate, setExamDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [file, setFile] = useState(null);
 
     const [options, setOptions] = useState({ facilities: [], examiners: [], campaigns: [] });
@@ -68,7 +68,7 @@ const ExamRecordImportPage = () => {
         formData.append('facilityId', selectedFacility);
         formData.append('examinerId', selectedExaminer);
         formData.append('campaignId', selectedCampaign);
-        formData.append('examDate', examDate.includes(':') && examDate.split(':').length === 2 ? `${examDate}:00` : examDate);
+        formData.append('examDate', examDate);
 
         try {
             const response = await axiosClient.post('/eye-exam-records/import', formData, {
@@ -152,7 +152,7 @@ const ExamRecordImportPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <label className={labelStyle}>Ngày khám lâm sàng (*)</label>
-                            <input type="datetime-local" className={inputStyle} value={examDate} onChange={e => { setExamDate(e.target.value); setImportResult(null); }} />
+                            <input type="date" className={inputStyle} value={examDate} onChange={e => { setExamDate(e.target.value); setImportResult(null); }} />
                             {errors.examDate && <p className="text-rose-600 text-[10px] font-bold mt-1.5">{errors.examDate}</p>}
                         </div>
                     </div>

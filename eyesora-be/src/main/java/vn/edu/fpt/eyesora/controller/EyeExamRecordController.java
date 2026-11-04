@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import vn.edu.fpt.eyesora.dto.response.ExcelImportResponse;
 import vn.edu.fpt.eyesora.dto.response.EyeExamRecordResponse;
 import vn.edu.fpt.eyesora.service.IEyeExamRecordService;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'EXAMINER')")
@@ -73,9 +75,10 @@ public class EyeExamRecordController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "campaignId", required = false) String campaignId,
             @RequestParam(value = "examinerId", required = false) String examinerId,
-            @RequestParam(value = "facilityId", required = false) String facilityId) {
+            @RequestParam(value = "facilityId", required = false) String facilityId,
+            @RequestParam(value = "examDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate examDate) {
 
-        ExcelImportResponse result = eyeExamRecordService.importExamRecordsFromExcel(file, campaignId, examinerId, facilityId);
+        ExcelImportResponse result = eyeExamRecordService.importExamRecordsFromExcel(file, campaignId, examinerId, facilityId, examDate);
         return ResponseEntity.ok(result);
     }
 

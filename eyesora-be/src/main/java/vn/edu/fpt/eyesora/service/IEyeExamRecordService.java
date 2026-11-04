@@ -8,6 +8,7 @@ import vn.edu.fpt.eyesora.dto.request.EyeExamRecordUpdateRequest;
 import vn.edu.fpt.eyesora.dto.response.ExcelImportResponse;
 import vn.edu.fpt.eyesora.dto.response.EyeExamRecordResponse;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface IEyeExamRecordService {
@@ -16,6 +17,6 @@ public interface IEyeExamRecordService {
     EyeExamRecordResponse createExamRecord(EyeExamRecordRequest request);
     EyeExamRecordResponse getExamRecordDetail(String examId);
     void deleteExamRecord(String examId);
-    ExcelImportResponse importExamRecordsFromExcel(MultipartFile file, String campaignId, String examinerId, String facilityId);
+    ExcelImportResponse importExamRecordsFromExcel(MultipartFile file, String campaignId, String examinerId, String facilityId, LocalDate examDate);
     List<EyeExamRecordResponse> getByPatientId(String patientId);
 }
