@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, University, GraduationCap, UsersRound, CalendarDays, ShieldAlert, ClipboardList, X } from "lucide-react";
+import { LayoutDashboard, University, UsersRound, CalendarDays, ShieldAlert, ClipboardList, X,  } from "lucide-react";
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { CalendarClock } from "lucide-react";
 

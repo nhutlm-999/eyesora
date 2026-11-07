@@ -10,43 +10,48 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-#    healthcheck:
-#      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 10
-#
-#  eyesora-be:
-#    build:
-#      context: ../eyesora-be
-#      dockerfile: Dockerfile
-#    container_name: eyesora-be
-#    depends_on:
-#      mysql:
-#        condition: service_healthy
-#    environment:
-#      DB_URL: jdbc:mysql://mysql:3306/eyesora?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-#      DB_USERNAME: root
-#      DB_PASSWORD: root
-#      MAIL_USERNAME: your_mail@gmail.com
-#      MAIL_PASSWORD: your_app_password
-#      SERVER_PORT: 8080
-#    ports:
-#      - "8080:8080"
-#    restart: unless-stopped
-#
-#  eyesora-fe:
-#    build:
-#      context: ../eyesora-fe
-#      dockerfile: Dockerfile
-#    container_name: eyesora-fe
-#    depends_on:
-#      - eyesora-be
-#    environment:
-#      VITE_API_BASE_URL: http://localhost:8080/api
-#    ports:
-#      - "5173:5173"
-#    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  eyesora-be:
+    build:
+      context: ../eyesora-be
+      dockerfile: Dockerfile
+    container_name: eyesora-be
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/eyesora?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      JWT_SECRET_KEY: Th1s1sS3cr3tK3y+Th1s1sS3cr3tK3y+Th1s1sS3cr3tK3y
+      JWT_ACCESS_EXPIRES_IN: 3600000
+      JWT_REFRESH_EXPIRES_IN: 7
+      MAIL_USERNAME: noreply@eyesora.vn
+      MAIL_PASSWORD: dummy_password
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  eyesora-fe:
+    build:
+      context: ../eyesora-fe
+      dockerfile: Dockerfile
+    container_name: eyesora-fe
+    depends_on:
+      - eyesora-be
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+      VITE_API_BASE_URL: http://localhost:8080/api
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
 
 volumes:
   mysql-data:
