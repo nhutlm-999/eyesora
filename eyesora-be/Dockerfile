@@ -1,13 +1,21 @@
-FROM eclipse-temurin:17-jdk
-
+# Build stage
+FROM eclipse-temurin:17-jdk AS builder
 WORKDIR /app
 
-COPY . .
+COPY mvnw pom.xml ./
+COPY .mvn .mvn
 RUN chmod +x mvnw
-RUN ./mvnw dependency:go-offline
-RUN ./mvnw package -DskipTests
+
+# Copy source code and build jar
+COPY src src
+RUN ./mvnw clean package -DskipTests
+
+# Runtime stage
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+
+COPY --from=builder /app/target/eyesora-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "target/eyesora-0.0.1-SNAPSHOT.jar"]
-
+ENTRYPOINT ["java", "-jar", "app.jar"]

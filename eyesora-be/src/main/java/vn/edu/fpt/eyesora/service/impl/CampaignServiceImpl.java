@@ -115,7 +115,10 @@ public class CampaignServiceImpl implements ICampaignService {
         // 4. Khởi tạo Object và map dữ liệu từ Request
         ExamCampaign campaign = new ExamCampaign();
         campaign.setCampaignTitle(req.title());
-        campaign.setFacilityYear(req.year());
+        String resolvedYear = (req.year() != null && !req.year().isBlank())
+                ? req.year()
+                : (startDate != null ? String.valueOf(startDate.getYear()) : null);
+        campaign.setFacilityYear(resolvedYear);
         campaign.setStartDate(startDate);
         campaign.setEndDate(endDate);
         campaign.setManagerName(req.managerName());
@@ -170,7 +173,10 @@ public class CampaignServiceImpl implements ICampaignService {
         campaign.setTargetfacility(target);
 
         campaign.setCampaignTitle(req.title());
-        campaign.setFacilityYear(req.year());
+        String resolvedYear = (req.year() != null && !req.year().isBlank())
+                ? req.year()
+                : (req.startDate() != null ? String.valueOf(req.startDate().getYear()) : null);
+        campaign.setFacilityYear(resolvedYear);
         campaign.setStartDate(req.startDate());
         campaign.setEndDate(req.endDate());
         campaign.setManagerName(req.managerName());

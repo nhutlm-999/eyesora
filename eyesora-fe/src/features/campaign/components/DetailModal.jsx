@@ -23,7 +23,7 @@ const DetailModal = ({ campaign, onClose }) => {
                     <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                         <div>
                             <span className="block font-bold text-gray-400 uppercase text-[10px] mb-1">Năm thực hiện:</span>
-                            <p className="font-bold text-gray-900">{campaign.facilityYear}</p>
+                            <p className="font-bold text-gray-900">{campaign.facilityYear || (campaign.startDate ? campaign.startDate.substring(0, 4) : '---')}</p>
                         </div>
                         <div>
                             <span className="block font-bold text-gray-400 uppercase text-[10px] mb-1">Trạng thái:</span>

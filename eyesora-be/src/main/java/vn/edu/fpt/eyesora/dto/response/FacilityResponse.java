@@ -10,7 +10,7 @@ public record FacilityResponse(
         String phone,
         String wardName,
         String wardId,
-        String districtId,
+        String provinceId,
         String googleMapsUrl,
         String principalName,
         String principalPhone

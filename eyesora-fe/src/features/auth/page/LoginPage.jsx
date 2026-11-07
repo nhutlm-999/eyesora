@@ -63,8 +63,10 @@ export default function LoginPage() {
                 const data = await authService.login(username, password);
                 loginSuccess(data);
 
-                if (data.roles?.includes("ROLE_ADMIN")) {
+                if (data.roles?.includes("ROLE_ADMIN") || data.roles?.includes("ROLE_FACILITY_ADMIN")) {
                     window.location.href = "/";
+                } else if (data.roles?.includes("ROLE_EXAMINER")) {
+                    window.location.href = "/eye-exam-records";
                 } else {
                     window.location.href = "/";
                 }

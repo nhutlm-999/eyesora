@@ -14,12 +14,12 @@ const FacilityFormPage = () => {
         address: '',
         phone: '',
         wardId: '',
-        districtId: '',
+        provinceId: '',
         googleMapsUrl: '',
         principalName: '',
         principalPhone: ''
     });
-    const [districts, setDistricts] = useState([]);
+    const [provinces, setProvinces] = useState([]);
     const [wards, setWards] = useState([]);
     const [errors, setErrors] = useState({});
 
@@ -33,30 +33,31 @@ const FacilityFormPage = () => {
     ) : null;
 
     useEffect(() => {
-        axiosClient.get("/master-data/districts?size=100").then(r => setDistricts(r.data.content || []));
+        axiosClient.get("/master-data/provinces?size=100").then(r => setProvinces(r.data.content || []));
 
         if (isEditMode) {
             axiosClient.get(`/master-data/facilities/${id}`).then(r => {
                 const data = r.data;
+                const pId = data.provinceId || data.districtId || '';
                 setFormData({
                     facilityName: data.facilityName || '',
                     facilityType: data.facilityType || 'CLINIC',
                     address: data.address || '',
                     phone: data.phone || '',
                     wardId: data.wardId ? String(data.wardId) : '',
-                    districtId: data.districtId ? String(data.districtId) : '',
+                    provinceId: pId ? String(pId) : '',
                     googleMapsUrl: data.googleMapsUrl || '',
                     principalName: data.principalName || '',
                     principalPhone: data.principalPhone || ''
                 });
-                if (data.districtId) fetchWards(data.districtId);
+                if (pId) fetchWards(pId);
             });
         }
     }, [id, isEditMode]);
 
-    const fetchWards = async (dId) => {
-        if (!dId) return;
-        const res = await axiosClient.get(`/master-data/wards?districtId=${dId}&size=100`);
+    const fetchWards = async (pId) => {
+        if (!pId) return;
+        const res = await axiosClient.get(`/master-data/wards?provinceId=${pId}&size=100`);
         setWards(res.data.content || []);
     };
 
@@ -178,12 +179,12 @@ const FacilityFormPage = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label className={labelStyle}>Quận/Huyện (*)</label>
-                            <select className={inputStyle} value={formData.districtId || ''} onChange={e => { setFormData({...formData, districtId: e.target.value, wardId: ''}); fetchWards(e.target.value); }}>
-                                <option value="">Chọn Quận/Huyện</option>
-                                {districts.map(d => <option key={d.id} value={d.id}>{d.districtName}</option>)}
+                            <label className={labelStyle}>Tỉnh/Thành phố (*)</label>
+                            <select className={inputStyle} value={formData.provinceId || ''} onChange={e => { setFormData({...formData, provinceId: e.target.value, wardId: ''}); fetchWards(e.target.value); }}>
+                                <option value="">Chọn Tỉnh/Thành phố</option>
+                                {provinces.map(p => <option key={p.id} value={p.id}>{p.provinceName}</option>)}
                             </select>
-                            <ErrorMsg field="districtId" />
+                            <ErrorMsg field="provinceId" />
                         </div>
                         <div>
                             <label className={labelStyle}>Phường/Xã (*)</label>

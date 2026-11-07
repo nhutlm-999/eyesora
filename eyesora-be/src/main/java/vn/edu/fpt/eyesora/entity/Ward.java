@@ -15,8 +15,8 @@ public class Ward {
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "district_id", nullable = false)
-    private District district;
+    @JoinColumn(name = "province_id", nullable = false)
+    private Province province;
 
     @Column(name = "ward_name", nullable = false, length = 100)
     private String wardName;

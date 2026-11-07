@@ -16,7 +16,7 @@ const ExamRecordImportPage = () => {
     const [selectedCampaign, setSelectedCampaign] = useState('');
     const [selectedFacility, setSelectedFacility] = useState('');
     const [selectedExaminer, setSelectedExaminer] = useState('');
-    const [examDate, setExamDate] = useState('2026-07-09T15:00');
+    const [examDate, setExamDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [file, setFile] = useState(null);
 
     const [options, setOptions] = useState({ facilities: [], examiners: [], campaigns: [] });
@@ -30,13 +30,13 @@ const ExamRecordImportPage = () => {
         try {
             const [fRes, eRes, cRes] = await Promise.all([
                 axiosClient.get('/master-data/facilities?size=999').catch(() => ({ data: [] })),
-                axiosClient.get('/admin/users?role=examiner&size=999').catch(() => ({ data: [] })),
+                axiosClient.get('/master-data/examiners?size=999').catch(() => ({ data: [] })),
                 axiosClient.get('/campaigns?status=active&size=999').catch(() => ({ data: [] }))
             ]);
             setOptions({
-                facilities: fRes.data.content || fRes.data || [],
-                examiners: eRes.data.content || eRes.data || [],
-                campaigns: cRes.data.content || cRes.data || []
+                facilities: Array.isArray(fRes.data?.content) ? fRes.data.content : (Array.isArray(fRes.data) ? fRes.data : []),
+                examiners: Array.isArray(eRes.data?.content) ? eRes.data.content : (Array.isArray(eRes.data) ? eRes.data : []),
+                campaigns: Array.isArray(cRes.data?.content) ? cRes.data.content : (Array.isArray(cRes.data) ? cRes.data : [])
             });
         } catch (err) {
             console.error("Lỗi tải danh mục:", err);
@@ -68,7 +68,7 @@ const ExamRecordImportPage = () => {
         formData.append('facilityId', selectedFacility);
         formData.append('examinerId', selectedExaminer);
         formData.append('campaignId', selectedCampaign);
-        formData.append('examDate', examDate.includes(':') && examDate.split(':').length === 2 ? `${examDate}:00` : examDate);
+        formData.append('examDate', examDate);
 
         try {
             const response = await axiosClient.post('/eye-exam-records/import', formData, {
@@ -152,7 +152,7 @@ const ExamRecordImportPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <label className={labelStyle}>Ngày khám lâm sàng (*)</label>
-                            <input type="datetime-local" className={inputStyle} value={examDate} onChange={e => { setExamDate(e.target.value); setImportResult(null); }} />
+                            <input type="date" className={inputStyle} value={examDate} onChange={e => { setExamDate(e.target.value); setImportResult(null); }} />
                             {errors.examDate && <p className="text-rose-600 text-[10px] font-bold mt-1.5">{errors.examDate}</p>}
                         </div>
                     </div>

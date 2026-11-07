@@ -16,7 +16,7 @@ import vn.edu.fpt.eyesora.service.IAddressService;
 import vn.edu.fpt.eyesora.service.IClassesService;
 import vn.edu.fpt.eyesora.service.IFacilityService;
 
-@PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'EXAMINER')")
+//@PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'EXAMINER')")
 @RestController
 @RequestMapping("/api/master-data")
 @RequiredArgsConstructor
@@ -24,37 +24,49 @@ public class MasterDataController {
     private final IAddressService addressService;
     private final IFacilityService facilityService;
     private final IClassesService classesService;
+    private final vn.edu.fpt.eyesora.service.IUserService userService;
 
-    // --- Districts ---
-    @GetMapping("/districts")
-    public ResponseEntity<PageResponse<DistrictResponse>> getAllDistricts(
+    // --- Examiners (dropdown cho form khám/import, không cần quyền ADMIN) ---
+    @GetMapping("/examiners")
+    public ResponseEntity<PageResponse<UserResponse>> getExaminers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        return ResponseEntity.ok(PageResponse.from(
+                userService.getAllUsers(PageRequest.of(page, size, Sort.by("username")), "EXAMINER")));
+    }
+
+    // --- Provinces ---
+    @GetMapping({"/provinces", "/districts"})
+    public ResponseEntity<PageResponse<ProvinceResponse>> getAllProvinces(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(PageResponse.from(addressService.getAllDistricts(PageRequest.of(page, size))));
+        return ResponseEntity.ok(PageResponse.from(addressService.getAllProvinces(PageRequest.of(page, size))));
     }
 
-    @GetMapping("/districts/{id}")
-    public ResponseEntity<DistrictResponse> getDistrictById(@PathVariable String id) {
-        return ResponseEntity.ok(addressService.getDistrictById(id));
+    @GetMapping({"/provinces/{id}", "/districts/{id}"})
+    public ResponseEntity<ProvinceResponse> getProvinceById(@PathVariable String id) {
+        return ResponseEntity.ok(addressService.getProvinceById(id));
     }
 
-    @PostMapping("/districts")
-    public ResponseEntity<DistrictResponse> createDistrict(@Valid @RequestBody DistrictRequest req) {
-        return ResponseEntity.ok(addressService.createDistrict(req));
+    @PostMapping({"/provinces", "/districts"})
+    public ResponseEntity<ProvinceResponse> createProvince(@Valid @RequestBody ProvinceRequest req) {
+        return ResponseEntity.ok(addressService.createProvince(req));
     }
 
-    @PutMapping("/districts/{id}")
-    public ResponseEntity<DistrictResponse> updateDistrict(@PathVariable String id, @Valid @RequestBody DistrictRequest req) {
-        return ResponseEntity.ok(addressService.updateDistrict(id, req));
+    @PutMapping({"/provinces/{id}", "/districts/{id}"})
+    public ResponseEntity<ProvinceResponse> updateProvince(@PathVariable String id, @Valid @RequestBody ProvinceRequest req) {
+        return ResponseEntity.ok(addressService.updateProvince(id, req));
     }
 
     // --- Wards ---
     @GetMapping("/wards")
     public ResponseEntity<PageResponse<WardResponse>> getAllWards(
+            @RequestParam(required = false) String provinceId,
             @RequestParam(required = false) String districtId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(PageResponse.from(addressService.getAllWards(districtId, PageRequest.of(page, size))));
+        String effectiveProvinceId = (provinceId != null && !provinceId.isBlank()) ? provinceId : districtId;
+        return ResponseEntity.ok(PageResponse.from(addressService.getAllWards(effectiveProvinceId, PageRequest.of(page, size))));
     }
 
     @GetMapping("/wards/{id}")

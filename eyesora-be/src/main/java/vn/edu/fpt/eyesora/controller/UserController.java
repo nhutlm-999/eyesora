@@ -19,7 +19,6 @@ import vn.edu.fpt.eyesora.service.IUserService;
 
 import java.security.Principal;
 
-@PreAuthorize("hasRole('ADMIN')")
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
@@ -27,6 +26,7 @@ public class UserController {
 
     private final IUserService userService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<?> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
@@ -38,6 +38,15 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers(pageable, role));
     }
 
+    /** Thông tin tài khoản đang đăng nhập - mọi role đều xem được profile của chính mình. */
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getMyProfile(Principal principal) {
+        User user = userService.findByUsername(principal.getName());
+        return ResponseEntity.ok(userService.getUserDetail(user.getId()));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(
             @PathVariable String id,
@@ -46,11 +55,13 @@ public class UserController {
         return ResponseEntity.ok("Đã cập nhật trạng thái tài khoản thành " + req.status());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserDetail(@PathVariable String id) {
         return ResponseEntity.ok(userService.getUserDetail(id));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,
@@ -66,12 +77,14 @@ public class UserController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
     public ResponseEntity<String> createUser(@Valid @RequestBody UserCreateRequest request) {
         userService.createUserByAdmin(request);
         return ResponseEntity.ok("Tạo tài khoản " + request.roleNames() + " thành công!");
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<String> updateUser(
             @PathVariable String id,

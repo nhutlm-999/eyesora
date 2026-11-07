@@ -18,7 +18,7 @@ const UserProfilePage = () => {
         const fetchUserProfile = async () => {
             setLoading(true);
             try {
-                const response = await axiosClient.get(`/admin/users/${id}`);
+                const response = await axiosClient.get('/admin/users/me');
                 // Hoặc nếu endpoint động: await axiosClient.get(`/api/admin/users/${currentUserId}`);
 
                 setProfile(response.data);

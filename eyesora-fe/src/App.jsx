@@ -75,6 +75,9 @@ function App() {
                         <Route path="/districts" element={<DistrictsPage/>}/>
                         <Route path="/districts/create" element={<DistrictFormPage/>}/>
                         <Route path="/districts/edit/:id" element={<DistrictFormPage/>}/>
+                        <Route path="/provinces" element={<DistrictsPage/>}/>
+                        <Route path="/provinces/create" element={<DistrictFormPage/>}/>
+                        <Route path="/provinces/edit/:id" element={<DistrictFormPage/>}/>
                         <Route path="/wards" element={<WardsPage/>}/>
                         <Route path="/wards/create" element={<WardsFormPage/>}/>
                         <Route path="/wards/edit/:id" element={<WardsFormPage/>}/>
