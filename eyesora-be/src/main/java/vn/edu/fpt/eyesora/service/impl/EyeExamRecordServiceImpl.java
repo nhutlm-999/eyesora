@@ -25,8 +25,11 @@ import vn.edu.fpt.eyesora.util.SecurityUtil;
 
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -300,14 +303,12 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
         int totalRows = 0;
 
         String finalFacilityId = facilityId;
-        // 1. Kiểm tra và lấy Facility
         if (finalFacilityId == null || finalFacilityId.isBlank()) {
             throw new IllegalArgumentException("Mã cơ sở (Facility ID) không được để trống.");
         }
         Facility facility = facilityRepository.findById(finalFacilityId)
                 .orElseThrow(() -> new NoSuchElementException("Không tìm thấy cơ sở/trường học với ID: " + finalFacilityId));
 
-        // 2. Khởi tạo campagin & examiner
         ExamCampaign campaign = campaignId != null ? campaignRepository.findById(campaignId).orElse(null) : null;
         User examiner = examinerId != null ? userRepository.findById(examinerId).orElse(null) : null;
 
@@ -317,14 +318,14 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
 
             Map<String, Classes> classCache = new HashMap<>();
             Map<String, Patient> patientCache = new HashMap<>();
+            // Cache giữ các record đã được tạo/cập nhật trong cùng lượt import này
+            Map<String, EyeExamRecord> processedRecordCache = new HashMap<>();
 
-            // 1. TỰ ĐỘNG TÌM DÒNG TIÊU ĐỀ CHÍNH
             int headerRowIndex = -1;
-            for (int i = 0; i <= Math.min(sheet.getLastRowNum(), 10); i++) { // Quét tối đa 10 dòng đầu
+            for (int i = 0; i <= Math.min(sheet.getLastRowNum(), 10); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
-                // Kiểm tra xem dòng này có chứa chữ "STT" hay "HỌ VÀ TÊN" không
                 String firstCellText = getCellValueAsString(row.getCell(0)).trim().toUpperCase();
                 String secondCellText = getCellValueAsString(row.getCell(1)).trim().toUpperCase();
 
@@ -334,15 +335,12 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
                 }
             }
 
-            // Nếu không tìm thấy tiêu đề bằng từ khóa, fallback mặc định bỏ qua 4 dòng đầu theo cấu trúc file của bạn
             int startRowIndex = (headerRowIndex != -1) ? (headerRowIndex + 1) : 4;
 
-            // Vì file mẫu của bạn có tiêu đề lồng nhau (2-3 dòng tiêu đề phụ bên dưới chữ STT),
-            // ta cần kiểm tra thêm cho đến khi gặp dòng có dữ liệu thật (Cột STT phải là số)
             while (startRowIndex <= sheet.getLastRowNum()) {
                 Row row = sheet.getRow(startRowIndex);
                 if (row != null && isDataRow(row)) {
-                    break; // Đã tìm thấy dòng dữ liệu thật đầu tiên!
+                    break;
                 }
                 startRowIndex++;
             }
@@ -353,16 +351,18 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
 
                 List<String> localErrors = new ArrayList<>();
 
-                EyeExamRecord record = parseRowToEntitySafe(row, campaign, examiner, facility, examDate, classCache, patientCache, localErrors);
+                EyeExamRecord record = parseRowToEntitySafe(row, campaign, examiner, facility, examDate, classCache, patientCache, processedRecordCache, localErrors);
 
                 if (!localErrors.isEmpty()) {
                     errorList.add(new RowError(i + 1, String.join(", ", localErrors)));
                 } else if (record != null) {
-                    recordsToSave.add(record);
+                    // Tránh add trùng object vào danh sách saveAll
+                    if (!recordsToSave.contains(record)) {
+                        recordsToSave.add(record);
+                    }
                 }
             }
 
-            // Thực hiện Batch Insert an toàn
             if (!recordsToSave.isEmpty()) {
                 eyeExamRecordRepository.saveAll(recordsToSave);
             }
@@ -386,10 +386,11 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
                                                LocalDate examDate,
                                                Map<String, Classes> classCache,
                                                Map<String, Patient> patientCache,
+                                               Map<String, EyeExamRecord> processedRecordCache,
                                                List<String> localErrors) {
 
-        // 1. XỬ LÝ LỚP HỌC THEO CƠ SỞ
-        String className = getCellValueAsString(row.getCell(3));
+        // 1. XỬ LÝ LỚP HỌC THEO CƠ SỞ (Cột 4: LỚP)
+        String className = getCellValueAsString(row.getCell(4)).trim();
         if (className.isEmpty()) {
             localErrors.add("Tên lớp (Class Name) không được để trống");
             return null;
@@ -405,22 +406,21 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
                 newClass.setFacility(facility);
 
                 try {
-                    // Lấy tất cả các chữ số đầu tiên của tên lớp (Ví dụ: "10A1" -> "10", "6B" -> "6")
                     String gradeNumbers = className.replaceAll("^(\\d+).*$", "$1");
                     newClass.setGrade(Integer.parseInt(gradeNumbers));
                 } catch (Exception e) {
-                    newClass.setGrade(99); // Đặt một giá trị mặc định tạm thời để không bị lỗi NOT NULL
+                    newClass.setGrade(99);
                 }
-//                newClass.updateSchoolYear();
 
                 clazz = classesRepository.save(newClass);
             }
             classCache.put(className, clazz);
         }
 
-        // 2. XỬ LÝ THÔNG TIN BỆNH NHAN
+        // 2. XỬ LÝ THÔNG TIN BỆNH NHÂN (Cột 1: HỌ VÀ TÊN, Cột 2: GIỚI TÍNH, Cột 3: NGÀY SINH)
         String patientName = getCellValueAsString(row.getCell(1)).trim();
         String genderStr = getCellValueAsString(row.getCell(2)).trim();
+        LocalDate birthDate = parseBirthDate(row.getCell(3));
 
         if (patientName.isEmpty()) {
             localErrors.add("Tên học sinh không được để trống");
@@ -434,23 +434,33 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
             gender = Patient.Gender.FEMALE;
         }
 
-        String patientCacheKey = String.format("%s_%s_%s", patientName.toLowerCase(), gender.name(), clazz.getId());
+        String patientCacheKey = String.format("%s_%s_%s_%s",
+                patientName.toLowerCase(),
+                gender.name(),
+                birthDate != null ? birthDate.toString() : "",
+                clazz.getId());
 
         Patient patient = patientCache.get(patientCacheKey);
         if (patient == null) {
-            Optional<Patient> existingPatient = patientRepository.findByPatientNameAndGenderAndClassId(patientName, gender, clazz.getId());
+            Optional<Patient> existingPatient = patientRepository.findByPatientNameAndGenderAndClassId(
+                    patientName, gender, clazz.getId());
 
             if (existingPatient.isPresent()) {
                 patient = existingPatient.get();
+                if (birthDate != null && patient.getDob() == null) {
+                    patient.setDob(birthDate);
+                    patient = patientRepository.saveAndFlush(patient);
+                }
             } else {
                 Patient newPatient = new Patient();
                 newPatient.setPatientName(patientName);
                 newPatient.setGender(gender);
-//                newPatient.setClasses(clazz);
+                newPatient.setDob(birthDate);
                 newPatient.setFacility(facility);
                 newPatient.setIsDeleted(false);
-//                newPatient.setExamCampaign(campaign);
-                patient = patientRepository.save(newPatient);
+
+                // Dùng saveAndFlush để chắc chắn có ID lập tức
+                patient = patientRepository.saveAndFlush(newPatient);
             }
             patientCache.put(patientCacheKey, patient);
         }
@@ -458,8 +468,20 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
         // 3. KHỞI TẠO HOẶC CẬP NHẬT RECORD
         EyeExamRecord record = null;
 
-        if (campaign != null && patient.getPatientId() != null) {
-            record = eyeExamRecordRepository.findByPatientAndCampaign(patient, campaign).orElse(null);
+        if (campaign != null && campaign.getCampaignId() != null
+                && patient != null && patient.getPatientId() != null) {
+
+            String recordCacheKey = patient.getPatientId() + "_" + campaign.getCampaignId();
+
+            // BƯỚC A: Kiểm tra xem record đã được xử lý trong đợt import này chưa
+            record = processedRecordCache.get(recordCacheKey);
+
+            // BƯỚC B: Nếu chưa có trong batch cache, tìm trong Database
+            if (record == null) {
+                record = eyeExamRecordRepository
+                        .findByPatient_PatientIdAndCampaign_CampaignId(patient.getPatientId(), campaign.getCampaignId())
+                        .orElse(null);
+            }
         }
 
         if (record == null) {
@@ -470,59 +492,104 @@ public class EyeExamRecordServiceImpl implements IEyeExamRecordService {
             record.setExaminer(examiner);
             record.setIsDeleted(false);
         } else {
-            // Nếu đã tồn tại và bạn muốn cho phép ghi đè/cập nhật,
             record.setClassesField(clazz);
             record.setExaminer(examiner);
         }
 
         record.setExamDate(examDate != null ? examDate : LocalDate.now());
 
-
         // 4. ĐỌC THÔNG SỐ THỊ LỰC & KHÚC XẠ
         try {
-            // --- THỊ LỰC KHÔNG KÍNH ---
-            // Cột 4 (MP), Cột 5 (MT)
-            record.setVaRightWithoutGlasses(parseVaToFloat(row.getCell(4)));
-            record.setVaLeftWithoutGlasses(parseVaToFloat(row.getCell(5)));
+            // --- KHÔNG KÍNH (Cột 5: MP, Cột 6: MT) ---
+            record.setVaRightWithoutGlasses(parseVaToFloat(row.getCell(5)));
+            record.setVaLeftWithoutGlasses(parseVaToFloat(row.getCell(6)));
 
-            // --- CÓ KÍNH CŨ ---
-            // Cột 6 (MP), Cột 7 (MT)
-            record.setVaRightOldGlasses(parseVaToFloat(row.getCell(6)));
-            record.setVaLeftOldGlasses(parseVaToFloat(row.getCell(7)));
+            // --- CÓ KÍNH (CŨ) (Cột 7: MP, Cột 8: MT) ---
+            record.setVaRightOldGlasses(parseVaToFloat(row.getCell(7)));
+            record.setVaLeftOldGlasses(parseVaToFloat(row.getCell(8)));
 
-            // --- KÍNH LỖ ---
-            // Cột 8 (MP), Cột 9 (MT)
-            record.setVaRightPinhole(parseVaToFloat(row.getCell(8)));
-            record.setVaLeftPinhole(parseVaToFloat(row.getCell(9)));
+            // --- KÍNH LỖ (Cột 9: MP, Cột 10: MT) ---
+            record.setVaRightPinhole(parseVaToFloat(row.getCell(9)));
+            record.setVaLeftPinhole(parseVaToFloat(row.getCell(10)));
 
-            // --- ĐỘ CẦU (SPH) ---
-            // Cột 10 (MP), Cột 11 (MT)
-            record.setSphRight(parseDiopterToFloat(row.getCell(10)));
-            record.setSphLeft(parseDiopterToFloat(row.getCell(11)));
+            // --- ĐỘ CẦU (SPH) (Cột 11: MP, Cột 12: MT) ---
+            record.setSphRight(parseDiopterToFloat(row.getCell(11)));
+            record.setSphLeft(parseDiopterToFloat(row.getCell(12)));
 
-            // --- ĐỘ TRỤ (CYL) ---
-            // Cột 12 (MP), Cột 13 (MT)
-            record.setCylRight(parseDiopterToFloat(row.getCell(12)));
-            record.setCylLeft(parseDiopterToFloat(row.getCell(13)));
+            // --- ĐỘ TRỤ (CYL) (Cột 13: MP, Cột 14: MT) ---
+            record.setCylRight(parseDiopterToFloat(row.getCell(13)));
+            record.setCylLeft(parseDiopterToFloat(row.getCell(14)));
 
-            // --- TRỤC (AXIS) ---
-            // Cột 14 (MP), Cột 15 (MT)
-            record.setAxisRight(getCellValueAsInteger(row.getCell(14)));
-            record.setAxisLeft(getCellValueAsInteger(row.getCell(15)));
+            // --- TRỤC (AXIS) (Cột 15: MP, Cột 16: MT) ---
+            record.setAxisRight(getCellValueAsInteger(row.getCell(15)));
+            record.setAxisLeft(getCellValueAsInteger(row.getCell(16)));
 
-            // --- TLCK (Thị lực có kính mới) ---
-            // Cột 16 (MP), Cột 17 (MT)
-            record.setVaRightWithGlasses(parseVaToFloat(row.getCell(16)));
-            record.setVaLeftWithGlasses(parseVaToFloat(row.getCell(17)));
+            // --- TLCK (Cột 17: MP, Cột 18: MT) ---
+            record.setVaRightWithGlasses(parseVaToFloat(row.getCell(17)));
+            record.setVaLeftWithGlasses(parseVaToFloat(row.getCell(18)));
 
-            System.out.println(record.getVaRightWithoutGlasses() + " - " + record.getVaLeftWithoutGlasses());
+            // --- KCĐT (Cột 19: MP, Cột 20: MT) ---
+            record.setPdRight(getCellValueAsNullableString(row.getCell(19)));
+            record.setPdLeft(getCellValueAsNullableString(row.getCell(20)));
 
         } catch (Exception e) {
             localErrors.add("Lỗi xử lý dữ liệu các cột mắt: " + e.getMessage());
             return null;
         }
 
+        // Đưa record vào cache lượt import sau khi đã populate thông số thành công
+        if (campaign != null && campaign.getCampaignId() != null
+                && patient != null && patient.getPatientId() != null) {
+            String recordCacheKey = patient.getPatientId() + "_" + campaign.getCampaignId();
+            processedRecordCache.put(recordCacheKey, record);
+        }
+
         return record;
+    }
+
+    private LocalDate parseBirthDate(Cell cell) {
+        if (cell == null) {
+            return null;
+        }
+
+        // 1. Nếu Excel lưu dạng số (Date serial number)
+        if (cell.getCellType() == CellType.NUMERIC) {
+            if (DateUtil.isCellDateFormatted(cell)) {
+                return cell.getDateCellValue()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
+            }
+            return null;
+        }
+
+        // 2. Nếu Excel lưu dạng text (hoặc formula trả về chuỗi)
+        String raw = getCellValueAsString(cell).trim();
+        if (raw.isEmpty()) {
+            return null;
+        }
+
+        List<DateTimeFormatter> formatters = List.of(
+                DateTimeFormatter.ofPattern("d/M/uuuu").withResolverStyle(ResolverStyle.STRICT),
+                DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT),
+                DateTimeFormatter.ofPattern("d-M-uuuu").withResolverStyle(ResolverStyle.STRICT),
+                DateTimeFormatter.ofPattern("dd-MM-uuuu").withResolverStyle(ResolverStyle.STRICT),
+                DateTimeFormatter.ISO_LOCAL_DATE // yyyy-MM-dd
+        );
+
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                return LocalDate.parse(raw, formatter);
+            } catch (DateTimeParseException ignored) {
+            }
+        }
+
+        return null;
+    }
+
+    private String getCellValueAsNullableString(Cell cell) {
+        String val = getCellValueAsString(cell).trim();
+        return val.isEmpty() ? null : val;
     }
 
     /**

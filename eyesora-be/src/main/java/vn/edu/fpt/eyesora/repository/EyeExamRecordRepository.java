@@ -58,4 +58,6 @@ public interface EyeExamRecordRepository extends JpaRepository<EyeExamRecord, St
             @Param("keyword") String keyword,
             Pageable pageable
     );
+
+    Optional<EyeExamRecord> findByPatient_PatientIdAndCampaign_CampaignId(String patientPatientId, String campaignCampaignId);
 }
