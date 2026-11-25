@@ -92,7 +92,7 @@ const ExamRecordImportPage = () => {
                 onBack={() => navigate('/eye-exam-records')}
                 onDownloadTemplate={() => {
                     const link = document.createElement('a');
-                    link.href = '/templates/mau_import_hoc_sinh.xlsx';
+                    link.href = '/template.xlsx';
                     link.setAttribute('download', 'Mau_Import_Hoc_Sinh.xlsx');
                     document.body.appendChild(link);
                     link.click();
